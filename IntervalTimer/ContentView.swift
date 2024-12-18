@@ -34,14 +34,27 @@ struct ContentView: View {
                     .bold()
                     .padding(.top, 50)
                     .padding()
-                    .foregroundColor(.mint)
+                    .foregroundColor(Color.black)
+
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 20)
+                        .frame(width: 200, height: 200)
+
+                    Circle()
+                        .trim(from: 0, to: progress())
+                        .stroke(isResting ? Color.cyan : Color.green, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                        .frame(width: 200, height: 200)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 1), value: progress())
+
+                    Text(formatTime(seconds: currentTime))
+                        .font(.system(size: 48, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color.primary)
+                }
 
                 Text(isResting ? "Rest" : "Set \(currentSet) of \(sets)")
                     .font(.title2)
-                    .foregroundColor(Color.primary)
-
-                Text(formatTime(seconds: currentTime))
-                    .font(.system(size: 64, weight: .bold, design: .monospaced))
                     .foregroundColor(Color.primary)
 
                 HStack(spacing: 20) {
@@ -49,7 +62,7 @@ struct ContentView: View {
                         Text(isRunning ? "Pause" : "Start")
                             .font(.title)
                             .padding()
-                            .background(Color.mint)
+                            .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
@@ -70,15 +83,13 @@ struct ContentView: View {
                     Text("Interval Configuration")
                         .font(.title2)
                         .padding()
-                        .background(Color.mint.opacity(0.8))
+                        .background(Color.blue.opacity(0.8))
                         .foregroundColor(.white)
                         .cornerRadius(12)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 20) // Add bottom padding to the button
                 }
             }
             .padding()
-            .background(Color(UIColor.systemGray6).edgesIgnoringSafeArea(.horizontal))
-            .edgesIgnoringSafeArea(.all)
         }
     }
 
@@ -137,6 +148,11 @@ struct ContentView: View {
         let seconds = seconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
+
+    private func progress() -> CGFloat {
+        let totalTime = isResting ? restDuration : timerDuration
+        return CGFloat(currentTime) / CGFloat(totalTime)
+    }
 }
 
 struct SettingsView: View {
@@ -150,7 +166,7 @@ struct SettingsView: View {
                 .font(.largeTitle)
                 .padding()
 
-            Stepper(value: $timerDuration, in: 10...3600, step: 5) {
+            Stepper(value: $timerDuration, in: 10...3600, step: 10) {
                 Text("Work Duration: \(timerDuration) seconds")
                     .font(.title2)
             }
