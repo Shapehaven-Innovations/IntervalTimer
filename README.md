@@ -26,7 +26,7 @@ IntervalTimer is a simple and customizable interval timer app built with SwiftUI
 
 1. Clone the repository or download the source code.
    ```bash
-   git clone IntervalTimer
+   git clone https://github.com/wolfrayet0855/IntervalTimer.git
    ```
 2. Open the project in Xcode.
    ```bash
