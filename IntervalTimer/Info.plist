@@ -7,7 +7,7 @@
 		<key>UIColorName</key>
 		<string>LaunchScreenColor</string>
 		<key>UIImageName</key>
-		<string></string>
+		<string>LaunchScreen</string>
 		<key>UILaunchScreen</key>
 		<dict/>
 	</dict>

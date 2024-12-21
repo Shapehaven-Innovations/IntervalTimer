@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9A5F826E2D14BEB5002EDCE3 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */ = {
+		9AA494782D1503AC002AABC8 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,7 +24,7 @@
 		9AE8C0BA2D125E04001E6F92 /* IntervalTimer */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				9A5F826E2D14BEB5002EDCE3 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */,
+				9AA494782D1503AC002AABC8 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */,
 			);
 			path = IntervalTimer;
 			sourceTree = "<group>";
@@ -270,7 +270,6 @@
 				INFOPLIST_FILE = IntervalTimer/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -299,7 +298,6 @@
 				INFOPLIST_FILE = IntervalTimer/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
