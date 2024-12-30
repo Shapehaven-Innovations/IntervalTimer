@@ -1,21 +1,12 @@
+// ContentView.swift
+// IntervalTimer
 //
-//  ContentView.swift
-//  IntervalTimer
+// Created by user on 12/17/24.
 //
-//  Created by user on 12/17/24.
-//
+
 import SwiftUI
 import Combine
 import AVFoundation
-
-@main
-struct IntervalTimerApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
 
 struct ContentView: View {
     @State private var timerDuration: Int = 60
@@ -28,79 +19,103 @@ struct ContentView: View {
     @State private var isResting: Bool = false
     @State private var activityComplete: Bool = false
     @State private var audioPlayer: AVAudioPlayer?
-    
+    @State private var isLandscape: Bool = false // Track orientation
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Interval Timer")
-                    .font(.system(size: 50, weight: .bold)) // Increased font size for title
-                    .padding(.top, 50)
-                    .padding()
-                    .foregroundColor(Color.black)
-                
-                ZStack {
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                        .frame(width: 200, height: 200)
-                    
-                    Circle()
-                        .trim(from: 0, to: progress())
-                        .stroke(isResting ? Color.cyan : Color.green, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                        .frame(width: 200, height: 200)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 1), value: progress())
-                    
-                    if activityComplete {
-                        Text("Mission Complete")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(Color.green)
-                            .multilineTextAlignment(.center)
-                    } else {
-                        Text(formatTime(seconds: currentTime))
-                            .font(.system(size: 48, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color.primary)
+            Group {
+                if isLandscape {
+                    HStack(spacing: 20) {
+                        timerView
+                        controlPanel
                     }
-                }
-                
-                Text(activityComplete ? "Great Work!" : (isResting ? "Rest" : "Set \(currentSet) of \(sets)"))
-                    .font(.title2)
-                    .foregroundColor(Color.primary)
-                
-                HStack(spacing: 20) {
-                    Button(action: { startTimer() }) {
-                        Text(isRunning ? "Pause" : "Start")
-                            .font(.title)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                } else {
+                    VStack(spacing: 20) {
+                        timerView
+                        controlPanel
                     }
-                    
-                    Button(action: { resetTimer() }) {
-                        Text("Reset")
-                            .font(.title)
-                            .padding()
-                            .background(Color.gray)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                }
-                
-                Spacer()
-                
-                NavigationLink(destination: SettingsView(timerDuration: $timerDuration, restDuration: $restDuration, sets: $sets)) {
-                    Text("Interval Configuration")
-                        .font(.title2)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding(.bottom, 20)
                 }
             }
             .padding()
             .onRotate(perform: handleOrientationChange)
+        }
+    }
+    
+    private var timerView: some View {
+        VStack(spacing: 20) {
+            Text("Interval Timer")
+                .font(.system(size: 50, weight: .bold))
+                .padding(.top, isLandscape ? 0 : 50)
+                .padding()
+                .foregroundColor(Color.black)
+            
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 20)
+                    .frame(width: 200, height: 200)
+                
+                Circle()
+                    .trim(from: 0, to: progress())
+                    .stroke(isResting ? Color.cyan : Color.green, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                    .frame(width: 200, height: 200)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 1), value: progress())
+                
+                if activityComplete {
+                    Text("Mission Complete")
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.green)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text(formatTime(seconds: currentTime))
+                        .font(.system(size: 48, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color.primary)
+                }
+            }
+            
+            Text(activityComplete ? "Great Work!" : (isResting ? "Rest" : "Set \(currentSet) of \(sets)"))
+                .font(.title2)
+                .foregroundColor(Color.primary)
+        }
+    }
+    
+    private var controlPanel: some View {
+        VStack(spacing: 20) {
+            HStack(spacing: 20) {
+                Button(action: { startTimer() }) {
+                    Text(isRunning ? "Pause" : "Start")
+                        .font(.title)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: { resetTimer() }) {
+                    Text("Reset")
+                        .font(.title)
+                        .padding()
+                        .background(Color.gray)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+            }
+            
+            NavigationLink(destination: SettingsView(timerDuration: $timerDuration, restDuration: $restDuration, sets: $sets)) {
+                Text("Interval Configuration")
+                    .font(.title2)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.bottom, 20)
+            }
+        }
+    }
+    
+    private func handleOrientationChange(orientation: UIDeviceOrientation) {
+        withAnimation {
+            isLandscape = orientation.isLandscape
         }
     }
     
@@ -179,14 +194,6 @@ struct ContentView: View {
         return CGFloat(currentTime) / CGFloat(totalTime)
     }
     
-    private func handleOrientationChange(orientation: UIDeviceOrientation) {
-        if orientation.isLandscape {
-            print("Switched to landscape mode")
-        } else if orientation.isPortrait {
-            print("Switched to portrait mode")
-        }
-    }
-    
     private func playSound(soundName: String) {
         guard let soundFile = NSDataAsset(name: soundName) else {
             print("Sound asset \(soundName) not found in Asset Catalog.")
@@ -201,45 +208,11 @@ struct ContentView: View {
     }
 }
 
-struct SettingsView: View {
-    @Binding var timerDuration: Int
-    @Binding var restDuration: Int
-    @Binding var sets: Int
-
-    var body: some View {
-        VStack {
-            Text("Interval Configuration Settings")
-                .font(.largeTitle)
-                .padding()
-
-            Stepper(value: $timerDuration, in: 10...3600, step: 5) {
-                Text("Work Duration: \(timerDuration) seconds")
-                    .font(.title2)
-            }
-            .padding()
-
-            Stepper(value: $restDuration, in: 10...600, step: 5) {
-                Text("Rest Duration: \(restDuration) seconds")
-                    .font(.title2)
-            }
-            .padding()
-
-            Stepper(value: $sets, in: 1...20, step: 1) {
-                Text("Sets: \(sets)")
-                    .font(.title2)
-            }
-            .padding()
-
-            Spacer()
+extension View {
+    func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
+        self.onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+            action(UIDevice.current.orientation)
         }
-        .padding()
     }
 }
 
-    extension View {
-        func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
-            self.onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-                action(UIDevice.current.orientation)
-            }
-        }
-    }
