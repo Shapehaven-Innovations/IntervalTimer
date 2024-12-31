@@ -18,91 +18,89 @@ struct ContentView: View {
     @State private var isResting: Bool = false
     @State private var activityComplete: Bool = false
     @State private var audioPlayer: AVAudioPlayer?
-
+    
     enum Destination: Hashable {
         case settings
     }
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                VStack(spacing: 20) {
-                    // Gear Icon for Configuration
-                    HStack {
-                        Spacer()
-                        NavigationLink(value: Destination.settings) {
-                            Image(systemName: "gearshape.fill")
+            VStack {
+                // Gear Icon for Settings
+                HStack {
+                    Spacer()
+                    NavigationLink(value: Destination.settings) {
+                        Image(systemName: "gearshape.fill")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.trailing)
+                }
+                
+                Spacer()
+
+                // Timer Display
+                Text(formatTime(seconds: currentTime))
+                    .font(.system(size: 100, weight: .bold, design: .monospaced))
+                    .foregroundColor(activityComplete ? .black : .primary)
+
+                if activityComplete {
+                    Text("Great Work!")
+                        .font(.title)
+                        .foregroundColor(.black)
+                } else {
+                    Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Progress Bar
+                ProgressView(value: progress())
+                    .progressViewStyle(LinearProgressViewStyle(tint: isResting ? .cyan : .green))
+                    .scaleEffect(x: 1, y: 4)
+                    .padding(.horizontal)
+
+                Spacer()
+
+                // Control Buttons
+                HStack(spacing: 40) {
+                    // Play/Pause Button
+                    Button(action: { startTimer() }) {
+                        ZStack {
+                            Circle()
+                                .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
+                                .frame(width: 80, height: 80)
+                            Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
                                 .resizable()
-                                .frame(width: 30, height: 30)
-                                .foregroundColor(.blue)
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(isRunning ? .red : .blue)
                         }
-                        .padding(.trailing)
                     }
 
-                    Spacer()
-
-                    // Timer Display
-                    Text(formatTime(seconds: currentTime))
-                        .font(.system(size: geometry.size.width > geometry.size.height ? 120 : 100, weight: .bold, design: .monospaced))
-                        .foregroundColor(activityComplete ? .black : .primary)
-
-                    if !activityComplete {
-                        Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Great Work!")
-                            .font(.title)
-                            .foregroundColor(.black)
-                    }
-
-                    Spacer()
-
-                    // Progress Bar
-                    ProgressView(value: progress())
-                        .progressViewStyle(LinearProgressViewStyle(tint: isResting ? .cyan : .green))
-                        .scaleEffect(x: 1, y: 4)
-                        .padding(.horizontal)
-
-                    Spacer()
-
-                    // Control Buttons
-                    HStack(spacing: 40) {
-                        // Play Button
-                        Button(action: { startTimer() }) {
-                            ZStack {
-                                Circle()
-                                    .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
-                                    .frame(width: 80, height: 80)
-                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(isRunning ? .red : .blue)
-                            }
-                        }
-
-                        // Reset Button
-                        Button(action: { resetTimer() }) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.gray.opacity(0.2))
-                                    .frame(width: 80, height: 80)
-                                Image(systemName: "arrow.clockwise.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(.gray)
-                            }
+                    // Reset Button
+                    Button(action: { resetTimer() }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 80, height: 80)
+                            Image(systemName: "arrow.clockwise.circle.fill")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.gray)
                         }
                     }
                 }
             }
+            .padding()
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .settings:
                     SettingsView(timerDuration: $timerDuration, restDuration: $restDuration, sets: $sets)
                 }
             }
-            .padding()
         }
     }
 
@@ -201,4 +199,3 @@ struct ContentView: View {
         }
     }
 }
-
