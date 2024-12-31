@@ -3,6 +3,7 @@
 //  IntervalTimer
 //
 //  Created by user on 12/17/24.
+//
 
 import SwiftUI
 import AVFoundation
@@ -45,7 +46,9 @@ struct ContentView: View {
 
                         // Timer Display
                         Text(formatTime(seconds: currentTime))
-                            .font(.system(size: geometry.size.width > geometry.size.height ? 120 : 100, weight: .bold, design: .monospaced))
+                            .font(.system(size: geometry.size.width > geometry.size.height ? 120 : 100,
+                                          weight: .bold,
+                                          design: .monospaced))
                             .foregroundColor(activityComplete ? .black : .primary)
 
                         if !activityComplete {
@@ -70,7 +73,7 @@ struct ContentView: View {
 
                         // Control Buttons
                         HStack(spacing: 40) {
-                            // Play Button
+                            // Play/Pause Button
                             Button(action: { startTimer() }) {
                                 ZStack {
                                     Circle()
@@ -100,15 +103,20 @@ struct ContentView: View {
 
                     // Confetti View
                     if showConfetti {
-                        ConfettiView(isActive: showConfetti)
-                            .edgesIgnoringSafeArea(.all)
+                        ConfettiView(
+                            isActive: showConfetti,
+                            width: geometry.size.width // <--- Provide actual width here
+                        )
+                        .edgesIgnoringSafeArea(.all)
                     }
                 }
             }
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .settings:
-                    SettingsView(timerDuration: $timerDuration, restDuration: $restDuration, sets: $sets)
+                    SettingsView(timerDuration: $timerDuration,
+                                 restDuration: $restDuration,
+                                 sets: $sets)
                 }
             }
             .padding()
@@ -196,7 +204,7 @@ struct ContentView: View {
     private func progress() -> Double {
         let totalTime = isResting ? restDuration : timerDuration
         guard totalTime > 0 else { return 0.0 } // Prevent division by zero
-        return min(max(Double(totalTime - currentTime) / Double(totalTime), 0.0), 1.0) // Clamp between 0.0 and 1.0
+        return min(max(Double(totalTime - currentTime) / Double(totalTime), 0.0), 1.0)
     }
 
     // Play Sound
