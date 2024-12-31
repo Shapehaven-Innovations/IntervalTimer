@@ -70,7 +70,7 @@ struct ConfettiView: UIViewRepresentable {
         view.layer.addSublayer(confettiLayer)
 
         // Stop emitting after 8 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
             confettiLayer.birthRate = 0
         }
     }
