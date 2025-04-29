@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "290x290_timer.png",
+      "filename" : "290x290.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "580x580_timer.png",
+      "filename" : "580x580.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "870x870_timer.png",
+      "filename" : "870x870.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
