@@ -1,4 +1,3 @@
-//
 // ContentView.swift
 // IntervalTimer
 // Core timer UI with dynamic settings sync
@@ -69,9 +68,7 @@ struct ContentView: View {
                     // Progress bar
                     ProgressView(value: progress())
                         .progressViewStyle(
-                            LinearProgressViewStyle(
-                                tint: isResting ? .cyan : .green
-                            )
+                            LinearProgressViewStyle(tint: isResting ? .cyan : .green)
                         )
                         .scaleEffect(x: 1, y: 4)
                         .padding(.horizontal)
@@ -111,17 +108,15 @@ struct ContentView: View {
             .navigationDestination(for: Destination.self) { _ in
                 SettingsView()
             }
-            .task {             // initial sync on appear
-                syncWithSettings()
-            }
+            // initial sync + live sync on settings change
+            .task { syncWithSettings() }
             .task(id: timerDuration) { syncWithSettings() }
-            .task(id: restDuration)  { syncWithSettings() }
-            .task(id: sets)         { syncWithSettings() }
+            .task(id: restDuration) { syncWithSettings() }
+            .task(id: sets) { syncWithSettings() }
         }
     }
 
     // MARK: - Sync settings
-
     private func syncWithSettings() {
         timer?.invalidate()
         isRunning       = false
@@ -132,7 +127,6 @@ struct ContentView: View {
     }
 
     // MARK: - Timer Logic
-
     private func startTimer() {
         if isRunning {
             timer?.invalidate()
@@ -167,7 +161,6 @@ struct ContentView: View {
     }
 
     // MARK: - Reset
-
     private func resetTimer() {
         syncWithSettings()
     }
@@ -178,14 +171,12 @@ struct ContentView: View {
         activityComplete = true
         playSound(named: "complete")
         saveSessionRecord()
-        // no confetti anymore…
     }
 
     // MARK: - Session Tracking
-
     private func saveSessionRecord() {
         var history: [SessionRecord] = []
-        if let data    = UserDefaults.standard.data(forKey: "sessionHistory"),
+        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
@@ -200,7 +191,6 @@ struct ContentView: View {
     }
 
     // MARK: - Utility
-
     private func progress() -> Double {
         let total = isResting ? restDuration : timerDuration
         guard total > 0 else { return 0 }
@@ -224,6 +214,12 @@ struct ContentView: View {
         } catch {
             print("Audio error: \(error.localizedDescription)")
         }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
 

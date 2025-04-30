@@ -1,4 +1,3 @@
-//
 // SettingsView.swift
 // IntervalTimer
 // Updated for modern iOS style with analytics & goals
@@ -12,7 +11,7 @@ struct SettingsView: View {
     @AppStorage("sets") private var sets: Int = 1
     @AppStorage("weeklyGoal") private var weeklyGoal: Int = 3
 
-    @State private var showingHistory: Bool = false
+    @State private var showingHistory = false
 
     var body: some View {
         NavigationView {
@@ -39,20 +38,29 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Accessibility & Analytics").font(.headline)) {
-                    Toggle(isOn: Binding(
-                        get: { true },
-                        set: { _ in }
-                    )) {
-                        Label("Enable enhanced accessibility", systemImage: "figure.wave")
+                    // Static indicator instead of a toggle
+                    HStack {
+                        Image(systemName: "figure.wave")
+                            .font(.title2)
+                        Text("Enhanced accessibility")
+                        Spacer()
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
                     }
-                    Button(action: { showingHistory = true }) {
+                    Text("Improves readability by increasing text size and contrast.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+
+                    Button(action: {
+                        showingHistory = true
+                    }) {
                         Label("View Session Analytics", systemImage: "chart.bar.doc.horizontal")
                     }
                 }
             }
             .navigationTitle("Settings")
             .navigationBarItems(trailing: Button(action: {
-                // Reset to defaults or implement save behavior
+                // Reset settings to defaults
                 timerDuration = 60
                 restDuration = 30
                 sets = 1
@@ -67,4 +75,9 @@ struct SettingsView: View {
     }
 }
 
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView()
+    }
+}
 

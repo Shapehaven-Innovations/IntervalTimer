@@ -1,4 +1,3 @@
-//
 // IntervalTimerApp.swift
 // IntervalTimer
 // Entry point
@@ -14,3 +13,4 @@ struct IntervalTimerApp: App {
         }
     }
 }
+
