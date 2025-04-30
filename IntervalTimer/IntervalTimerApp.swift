@@ -1,8 +1,7 @@
-
+//
 // IntervalTimerApp.swift
 // IntervalTimer
-//
-// Created by user on 12/17/24.
+// Entry point
 //
 
 import SwiftUI

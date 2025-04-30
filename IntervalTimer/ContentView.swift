@@ -1,132 +1,134 @@
 //
-//  ContentView.swift
-//  IntervalTimer
-//
-//  Created by user on 12/17/24.
+// ContentView.swift
+// IntervalTimer
+// Core timer UI with dynamic settings sync
 //
 
 import SwiftUI
 import AVFoundation
 
+enum Destination: Hashable {
+    case settings
+}
+
 struct ContentView: View {
-    @State private var timerDuration: Int = 60
-    @State private var restDuration: Int = 30
+    // Live bindings to Settings values
+    @AppStorage("timerDuration") private var timerDuration: Int = 60
+    @AppStorage("restDuration") private var restDuration: Int = 30
+    @AppStorage("sets") private var sets: Int = 1
+
+    // Timer state
     @State private var currentTime: Int = 60
-    @State private var isRunning: Bool = false
-    @State private var timer: Timer? = nil
-    @State private var sets: Int = 1
     @State private var currentSet: Int = 1
+    @State private var isRunning: Bool = false
     @State private var isResting: Bool = false
     @State private var activityComplete: Bool = false
-    @State private var showConfetti: Bool = false
+    @State private var timer: Timer? = nil
     @State private var audioPlayer: AVAudioPlayer?
-
-    enum Destination: Hashable {
-        case settings
-    }
 
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
-                ScrollView(.vertical) {
-                    ZStack {
-                        VStack(spacing: 20) {
-                            // Gear Icon for Configuration
-                            HStack {
-                                Spacer()
-                                NavigationLink(value: Destination.settings) {
-                                    Image(systemName: "gearshape.fill")
-                                        .resizable()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(.blue)
-                                }
-                                .padding(.trailing)
+                VStack(spacing: 20) {
+                    // Settings button
+                    HStack {
+                        Spacer()
+                        NavigationLink(value: Destination.settings) {
+                            Image(systemName: "gearshape.fill")
+                                .resizable()
+                                .frame(width: 30, height: 30)
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.trailing)
+                    }
+
+                    Spacer()
+
+                    // Time display
+                    Text(formatTime(seconds: currentTime))
+                        .font(.system(
+                            size: geometry.size.width > geometry.size.height ? 120 : 100,
+                            weight: .bold,
+                            design: .monospaced
+                        ))
+                        .foregroundColor(activityComplete ? .black : .primary)
+
+                    // Subtitle
+                    if activityComplete {
+                        Text("Great Work!")
+                            .font(.title)
+                            .foregroundColor(.black)
+                    } else {
+                        Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Progress bar
+                    ProgressView(value: progress())
+                        .progressViewStyle(
+                            LinearProgressViewStyle(
+                                tint: isResting ? .cyan : .green
+                            )
+                        )
+                        .scaleEffect(x: 1, y: 4)
+                        .padding(.horizontal)
+
+                    Spacer()
+
+                    // Controls
+                    HStack(spacing: 40) {
+                        Button { startTimer() } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(isRunning ? .red : .blue)
                             }
-
-                            Spacer()
-
-                            // Timer Display
-                            Text(formatTime(seconds: currentTime))
-                                .font(
-                                    .system(
-                                        size: geometry.size.width > geometry.size.height ? 120 : 100,
-                                        weight: .bold,
-                                        design: .monospaced
-                                    )
-                                )
-                                .foregroundColor(activityComplete ? .black : .primary)
-
-                            if !activityComplete {
-                                Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
-                                    .font(.title2)
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("Great Work!")
-                                    .font(.title)
-                                    .foregroundColor(.black)
-                            }
-
-                            Spacer()
-
-                            // Progress Bar
-                            ProgressView(value: progress())
-                                .progressViewStyle(LinearProgressViewStyle(tint: isResting ? .cyan : .green))
-                                .scaleEffect(x: 1, y: 4)
-                                .padding(.horizontal)
-
-                            Spacer()
-
-                            // Control Buttons
-                            HStack(spacing: 40) {
-                                // Play/Pause Button
-                                Button(action: { startTimer() }) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
-                                            .frame(width: 80, height: 80)
-                                        Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
-                                            .resizable()
-                                            .frame(width: 60, height: 60)
-                                            .foregroundColor(isRunning ? .red : .blue)
-                                    }
-                                }
-
-                                // Reset Button
-                                Button(action: { resetTimer() }) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .frame(width: 80, height: 80)
-                                        Image(systemName: "arrow.clockwise.circle.fill")
-                                            .resizable()
-                                            .frame(width: 60, height: 60)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                            .padding(.bottom, 20)  // Extra bottom padding so it’s not clipped
                         }
 
-                        // Confetti overlay
-                        if showConfetti {
-                            ConfettiView(isActive: showConfetti, width: geometry.size.width)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .edgesIgnoringSafeArea(.all)
+                        Button { resetTimer() } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: "arrow.clockwise.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
-                    .frame(minHeight: geometry.size.height)
+                    .padding(.bottom, 20)
                 }
+                .frame(minHeight: geometry.size.height)
             }
-            .navigationDestination(for: Destination.self) { destination in
-                switch destination {
-                case .settings:
-                    SettingsView(timerDuration: $timerDuration,
-                                 restDuration: $restDuration,
-                                 sets: $sets)
-                }
+            .navigationDestination(for: Destination.self) { _ in
+                SettingsView()
             }
-            .padding()
+            .task {             // initial sync on appear
+                syncWithSettings()
+            }
+            .task(id: timerDuration) { syncWithSettings() }
+            .task(id: restDuration)  { syncWithSettings() }
+            .task(id: sets)         { syncWithSettings() }
         }
+    }
+
+    // MARK: - Sync settings
+
+    private func syncWithSettings() {
+        timer?.invalidate()
+        isRunning       = false
+        activityComplete = false
+        isResting       = false
+        currentSet      = 1
+        currentTime     = timerDuration
     }
 
     // MARK: - Timer Logic
@@ -135,99 +137,92 @@ struct ContentView: View {
         if isRunning {
             timer?.invalidate()
         } else {
-            if currentTime == 0 {
-                if isResting {
-                    if currentSet < sets {
-                        playSound(soundName: "work")
-                        currentSet += 1
-                        isResting = false
-                        currentTime = timerDuration
-                    } else {
-                        completeActivity()
-                        return
-                    }
-                } else {
-                    playSound(soundName: "rest")
-                    isResting = true
-                    currentTime = restDuration
-                }
-            }
-
+            if currentTime == 0 { advancePhase() }
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
                 if currentTime > 0 {
                     currentTime -= 1
                 } else {
-                    if isResting {
-                        if currentSet < sets {
-                            playSound(soundName: "work")
-                            currentSet += 1
-                            isResting = false
-                            currentTime = timerDuration
-                        } else {
-                            completeActivity()
-                            return
-                        }
-                    } else {
-                        playSound(soundName: "rest")
-                        isResting = true
-                        currentTime = restDuration
-                    }
+                    advancePhase()
                 }
             }
         }
         isRunning.toggle()
     }
 
+    private func advancePhase() {
+        if isResting {
+            if currentSet < sets {
+                playSound(named: "work")
+                currentSet += 1
+                isResting = false
+                currentTime = timerDuration
+            } else {
+                completeActivity()
+            }
+        } else {
+            playSound(named: "rest")
+            isResting = true
+            currentTime = restDuration
+        }
+    }
+
+    // MARK: - Reset
+
     private func resetTimer() {
-        timer?.invalidate()
-        currentTime = timerDuration
-        currentSet = 1
-        isResting = false
-        isRunning = false
-        activityComplete = false
+        syncWithSettings()
     }
 
     private func completeActivity() {
         timer?.invalidate()
-        isRunning = false
+        isRunning       = false
         activityComplete = true
-        playSound(soundName: "complete")
-        showConfetti = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            showConfetti = false
+        playSound(named: "complete")
+        saveSessionRecord()
+        // no confetti anymore…
+    }
+
+    // MARK: - Session Tracking
+
+    private func saveSessionRecord() {
+        var history: [SessionRecord] = []
+        if let data    = UserDefaults.standard.data(forKey: "sessionHistory"),
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
+            history = decoded
+        }
+        let record = SessionRecord(date: Date(),
+                                   timerDuration: timerDuration,
+                                   restDuration: restDuration,
+                                   sets: sets)
+        history.append(record)
+        if let encoded = try? JSONEncoder().encode(history) {
+            UserDefaults.standard.set(encoded, forKey: "sessionHistory")
         }
     }
 
     // MARK: - Utility
 
-    // Updated progress function that clamps value between 0 and 1
     private func progress() -> Double {
-        let totalTime = isResting ? restDuration : timerDuration
-        guard totalTime > 0 else { return 0.0 }
-
-        // fraction = portion of the current interval completed
-        let fraction = Double(totalTime - currentTime) / Double(totalTime)
-
-        // Make sure progress stays within [0, 1] to avoid warnings
-        return min(max(fraction, 0.0), 1.0)
+        let total = isResting ? restDuration : timerDuration
+        guard total > 0 else { return 0 }
+        return min(max(Double(total - currentTime) / Double(total), 0), 1)
     }
 
     private func formatTime(seconds: Int) -> String {
-        let minutes = seconds / 60
-        let seconds = seconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
     }
 
-    private func playSound(soundName: String) {
-        guard let soundFile = NSDataAsset(name: soundName) else {
-            print("Sound asset \(soundName) not found.")
+    private func playSound(named name: String) {
+        guard let asset = NSDataAsset(name: name) else {
+            print("Sound asset \(name) not found.")
             return
         }
         do {
-            audioPlayer = try AVAudioPlayer(data: soundFile.data)
+            audioPlayer = try AVAudioPlayer(data: asset.data)
             audioPlayer?.play()
         } catch {
-            print("Error creating audio player: \(error.localizedDescription)")
+            print("Audio error: \(error.localizedDescription)")
         }
     }
 }
