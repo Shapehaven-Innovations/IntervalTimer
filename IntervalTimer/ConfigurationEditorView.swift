@@ -1,3 +1,11 @@
+//
+//  ConfigurationEditorView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/8/25.
+//
+
+
 // ConfigurationEditorView.swift
 // IntervalTimer
 // Sheet for creating a new custom configuration

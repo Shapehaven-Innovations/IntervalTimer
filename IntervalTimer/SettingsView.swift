@@ -1,7 +1,6 @@
 // SettingsView.swift
 // IntervalTimer
-// Create, rename, and save customized interval sessions
-//
+// Create, save, delete, rename & apply customized interval sessions
 
 import SwiftUI
 
@@ -11,9 +10,11 @@ struct SettingsView: View {
     @AppStorage("sets") private var sets: Int = 1
     @AppStorage("weeklyGoal") private var weeklyGoal: Int = 3
 
-    @State private var showingHistory = false
-    @State private var history: [SessionRecord] = []
+    private let configsKey = "savedConfigurations"
+    @State private var configs: [SessionRecord] = []
     @State private var showConfigEditor = false
+    @State private var renamingRecord: SessionRecord?
+    @State private var showingHistory = false
 
     var body: some View {
         NavigationView {
@@ -60,46 +61,77 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Saved Configurations").font(.headline)) {
-                    if history.isEmpty {
+                    if configs.isEmpty {
                         Text("No saved configurations.")
                             .foregroundColor(.secondary)
                     } else {
-                        ForEach($history) { $record in
+                        ForEach(configs) { record in
                             HStack {
                                 Image(systemName: "slider.horizontal.3")
-                                TextField("Name", text: $record.name, onCommit: saveHistory)
+                                Text(record.name)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // Apply this config
+                                timerDuration = record.timerDuration
+                                restDuration  = record.restDuration
+                                sets          = record.sets
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    delete(record: record)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button {
+                                    renamingRecord = record
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
                             }
                         }
-                        .onDelete(perform: deleteConfigs)
                     }
 
                     Button {
                         showConfigEditor = true
                     } label: {
-                        Label("Save Current Configuration", systemImage: "plus.circle")
+                        Label("Save Configuration", systemImage: "plus.circle")
                     }
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarItems(trailing: Button(action: resetSettings) {
-                Image(systemName: "arrow.clockwise")
-            })
-            // Analytics sheet
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: resetSettings) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
             .sheet(isPresented: $showingHistory) {
                 AnalyticsView()
             }
-            // Editor sheet for new config
             .sheet(isPresented: $showConfigEditor) {
                 ConfigurationEditorView(
                     timerDuration: timerDuration,
                     restDuration: restDuration,
                     sets: sets
                 ) { newRecord in
-                    history.insert(newRecord, at: 0)
-                    saveHistory()
+                    configs.insert(newRecord, at: 0)
+                    saveConfigs()
                 }
             }
-            .onAppear(perform: loadHistory)
+            .sheet(item: $renamingRecord) { record in
+                RenameConfigurationView(currentName: record.name) { newName in
+                    if let idx = configs.firstIndex(where: { $0.id == record.id }) {
+                        configs[idx].name = newName
+                        saveConfigs()
+                    }
+                }
+            }
+            .onAppear(perform: loadConfigs)
         }
     }
 
@@ -110,65 +142,25 @@ struct SettingsView: View {
         weeklyGoal     = 3
     }
 
-    private func loadHistory() {
-        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
+    private func loadConfigs() {
+        if let data = UserDefaults.standard.data(forKey: configsKey),
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
-            history = decoded.sorted { $0.date > $1.date }
+            configs = decoded.sorted { $0.date > $1.date }
         } else {
-            history = []
+            configs = []
         }
     }
 
-    private func saveHistory() {
-        if let encoded = try? JSONEncoder().encode(history) {
-            UserDefaults.standard.set(encoded, forKey: "sessionHistory")
+    private func saveConfigs() {
+        if let encoded = try? JSONEncoder().encode(configs) {
+            UserDefaults.standard.set(encoded, forKey: configsKey)
         }
     }
 
-    private func deleteConfigs(at offsets: IndexSet) {
-        history.remove(atOffsets: offsets)
-        saveHistory()
-    }
-}
-
-struct ConfigurationEditorView: View {
-    @Environment(\.presentationMode) private var presentationMode
-    let timerDuration: Int
-    let restDuration: Int
-    let sets: Int
-    @State private var name: String = ""
-    let onSave: (SessionRecord) -> Void
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Configuration Name")) {
-                    TextField("Enter a name", text: $name)
-                }
-                Section(header: Text("Settings Preview")) {
-                    HStack { Text("Work"); Spacer(); Text("\(timerDuration) sec") }
-                    HStack { Text("Rest"); Spacer(); Text("\(restDuration) sec") }
-                    HStack { Text("Sets"); Spacer(); Text("\(sets)") }
-                }
-            }
-            .navigationTitle("New Configuration")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("Save") {
-                    guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let record = SessionRecord(
-                        name: name,
-                        date: Date(),
-                        timerDuration: timerDuration,
-                        restDuration: restDuration,
-                        sets: sets
-                    )
-                    onSave(record)
-                    presentationMode.wrappedValue.dismiss()
-                }
-            )
+    private func delete(record: SessionRecord) {
+        if let idx = configs.firstIndex(where: { $0.id == record.id }) {
+            configs.remove(at: idx)
+            saveConfigs()
         }
     }
 }
