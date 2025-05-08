@@ -25,6 +25,16 @@ struct ContentView: View {
     @State private var timer: Timer? = nil
     @State private var audioPlayer: AVAudioPlayer?
 
+    // MARK: – Computed for ProgressView
+    private var totalDuration: Int {
+        isResting ? restDuration : timerDuration
+    }
+    private var elapsedTime: Int {
+        // ensure we never go negative or exceed totalDuration
+        let raw = totalDuration - currentTime
+        return max(0, min(totalDuration, raw))
+    }
+
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
@@ -65,13 +75,16 @@ struct ContentView: View {
 
                     Spacer()
 
-                    // Progress bar
-                    ProgressView(value: progress())
-                        .progressViewStyle(
-                            LinearProgressViewStyle(tint: isResting ? .cyan : .green)
-                        )
-                        .scaleEffect(x: 1, y: 4)
-                        .padding(.horizontal)
+                    // Progress bar (fixed out‑of‑bounds issue)
+                    ProgressView(
+                        value: Double(elapsedTime),
+                        total: Double(totalDuration)
+                    )
+                    .progressViewStyle(
+                        LinearProgressViewStyle(tint: isResting ? .cyan : .green)
+                    )
+                    .scaleEffect(x: 1, y: 4)
+                    .padding(.horizontal)
 
                     Spacer()
 
@@ -119,11 +132,11 @@ struct ContentView: View {
     // MARK: - Sync settings
     private func syncWithSettings() {
         timer?.invalidate()
-        isRunning       = false
+        isRunning        = false
         activityComplete = false
-        isResting       = false
-        currentSet      = 1
-        currentTime     = timerDuration
+        isResting        = false
+        currentSet       = 1
+        currentTime      = timerDuration
     }
 
     // MARK: - Timer Logic
@@ -167,7 +180,7 @@ struct ContentView: View {
 
     private func completeActivity() {
         timer?.invalidate()
-        isRunning       = false
+        isRunning        = false
         activityComplete = true
         playSound(named: "complete")
         saveSessionRecord()
@@ -180,10 +193,12 @@ struct ContentView: View {
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
-        let record = SessionRecord(date: Date(),
-                                   timerDuration: timerDuration,
-                                   restDuration: restDuration,
-                                   sets: sets)
+        let record = SessionRecord(
+            date: Date(),
+            timerDuration: timerDuration,
+            restDuration: restDuration,
+            sets: sets
+        )
         history.append(record)
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: "sessionHistory")
@@ -191,12 +206,6 @@ struct ContentView: View {
     }
 
     // MARK: - Utility
-    private func progress() -> Double {
-        let total = isResting ? restDuration : timerDuration
-        guard total > 0 else { return 0 }
-        return min(max(Double(total - currentTime) / Double(total), 0), 1)
-    }
-
     private func formatTime(seconds: Int) -> String {
         let m = seconds / 60
         let s = seconds % 60

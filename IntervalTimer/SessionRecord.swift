@@ -1,3 +1,4 @@
+
 // SessionRecord.swift
 // IntervalTimer
 // Shared model for saved sessions
