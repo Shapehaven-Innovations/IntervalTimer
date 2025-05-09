@@ -1,3 +1,11 @@
+//
+//  GoalsView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/9/25.
+//
+
+
 // GoalsView.swift
 // IntervalTimer
 // Set daily/weekly/monthly goals + free‑form notes

@@ -1,228 +1,254 @@
 // ContentView.swift
 // IntervalTimer
-// Core timer UI with dynamic settings sync
-//
+// Main dashboard with config + action tiles
 
 import SwiftUI
-import AVFoundation
-
-enum Destination: Hashable {
-    case settings
-}
 
 struct ContentView: View {
-    // Live bindings to Settings values
-    @AppStorage("timerDuration") private var timerDuration: Int = 60
-    @AppStorage("restDuration") private var restDuration: Int = 30
-    @AppStorage("sets") private var sets: Int = 1
+    @Environment(\.presentationMode) private var presentationMode
 
-    // Timer state
-    @State private var currentTime: Int = 60
-    @State private var currentSet: Int = 1
-    @State private var isRunning: Bool = false
-    @State private var isResting: Bool = false
-    @State private var activityComplete: Bool = false
-    @State private var timer: Timer? = nil
-    @State private var audioPlayer: AVAudioPlayer?
+    // MARK: – Live settings
+    @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
+    @AppStorage("timerDuration")    private var timerDuration:    Int = 20
+    @AppStorage("restDuration")     private var restDuration:     Int = 10
+    @AppStorage("sets")             private var sets:             Int = 8
 
-    // MARK: – Computed for ProgressView
-    private var totalDuration: Int {
-        isResting ? restDuration : timerDuration
-    }
-    private var elapsedTime: Int {
-        // ensure we never go negative or exceed totalDuration
-        let raw = totalDuration - currentTime
-        return max(0, min(totalDuration, raw))
+    // MARK: – Saved configurations
+    @AppStorage("savedConfigurations") private var configsData: Data = Data()
+    @State private var configs: [SessionRecord] = []
+
+    // MARK: – Sheet / Navigation controls
+    @State private var activePicker: PickerType?
+    @State private var showingConfigEditor = false
+    @State private var showingWorkoutLog   = false
+    @State private var showingGoals        = false
+    @State private var showingAnalytics    = false
+    @State private var showingTimer        = false
+
+    enum PickerType: Int, Identifiable {
+        case getReady, rounds, work, rest
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .getReady: return "Get Ready"
+            case .rounds:   return "Rounds"
+            case .work:     return "Work"
+            case .rest:     return "Rest"
+            }
+        }
     }
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                VStack(spacing: 20) {
-                    // Settings button
-                    HStack {
-                        Spacer()
-                        NavigationLink(value: Destination.settings) {
-                            Image(systemName: "gearshape.fill")
-                                .resizable()
-                                .frame(width: 30, height: 30)
-                                .foregroundColor(.blue)
-                        }
-                        .padding(.trailing)
+        NavigationView {
+            ScrollView {
+               // Text("Custom Workout")
+                  //.font(.title2).bold()
+                  //  .padding(.top, 16)
+
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 20
+                ) {
+                    // — CONFIG TILES —
+                    tile(icon: "bolt.fill",
+                         label: "Get Ready",
+                         value: format(getReadyDuration),
+                         color: .yellow) {
+                        activePicker = .getReady
                     }
 
-                    Spacer()
-
-                    // Time display
-                    Text(formatTime(seconds: currentTime))
-                        .font(.system(
-                            size: geometry.size.width > geometry.size.height ? 120 : 100,
-                            weight: .bold,
-                            design: .monospaced
-                        ))
-                        .foregroundColor(activityComplete ? .black : .primary)
-
-                    // Subtitle
-                    if activityComplete {
-                        Text("Great Work!")
-                            .font(.title)
-                            .foregroundColor(.black)
-                    } else {
-                        Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
+                    tile(icon: "repeat.circle.fill",
+                         label: "Rounds",
+                         value: "\(sets)",
+                         color: .mint) {
+                        activePicker = .rounds
                     }
 
-                    Spacer()
+                    tile(icon: "flame.fill",
+                         label: "Work",
+                         value: format(timerDuration),
+                         color: .green) {
+                        activePicker = .work
+                    }
 
-                    // Progress bar (fixed out‑of‑bounds issue)
-                    ProgressView(
-                        value: Double(elapsedTime),
-                        total: Double(totalDuration)
-                    )
-                    .progressViewStyle(
-                        LinearProgressViewStyle(tint: isResting ? .cyan : .green)
-                    )
-                    .scaleEffect(x: 1, y: 4)
-                    .padding(.horizontal)
+                    tile(icon: "bed.double.fill",
+                         label: "Rest",
+                         value: format(restDuration),
+                         color: .red) {
+                        activePicker = .rest
+                    }
 
-                    Spacer()
+                    // — ACTION TILES —
+                    tile(icon: "play.circle.fill",
+                         label: "Start Workout",
+                         color: .orange) {
+                        showingTimer = true
+                    }
 
-                    // Controls
-                    HStack(spacing: 40) {
-                        Button { startTimer() } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
-                                    .frame(width: 80, height: 80)
-                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(isRunning ? .red : .blue)
-                            }
-                        }
+                    tile(icon: "plus.circle.fill",
+                         label: "Save Workout",
+                         color: .teal) {
+                        showingConfigEditor = true
+                    }
 
-                        Button { resetTimer() } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.gray.opacity(0.2))
-                                    .frame(width: 80, height: 80)
-                                Image(systemName: "arrow.clockwise.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(.gray)
-                            }
+                    tile(icon: "list.bullet.clipboard.fill",
+                         label: "Workout Log",
+                         color: .indigo) {
+                        showingWorkoutLog = true
+                    }
+
+                    tile(icon: "target",
+                         label: "Goals",
+                         color: .pink) {
+                        showingGoals = true
+                    }
+
+                    tile(icon: "chart.bar.doc.horizontal.fill",
+                         label: "Analytics",
+                         color: .blue) {
+                        showingAnalytics = true
+                    }
+
+                    // — SAVED WORKOUTS —
+                    ForEach(configs) { record in
+                        tile(icon: "slider.horizontal.3",
+                             label: record.name,
+                             value: "\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x",
+                             color: .gray) {
+                            timerDuration = record.timerDuration
+                            restDuration  = record.restDuration
+                            sets          = record.sets
                         }
                     }
-                    .padding(.bottom, 20)
                 }
-                .frame(minHeight: geometry.size.height)
+                .padding()
             }
-            .navigationDestination(for: Destination.self) { _ in
-                SettingsView()
+           .navigationTitle("Interval Timer")
+           // .navigationBarItems(trailing: Button("Done") {
+            //    presentationMode.wrappedValue.dismiss()
+           // })
+            // — PICKER SHEET —
+            .sheet(item: $activePicker) { picker in
+                PickerSheet(
+                    type: picker,
+                    getReady: $getReadyDuration,
+                    rounds:   $sets,
+                    work:     $timerDuration,
+                    rest:     $restDuration
+                )
             }
-            // initial sync + live sync on settings change
-            .task { syncWithSettings() }
-            .task(id: timerDuration) { syncWithSettings() }
-            .task(id: restDuration) { syncWithSettings() }
-            .task(id: sets) { syncWithSettings() }
-        }
-    }
-
-    // MARK: - Sync settings
-    private func syncWithSettings() {
-        timer?.invalidate()
-        isRunning        = false
-        activityComplete = false
-        isResting        = false
-        currentSet       = 1
-        currentTime      = timerDuration
-    }
-
-    // MARK: - Timer Logic
-    private func startTimer() {
-        if isRunning {
-            timer?.invalidate()
-        } else {
-            if currentTime == 0 { advancePhase() }
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if currentTime > 0 {
-                    currentTime -= 1
-                } else {
-                    advancePhase()
+            // — OTHER SHEETS —
+            .sheet(isPresented: $showingTimer) {
+                TimerView()
+            }
+            .sheet(isPresented: $showingConfigEditor) {
+                ConfigurationEditorView(
+                    timerDuration: timerDuration,
+                    restDuration:  restDuration,
+                    sets:          sets
+                ) { newRecord in
+                    configs.insert(newRecord, at: 0)
+                    saveConfigs()
                 }
             }
+            .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
+            .sheet(isPresented: $showingGoals)        { GoalsView() }
+            .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
+            .onAppear(perform: loadConfigs)
         }
-        isRunning.toggle()
     }
 
-    private func advancePhase() {
-        if isResting {
-            if currentSet < sets {
-                playSound(named: "work")
-                currentSet += 1
-                isResting = false
-                currentTime = timerDuration
-            } else {
-                completeActivity()
+    // MARK: – Helpers
+
+    private func tile(icon: String,
+                      label: String,
+                      value: String? = nil,
+                      color: Color,
+                      action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon).font(.largeTitle)
+                Text(label).font(.headline)
+                if let v = value {
+                    Text(v).font(.subheadline).bold()
+                }
             }
-        } else {
-            playSound(named: "rest")
-            isResting = true
-            currentTime = restDuration
+            .foregroundColor(.white)
+            .frame(minHeight: 140)
+            .frame(maxWidth: .infinity)
+            .background(color)
+            .cornerRadius(16)
+            .shadow(color: color.opacity(0.3), radius: 6, x: 0, y: 5)
         }
+        .accessibilityElement(children: .combine)
     }
 
-    // MARK: - Reset
-    private func resetTimer() {
-        syncWithSettings()
-    }
-
-    private func completeActivity() {
-        timer?.invalidate()
-        isRunning        = false
-        activityComplete = true
-        playSound(named: "complete")
-        saveSessionRecord()
-    }
-
-    // MARK: - Session Tracking
-    private func saveSessionRecord() {
-        var history: [SessionRecord] = []
-        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
-            history = decoded
-        }
-        let record = SessionRecord(
-            date: Date(),
-            timerDuration: timerDuration,
-            restDuration: restDuration,
-            sets: sets
-        )
-        history.append(record)
-        if let encoded = try? JSONEncoder().encode(history) {
-            UserDefaults.standard.set(encoded, forKey: "sessionHistory")
-        }
-    }
-
-    // MARK: - Utility
-    private func formatTime(seconds: Int) -> String {
-        let m = seconds / 60
-        let s = seconds % 60
+    private func format(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
         return String(format: "%02d:%02d", m, s)
     }
 
-    private func playSound(named name: String) {
-        guard let asset = NSDataAsset(name: name) else {
-            print("Sound asset \(name) not found.")
-            return
+    private func loadConfigs() {
+        if let decoded = try? JSONDecoder()
+            .decode([SessionRecord].self, from: configsData) {
+            configs = decoded
         }
-        do {
-            audioPlayer = try AVAudioPlayer(data: asset.data)
-            audioPlayer?.play()
-        } catch {
-            print("Audio error: \(error.localizedDescription)")
+    }
+
+    private func saveConfigs() {
+        if let encoded = try? JSONEncoder().encode(configs) {
+            configsData = encoded
         }
+    }
+}
+
+// MARK: – Inline PickerSheet (unchanged from your original)
+struct PickerSheet: View {
+    let type: ContentView.PickerType
+    @Binding var getReady: Int
+    @Binding var rounds:   Int
+    @Binding var work:     Int
+    @Binding var rest:     Int
+
+    @Environment(\.presentationMode) private var presentationMode
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text(type.title)) {
+                    if type == .rounds {
+                        Picker("Rounds", selection: $rounds) {
+                            ForEach(1...20, id: \.self) { Text("\($0)").tag($0) }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                    } else {
+                        Picker("\(type.title) Duration", selection: bindingFor(type)) {
+                            ForEach(1...300, id: \.self) { Text(format($0)).tag($0) }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                    }
+                }
+            }
+            .navigationTitle(type.title)
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() },
+                trailing: Button("Save")   { presentationMode.wrappedValue.dismiss() }
+            )
+        }
+    }
+
+    private func bindingFor(_ type: ContentView.PickerType) -> Binding<Int> {
+        switch type {
+        case .getReady: return $getReady
+        case .work:     return $work
+        case .rest:     return $rest
+        case .rounds:   return $rounds
+        }
+    }
+
+    private func format(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
     }
 }
 

@@ -1,0 +1,890 @@
+===== AnalyticsView.swift =====
+// AnalyticsView.swift
+// IntervalTimer
+// Tracks summary + compares against goals
+
+import SwiftUI
+
+struct AnalyticsView: View {
+    @Environment(\.presentationMode) private var presentationMode
+    @State private var history: [SessionRecord] = []
+
+    @AppStorage("dailyGoal")   private var dailyGoal:   Int = 1
+    @AppStorage("weeklyGoal")  private var weeklyGoal:  Int = 7
+    @AppStorage("monthlyGoal") private var monthlyGoal: Int = 30
+
+    private var totalSessions: Int { history.count }
+    private var daysCompleted:  Int {
+        Set(history.map { Calendar.current.startOfDay(for: $0.date) }).count
+    }
+    private var todayCount: Int {
+        history.filter { Calendar.current.isDateInToday($0.date) }.count
+    }
+    private var weekCount: Int {
+        let start = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        return history.filter { $0.date >= start }.count
+    }
+    private var monthCount: Int {
+        let start = Calendar.current.date(byAdding: .month, value: -1, to: Date())!
+        return history.filter { $0.date >= start }.count
+    }
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("Overview")) {
+                    HStack {
+                        Text("Total Sessions")
+                        Spacer()
+                        Text("\(totalSessions)").bold()
+                    }
+                    HStack {
+                        Text("Days Completed")
+                        Spacer()
+                        Text("\(daysCompleted)").bold()
+                    }
+                }
+
+                Section(header: Text("Progress vs Goals")) {
+                    ProgressRow(title: "Today",
+                                current: todayCount,
+                                goal: dailyGoal)
+                    ProgressRow(title: "Week",
+                                current: weekCount,
+                                goal: weeklyGoal)
+                    ProgressRow(title: "Month",
+                                current: monthCount,
+                                goal: monthlyGoal)
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("Analytics")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+            .onAppear(perform: loadHistory)
+        }
+    }
+
+    private func loadHistory() {
+        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
+           let decoded = try? JSONDecoder()
+             .decode([SessionRecord].self, from: data) {
+            history = decoded.sorted { $0.date > $1.date }
+        }
+    }
+}
+
+private struct ProgressRow: View {
+    let title: String, current: Int, goal: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text("\(current)/\(goal)")
+                    .bold()
+            }
+            ProgressView(value: Double(min(current, goal)),
+                         total: Double(goal))
+                .scaleEffect(y: 2, anchor: .center)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+
+
+
+===== ConfigurationEditorView.swift =====
+//
+//  ConfigurationEditorView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/8/25.
+//
+
+
+// ConfigurationEditorView.swift
+// IntervalTimer
+// Sheet for creating a new custom configuration
+
+import SwiftUI
+
+struct ConfigurationEditorView: View {
+    @Environment(\.presentationMode) private var presentationMode
+    let timerDuration: Int
+    let restDuration: Int
+    let sets: Int
+    @State private var name: String = ""
+    let onSave: (SessionRecord) -> Void
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Configuration Name")) {
+                    TextField("Enter a name", text: $name)
+                }
+                Section(header: Text("Settings Preview")) {
+                    HStack { Text("Work"); Spacer(); Text("\(timerDuration) sec") }
+                    HStack { Text("Rest"); Spacer(); Text("\(restDuration) sec") }
+                    HStack { Text("Sets"); Spacer(); Text("\(sets)") }
+                }
+            }
+            .navigationTitle("New Configuration")
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button("Save") {
+                    let trimmed = name.trimmingCharacters(in: .whitespaces)
+                    guard !trimmed.isEmpty else { return }
+                    let record = SessionRecord(
+                        name: trimmed,
+                        date: Date(),
+                        timerDuration: timerDuration,
+                        restDuration: restDuration,
+                        sets: sets
+                    )
+                    onSave(record)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
+        }
+    }
+}
+
+
+
+===== ContentView.swift =====
+// ContentView.swift
+// IntervalTimer
+// Core timer UI with dynamic settings sync
+//
+
+import SwiftUI
+import AVFoundation
+
+enum Destination: Hashable {
+    case settings
+}
+
+struct ContentView: View {
+    // Live bindings to Settings values
+    @AppStorage("timerDuration") private var timerDuration: Int = 60
+    @AppStorage("restDuration") private var restDuration: Int = 30
+    @AppStorage("sets") private var sets: Int = 1
+
+    // Timer state
+    @State private var currentTime: Int = 60
+    @State private var currentSet: Int = 1
+    @State private var isRunning: Bool = false
+    @State private var isResting: Bool = false
+    @State private var activityComplete: Bool = false
+    @State private var timer: Timer? = nil
+    @State private var audioPlayer: AVAudioPlayer?
+
+    // MARK: – Computed for ProgressView
+    private var totalDuration: Int {
+        isResting ? restDuration : timerDuration
+    }
+    private var elapsedTime: Int {
+        // ensure we never go negative or exceed totalDuration
+        let raw = totalDuration - currentTime
+        return max(0, min(totalDuration, raw))
+    }
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geometry in
+                VStack(spacing: 20) {
+                    // Settings button
+                    HStack {
+                        Spacer()
+                        NavigationLink(value: Destination.settings) {
+                            Image(systemName: "gearshape.fill")
+                                .resizable()
+                                .frame(width: 30, height: 30)
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.trailing)
+                    }
+
+                    Spacer()
+
+                    // Time display
+                    Text(formatTime(seconds: currentTime))
+                        .font(.system(
+                            size: geometry.size.width > geometry.size.height ? 120 : 100,
+                            weight: .bold,
+                            design: .monospaced
+                        ))
+                        .foregroundColor(activityComplete ? .black : .primary)
+
+                    // Subtitle
+                    if activityComplete {
+                        Text("Great Work!")
+                            .font(.title)
+                            .foregroundColor(.black)
+                    } else {
+                        Text(isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Progress bar (fixed out‑of‑bounds issue)
+                    ProgressView(
+                        value: Double(elapsedTime),
+                        total: Double(totalDuration)
+                    )
+                    .progressViewStyle(
+                        LinearProgressViewStyle(tint: isResting ? .cyan : .green)
+                    )
+                    .scaleEffect(x: 1, y: 4)
+                    .padding(.horizontal)
+
+                    Spacer()
+
+                    // Controls
+                    HStack(spacing: 40) {
+                        Button { startTimer() } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(isRunning ? Color.red.opacity(0.2) : Color.blue.opacity(0.2))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(isRunning ? .red : .blue)
+                            }
+                        }
+
+                        Button { resetTimer() } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: "arrow.clockwise.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 20)
+                }
+                .frame(minHeight: geometry.size.height)
+            }
+            .navigationDestination(for: Destination.self) { _ in
+                SettingsView()
+            }
+            // initial sync + live sync on settings change
+            .task { syncWithSettings() }
+            .task(id: timerDuration) { syncWithSettings() }
+            .task(id: restDuration) { syncWithSettings() }
+            .task(id: sets) { syncWithSettings() }
+        }
+    }
+
+    // MARK: - Sync settings
+    private func syncWithSettings() {
+        timer?.invalidate()
+        isRunning        = false
+        activityComplete = false
+        isResting        = false
+        currentSet       = 1
+        currentTime      = timerDuration
+    }
+
+    // MARK: - Timer Logic
+    private func startTimer() {
+        if isRunning {
+            timer?.invalidate()
+        } else {
+            if currentTime == 0 { advancePhase() }
+            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                if currentTime > 0 {
+                    currentTime -= 1
+                } else {
+                    advancePhase()
+                }
+            }
+        }
+        isRunning.toggle()
+    }
+
+    private func advancePhase() {
+        if isResting {
+            if currentSet < sets {
+                playSound(named: "work")
+                currentSet += 1
+                isResting = false
+                currentTime = timerDuration
+            } else {
+                completeActivity()
+            }
+        } else {
+            playSound(named: "rest")
+            isResting = true
+            currentTime = restDuration
+        }
+    }
+
+    // MARK: - Reset
+    private func resetTimer() {
+        syncWithSettings()
+    }
+
+    private func completeActivity() {
+        timer?.invalidate()
+        isRunning        = false
+        activityComplete = true
+        playSound(named: "complete")
+        saveSessionRecord()
+    }
+
+    // MARK: - Session Tracking
+    private func saveSessionRecord() {
+        var history: [SessionRecord] = []
+        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
+            history = decoded
+        }
+        let record = SessionRecord(
+            date: Date(),
+            timerDuration: timerDuration,
+            restDuration: restDuration,
+            sets: sets
+        )
+        history.append(record)
+        if let encoded = try? JSONEncoder().encode(history) {
+            UserDefaults.standard.set(encoded, forKey: "sessionHistory")
+        }
+    }
+
+    // MARK: - Utility
+    private func formatTime(seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+
+    private func playSound(named name: String) {
+        guard let asset = NSDataAsset(name: name) else {
+            print("Sound asset \(name) not found.")
+            return
+        }
+        do {
+            audioPlayer = try AVAudioPlayer(data: asset.data)
+            audioPlayer?.play()
+        } catch {
+            print("Audio error: \(error.localizedDescription)")
+        }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
+
+
+
+
+===== GoalsView.swift =====
+//
+//  GoalsView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/9/25.
+//
+
+
+// GoalsView.swift
+// IntervalTimer
+// Set daily/weekly/monthly goals + free‑form notes
+
+import SwiftUI
+
+struct GoalsView: View {
+    @Environment(\.presentationMode) private var presentationMode
+
+    @AppStorage("dailyGoal")   private var dailyGoal:   Int = 1
+    @AppStorage("weeklyGoal")  private var weeklyGoal:  Int = 7
+    @AppStorage("monthlyGoal") private var monthlyGoal: Int = 30
+    @AppStorage("goalNotes")   private var goalNotes:   String = ""
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Goals")) {
+                    Stepper("Daily: \(dailyGoal)",
+                            value: $dailyGoal,
+                            in: 1...24)
+                    Stepper("Weekly: \(weeklyGoal)",
+                            value: $weeklyGoal,
+                            in: 1...168)
+                    Stepper("Monthly: \(monthlyGoal)",
+                            value: $monthlyGoal,
+                            in: 1...744)
+                }
+
+                Section(header: Text("Notes")) {
+                    TextEditor(text: $goalNotes)
+                        .frame(height: 150)
+                }
+            }
+            .navigationTitle("Goals")
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button("Save") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
+        }
+    }
+}
+
+
+
+===== IntervalTimerApp.swift =====
+// IntervalTimerApp.swift
+// IntervalTimer
+// Entry point
+//
+
+import SwiftUI
+
+@main
+struct IntervalTimerApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+
+
+
+===== RenameConfigurationView.swift =====
+//
+//  RenameConfigurationView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/8/25.
+//
+
+
+// RenameConfigurationView.swift
+// IntervalTimer
+// Sheet for renaming an existing configuration
+
+import SwiftUI
+
+struct RenameConfigurationView: View {
+    @Environment(\.presentationMode) private var presentationMode
+    @State private var name: String
+    let onRename: (String) -> Void
+
+    init(currentName: String, onRename: @escaping (String) -> Void) {
+        _name = State(initialValue: currentName)
+        self.onRename = onRename
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Configuration Name")) {
+                    TextField("Enter a name", text: $name)
+                }
+            }
+            .navigationTitle("Edit Configuration")
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button("Save") {
+                    let trimmed = name.trimmingCharacters(in: .whitespaces)
+                    guard !trimmed.isEmpty else { return }
+                    onRename(trimmed)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
+        }
+    }
+}
+
+
+
+===== SessionRecord.swift =====
+// SessionRecord.swift
+// IntervalTimer
+// Shared model for saved sessions
+
+import Foundation
+
+struct SessionRecord: Identifiable, Codable {
+    let id: UUID
+    var name: String
+    let date: Date
+    let timerDuration: Int
+    let restDuration: Int
+    let sets: Int
+
+    init(id: UUID = UUID(),
+         name: String = "",
+         date: Date,
+         timerDuration: Int,
+         restDuration: Int,
+         sets: Int) {
+        self.id = id
+        self.name = name
+        self.date = date
+        self.timerDuration = timerDuration
+        self.restDuration = restDuration
+        self.sets = sets
+    }
+}
+
+
+
+===== SettingsView.swift =====
+// SettingsView.swift
+// IntervalTimer
+// Modern dashboard with config + action tiles
+
+import SwiftUI
+
+struct SettingsView: View {
+    @Environment(\.presentationMode) private var presentationMode
+
+    // MARK: – Live settings
+    @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
+    @AppStorage("timerDuration")    private var timerDuration:    Int = 20
+    @AppStorage("restDuration")     private var restDuration:     Int = 10
+    @AppStorage("sets")             private var sets:             Int = 8
+
+    // MARK: – Saved configurations
+    @AppStorage("savedConfigurations") private var configsData: Data = Data()
+    @State private var configs: [SessionRecord] = []
+
+    // MARK: – Sheet controls
+    @State private var activePicker: PickerType?
+    @State private var showingConfigEditor = false
+    @State private var showingWorkoutLog = false
+    @State private var showingGoals = false
+    @State private var showingAnalytics = false
+
+    enum PickerType: Int, Identifiable {
+        case getReady, rounds, work, rest
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .getReady: return "Get Ready"
+            case .rounds:   return "Rounds"
+            case .work:     return "Work"
+            case .rest:     return "Rest"
+            }
+        }
+    }
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                Text("Custom Workout")
+                    .font(.title2).bold()
+                    .padding(.top, 16)
+
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 20
+                ) {
+                    // — CONFIG TILES —
+                    tile(
+                        icon: "bolt.fill",
+                        label: "Get Ready",
+                        value: format(getReadyDuration),
+                        color: .yellow
+                    ) { activePicker = .getReady }
+
+                    tile(
+                        icon: "repeat.circle.fill",
+                        label: "Rounds",
+                        value: "\(sets)",
+                        color: .mint
+                    ) { activePicker = .rounds }
+
+                    tile(
+                        icon: "flame.fill",
+                        label: "Work",
+                        value: format(timerDuration),
+                        color: .green
+                    ) { activePicker = .work }
+
+                    tile(
+                        icon: "bed.double.fill",
+                        label: "Rest",
+                        value: format(restDuration),
+                        color: .red
+                    ) { activePicker = .rest }
+
+                    // — ACTION TILES —
+                    tile(icon: "plus.circle.fill",
+                         label: "Save Workout",
+                         color: .teal) {
+                        showingConfigEditor = true
+                    }
+
+                    tile(icon: "list.bullet.clipboard.fill",
+                         label: "Workout Log",
+                         color: .indigo) {
+                        showingWorkoutLog = true
+                    }
+
+                    tile(icon: "target",
+                         label: "Goals",
+                         color: .pink) {
+                        showingGoals = true
+                    }
+
+                    tile(icon: "chart.bar.doc.horizontal.fill",
+                         label: "Analytics",
+                         color: .blue) {
+                        showingAnalytics = true
+                    }
+
+                    // — SAVED WORKOUTS —
+                    ForEach(configs) { record in
+                        tile(
+                            icon: "slider.horizontal.3",
+                            label: record.name,
+                            value: "\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x",
+                            color: .gray
+                        ) {
+                            timerDuration = record.timerDuration
+                            restDuration  = record.restDuration
+                            sets          = record.sets
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Settings")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+            // — PICKER SHEET —
+            .sheet(item: $activePicker) { picker in
+                PickerSheet(
+                    type: picker,
+                    getReady: $getReadyDuration,
+                    rounds:   $sets,
+                    work:     $timerDuration,
+                    rest:     $restDuration
+                )
+            }
+            // — OTHER SCREENS —
+            .sheet(isPresented: $showingConfigEditor) {
+                ConfigurationEditorView(
+                    timerDuration: timerDuration,
+                    restDuration:  restDuration,
+                    sets:          sets
+                ) { newRecord in
+                    configs.insert(newRecord, at: 0)
+                    saveConfigs()
+                }
+            }
+            .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
+            .sheet(isPresented: $showingGoals) { GoalsView() }
+            .sheet(isPresented: $showingAnalytics) { AnalyticsView() }
+            .onAppear(perform: loadConfigs)
+        }
+    }
+
+    // MARK: – Helpers
+    private func tile(icon: String,
+                      label: String,
+                      value: String? = nil,
+                      color: Color,
+                      action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.largeTitle)
+                Text(label)
+                    .font(.headline)
+                if let v = value {
+                    Text(v)
+                        .font(.subheadline).bold()
+                }
+            }
+            .foregroundColor(.white)
+            .frame(minHeight: 140)
+            .frame(maxWidth: .infinity)
+            .background(color)
+            .cornerRadius(16)
+            .shadow(color: color.opacity(0.3), radius: 6, x: 0, y: 5)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func format(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+
+    private func loadConfigs() {
+        if let decoded = try? JSONDecoder()
+            .decode([SessionRecord].self, from: configsData) {
+            configs = decoded
+        }
+    }
+
+    private func saveConfigs() {
+        if let encoded = try? JSONEncoder().encode(configs) {
+            configsData = encoded
+        }
+    }
+}
+
+// MARK: – Inline PickerSheet
+struct PickerSheet: View {
+    let type: SettingsView.PickerType
+
+    @Binding var getReady: Int
+    @Binding var rounds:   Int
+    @Binding var work:     Int
+    @Binding var rest:     Int
+
+    @Environment(\.presentationMode) private var presentationMode
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text(type.title)) {
+                    if type == .rounds {
+                        Picker("Rounds", selection: $rounds) {
+                            ForEach(1...20, id: \.self) { num in
+                                Text("\(num)").tag(num)
+                            }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                    } else {
+                        Picker("\(type.title) Duration", selection: bindingFor(type)) {
+                            ForEach(1...300, id: \.self) { sec in
+                                Text(format(sec)).tag(sec)
+                            }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                    }
+                }
+            }
+            .navigationTitle(type.title)
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() },
+                trailing: Button("Save")   { presentationMode.wrappedValue.dismiss() }
+            )
+        }
+    }
+
+    private func bindingFor(_ type: SettingsView.PickerType) -> Binding<Int> {
+        switch type {
+        case .getReady: return $getReady
+        case .work:     return $work
+        case .rest:     return $rest
+        case .rounds:   return $rounds
+        }
+    }
+
+    private func format(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+}
+
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView()
+    }
+}
+
+
+
+
+===== WorkoutLogView.swift =====
+//
+//  WorkoutLogView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/9/25.
+//
+
+
+// WorkoutLogView.swift
+// IntervalTimer
+// Detailed list of every session
+
+import SwiftUI
+
+struct WorkoutLogView: View {
+    @Environment(\.presentationMode) private var presentationMode
+    @State private var history: [SessionRecord] = []
+
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(history) { record in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(record.name.isEmpty ? "Unnamed Workout" : record.name)
+                            .font(.headline)
+
+                        Text(record.date, style: .date) +
+                        Text(" ") +
+                        Text(record.date, style: .time)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        HStack {
+                            Text("Work: \(format(record.timerDuration))")
+                            Spacer()
+                            Text("Rest: \(format(record.restDuration))")
+                            Spacer()
+                            Text("Sets: \(record.sets)")
+                        }
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 6)
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("Workout Log")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+            .onAppear(perform: loadHistory)
+        }
+    }
+
+    private func loadHistory() {
+        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
+            history = decoded.sorted { $0.date > $1.date }
+        }
+    }
+
+    private func format(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+}
+
+
+

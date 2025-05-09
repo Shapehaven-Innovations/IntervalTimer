@@ -1,7 +1,6 @@
 // IntervalTimerApp.swift
 // IntervalTimer
 // Entry point
-//
 
 import SwiftUI
 
@@ -12,5 +11,5 @@ struct IntervalTimerApp: App {
             ContentView()
         }
     }
+    
 }
-
