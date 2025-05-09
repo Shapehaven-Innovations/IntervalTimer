@@ -3,9 +3,15 @@
 // Main dashboard with config + action tiles
 
 import SwiftUI
+import UIKit   // for UIDevice.current.name
 
 struct ContentView: View {
     @Environment(\.presentationMode) private var presentationMode
+
+    // MARK: – Device Info
+    private var deviceName: String {
+        UIDevice.current.name
+    }
 
     // MARK: – Live settings
     @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
@@ -41,10 +47,6 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-               // Text("Custom Workout")
-                  //.font(.title2).bold()
-                  //  .padding(.top, 16)
-
                 LazyVGrid(
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
                     spacing: 20
@@ -123,10 +125,10 @@ struct ContentView: View {
                 }
                 .padding()
             }
-           .navigationTitle("Interval Timer")
-           // .navigationBarItems(trailing: Button("Done") {
-            //    presentationMode.wrappedValue.dismiss()
-           // })
+            .navigationTitle("Hello, \(deviceName)!")
+            // .navigationBarItems(trailing: Button("Done") {
+            //     presentationMode.wrappedValue.dismiss()
+            // })
             // — PICKER SHEET —
             .sheet(item: $activePicker) { picker in
                 PickerSheet(
@@ -202,7 +204,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: – Inline PickerSheet (unchanged from your original)
+// MARK: – Inline PickerSheet (unchanged)
 struct PickerSheet: View {
     let type: ContentView.PickerType
     @Binding var getReady: Int
