@@ -1,6 +1,6 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with dynamic settings sync
+// Core timer UI with full‑width “Record Today’s Goal” banner
 
 import SwiftUI
 import AVFoundation
@@ -20,17 +20,30 @@ struct TimerView: View {
     @State private var timer:            Timer?
     @State private var audioPlayer:      AVAudioPlayer?
 
+    // MARK: – Banner & Navigation
+    @State private var showBanner:  Bool = true
+    @State private var showLogView: Bool = false
+
     // Computed for ProgressView
     private var totalDuration: Int {
         isResting ? restDuration : timerDuration
     }
-    private var elapsedTime:  Int {
+    private var elapsedTime: Int {
         max(0, totalDuration - currentTime)
     }
 
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
+                // — FULL‑WIDTH BANNER —
+                if showBanner {
+                    BannerView(
+                        message: "🎯 Record Today’s Goal!",
+                        onTap:    { showLogView = true },
+                        onClose:  { showBanner = false }
+                    )
+                }
+
                 Spacer()
 
                 // Big timer display
@@ -103,8 +116,12 @@ struct TimerView: View {
                 .padding(.bottom, 20)
             }
             .frame(minHeight: geometry.size.height)
+            .ignoresSafeArea(edges: .top)
+            .sheet(isPresented: $showLogView) {
+                GoalsView()
+            }
         }
-        // re‑sync whenever settings change
+        // Sync on settings change
         .task { syncWithSettings() }
         .task(id: timerDuration) { syncWithSettings() }
         .task(id: restDuration)  { syncWithSettings() }
@@ -127,14 +144,13 @@ struct TimerView: View {
             timer?.invalidate()
         } else {
             if currentTime == 0 { advancePhase() }
-            timer = Timer
-                .scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                    if currentTime > 0 {
-                        currentTime -= 1
-                    } else {
-                        advancePhase()
-                    }
+            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                if currentTime > 0 {
+                    currentTime -= 1
+                } else {
+                    advancePhase()
                 }
+            }
         }
         isRunning.toggle()
     }
@@ -173,15 +189,14 @@ struct TimerView: View {
     private func saveSessionRecord() {
         var history: [SessionRecord] = []
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder()
-             .decode([SessionRecord].self, from: data) {
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
         let record = SessionRecord(
-            date: Date(),
+            date:          Date(),
             timerDuration: timerDuration,
-            restDuration: restDuration,
-            sets: sets
+            restDuration:  restDuration,
+            sets:          sets
         )
         history.append(record)
         if let encoded = try? JSONEncoder().encode(history) {
@@ -192,9 +207,7 @@ struct TimerView: View {
     // MARK: – Helpers
 
     private func formatTime(seconds: Int) -> String {
-        String(format: "%02d:%02d",
-               seconds / 60,
-               seconds % 60)
+        String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
     private func playSound(named name: String) {
@@ -208,6 +221,37 @@ struct TimerView: View {
         } catch {
             print("Audio error: \(error.localizedDescription)")
         }
+    }
+}
+
+// MARK: – BannerView
+
+private struct BannerView: View {
+    let message: String
+    let onTap:    () -> Void
+    let onClose:  () -> Void
+
+    var body: some View {
+        HStack {
+            Button(action: onTap) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                    Text(message)
+                        .font(.subheadline)
+                        .bold()
+                }
+            }
+            Spacer()
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.headline)
+            }
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)   // full width
+        .background(Color.yellow)     // full‑bleed background
+        .foregroundColor(.blue)
     }
 }
 
