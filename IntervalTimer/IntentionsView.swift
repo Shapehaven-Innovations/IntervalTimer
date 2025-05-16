@@ -6,10 +6,6 @@
 //
 
 
-// GoalsView.swift
-// IntervalTimer
-// Set daily/weekly/monthly goals + free‑form notes
-
 import SwiftUI
 
 struct GoalsView: View {
