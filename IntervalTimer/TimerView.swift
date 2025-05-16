@@ -1,6 +1,6 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with full‑width “Record Today’s Goal” banner
+// Core timer UI with full‑width “Set Intention” banner
 
 import SwiftUI
 import AVFoundation
@@ -20,9 +20,9 @@ struct TimerView: View {
     @State private var timer:            Timer?
     @State private var audioPlayer:      AVAudioPlayer?
 
-    // MARK: – Banner & Navigation
-    @State private var showBanner:  Bool = true
-    @State private var showLogView: Bool = false
+    // MARK: – Banner & Intentions sheet
+    @State private var showBanner:       Bool = true
+    @State private var showIntentions:   Bool = false
 
     // Computed for ProgressView
     private var totalDuration: Int {
@@ -38,8 +38,8 @@ struct TimerView: View {
                 // — FULL‑WIDTH BANNER —
                 if showBanner {
                     BannerView(
-                        message: "🎯 Record Today’s Goal!",
-                        onTap:    { showLogView = true },
+                        message: "🎯 Set Intention NOW",
+                        onTap:    { showIntentions = true },
                         onClose:  { showBanner = false }
                     )
                 }
@@ -117,8 +117,9 @@ struct TimerView: View {
             }
             .frame(minHeight: geometry.size.height)
             .ignoresSafeArea(edges: .top)
-            .sheet(isPresented: $showLogView) {
-                GoalsView()
+            // — Intentions sheet —
+            .sheet(isPresented: $showIntentions) {
+                IntentionsView()
             }
         }
         // Sync on settings change
@@ -235,10 +236,9 @@ private struct BannerView: View {
         HStack {
             Button(action: onTap) {
                 HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    Image(systemName: "lightbulb.fill")
                     Text(message)
-                        .font(.subheadline)
-                        .bold()
+                        .font(.subheadline).bold()
                 }
             }
             Spacer()
@@ -252,12 +252,6 @@ private struct BannerView: View {
         .frame(maxWidth: .infinity)   // full width
         .background(Color.yellow)     // full‑bleed background
         .foregroundColor(.blue)
-    }
-}
-
-struct TimerView_Previews: PreviewProvider {
-    static var previews: some View {
-        TimerView()
     }
 }
 

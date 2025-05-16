@@ -154,7 +154,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
-            .sheet(isPresented: $showingGoals)        { GoalsView() }
+            .sheet(isPresented: $showingGoals)        { IntentionsView() }
             .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
             .onAppear(perform: loadConfigs)
         }
