@@ -27,7 +27,7 @@ struct ContentView: View {
     @State private var activePicker: PickerType?
     @State private var showingConfigEditor = false
     @State private var showingWorkoutLog   = false
-    @State private var showingGoals        = false
+    @State private var showingIntention        = false
     @State private var showingAnalytics    = false
     @State private var showingTimer        = false
 
@@ -100,9 +100,9 @@ struct ContentView: View {
                     }
 
                     tile(icon: "target",
-                         label: "Goals",
+                         label: "Intention",
                          color: .pink) {
-                        showingGoals = true
+                        showingIntention = true
                     }
 
                     tile(icon: "chart.bar.doc.horizontal.fill",
@@ -154,7 +154,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
-            .sheet(isPresented: $showingGoals)        { IntentionsView() }
+            .sheet(isPresented: $showingIntention)        { IntentionsView() }
             .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
             .onAppear(perform: loadConfigs)
         }
