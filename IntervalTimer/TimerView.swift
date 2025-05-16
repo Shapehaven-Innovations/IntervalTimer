@@ -1,6 +1,6 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with full‑width “Set Intention” banner
+// Core timer UI with auto‑dismissing IntentionBanner
 
 import SwiftUI
 import AVFoundation
@@ -12,17 +12,19 @@ struct TimerView: View {
     @AppStorage("sets")          private var sets:         Int = 1
 
     // MARK: – Timer state
-    @State private var currentTime:      Int = 60
-    @State private var currentSet:       Int = 1
-    @State private var isRunning:        Bool = false
-    @State private var isResting:        Bool = false
-    @State private var activityComplete: Bool = false
+    @State private var currentTime:      Int   = 60
+    @State private var currentSet:       Int   = 1
+    @State private var isRunning:        Bool  = false
+    @State private var isResting:        Bool  = false
+    @State private var activityComplete: Bool  = false
     @State private var timer:            Timer?
-    @State private var audioPlayer:      AVAudioPlayer?
 
     // MARK: – Banner & Intentions sheet
-    @State private var showBanner:       Bool = true
-    @State private var showIntentions:   Bool = false
+    @State private var showBanner:     Bool = true
+    @State private var showIntentions: Bool = false
+
+    // MARK: – Audio
+    @State private var audioPlayer: AVAudioPlayer?
 
     // Computed for ProgressView
     private var totalDuration: Int {
@@ -35,18 +37,19 @@ struct TimerView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                // — FULL‑WIDTH BANNER —
+                // — AUTO‑DISMISSING BANNER —
                 if showBanner {
-                    BannerView(
-                        message: "🎯 Set Intention NOW",
-                        onTap:    { showIntentions = true },
-                        onClose:  { showBanner = false }
+                    IntentionBanner(
+                        onTap:     { showIntentions = true },
+                        onDismiss: { showBanner = false }
                     )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
                 }
 
                 Spacer()
 
-                // Big timer display
+                // Big timer
                 Text(formatTime(seconds: currentTime))
                     .font(.system(
                         size: geometry.size.width > geometry.size.height ? 120 : 100,
@@ -56,17 +59,12 @@ struct TimerView: View {
                     .foregroundColor(activityComplete ? .black : .primary)
 
                 // Subtitle
-                if activityComplete {
-                    Text("Great Work!")
-                        .font(.title)
-                        .foregroundColor(.black)
-                } else {
-                    Text(isResting
-                         ? "Rest Time"
-                         : "Set \(currentSet) of \(sets)")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
+                Text(activityComplete
+                     ? "Great Work!"
+                     : (isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
+                )
+                .font(activityComplete ? .title : .title2)
+                .foregroundColor(activityComplete ? .black : .secondary)
 
                 Spacer()
 
@@ -225,33 +223,54 @@ struct TimerView: View {
     }
 }
 
-// MARK: – BannerView
+// MARK: – IntentionBanner
 
-private struct BannerView: View {
-    let message: String
-    let onTap:    () -> Void
-    let onClose:  () -> Void
+struct IntentionBanner: View {
+    var onTap:     () -> Void
+    var onDismiss: () -> Void
+
+    @State private var autoDismissTask: Task<Void, Never>?
 
     var body: some View {
-        HStack {
-            Button(action: onTap) {
-                HStack(spacing: 8) {
-                    Image(systemName: "lightbulb.fill")
-                    Text(message)
-                        .font(.subheadline).bold()
-                }
+        HStack(spacing: 8) {
+            Image(systemName: "lightbulb.fill")
+                .foregroundColor(.yellow)
+
+            Text("Tap to set today’s intention")
+                .font(.headline)
+                .foregroundStyle(.white)
+
+            Spacer(minLength: 0)
+
+            Button(role: .cancel, action: onDismiss) {
+                Image(systemName: "xmark")
+                    .padding(6)
             }
-            Spacer()
-            Button(action: onClose) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.headline)
+            .tint(.white)
+        }
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
+        .background(Color.accentColor)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(radius: 4, y: 2)
+        .onTapGesture {
+            onTap()
+            autoDismissTask?.cancel()
+        }
+        .onAppear {
+            autoDismissTask = Task {
+                try? await Task.sleep(for: .seconds(7))
+                await MainActor.run { onDismiss() }
             }
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity)   // full width
-        .background(Color.yellow)     // full‑bleed background
-        .foregroundColor(.blue)
+        .accessibilityLabel("Set intention for workout")
+    }
+}
+
+struct TimerView_Previews: PreviewProvider {
+    static var previews: some View {
+        TimerView()
     }
 }
 
