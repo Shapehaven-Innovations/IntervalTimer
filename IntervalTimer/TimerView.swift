@@ -1,23 +1,23 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with auto‑dismissing IntentionBanner
+// Core timer UI with Get‑Ready countdown + auto‑dismissing IntentionBanner
 
 import SwiftUI
 import AVFoundation
 
 struct TimerView: View {
     // MARK: – User‑configurable settings
-    @AppStorage("timerDuration") private var timerDuration: Int = 60
-    @AppStorage("restDuration")  private var restDuration:  Int = 30
-    @AppStorage("sets")          private var sets:         Int = 1
+    @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
+    @AppStorage("timerDuration")    private var timerDuration:    Int = 60
+    @AppStorage("restDuration")     private var restDuration:     Int = 30
+    @AppStorage("sets")             private var sets:             Int = 1
 
-    // MARK: – Timer state
-    @State private var currentTime:      Int   = 60
-    @State private var currentSet:       Int   = 1
-    @State private var isRunning:        Bool  = false
-    @State private var isResting:        Bool  = false
-    @State private var activityComplete: Bool  = false
-    @State private var timer:            Timer?
+    // MARK: – Timer phases
+    private enum Phase { case getReady, work, rest, complete }
+    @State private var phase: Phase = .getReady
+    @State private var currentTime: Int   = 0
+    @State private var currentSet:  Int   = 1
+    @State private var timer:        Timer?
 
     // MARK: – Banner & Intentions sheet
     @State private var showBanner:     Bool = true
@@ -28,198 +28,225 @@ struct TimerView: View {
 
     // Computed for ProgressView
     private var totalDuration: Int {
-        isResting ? restDuration : timerDuration
+        switch phase {
+        case .getReady: return getReadyDuration
+        case .work:     return timerDuration
+        case .rest:     return restDuration
+        case .complete: return 1
+        }
     }
     private var elapsedTime: Int {
-        max(0, totalDuration - currentTime)
+        totalDuration - currentTime
+    }
+
+    // MARK: – Dynamic background
+    private var backgroundColor: Color {
+        switch phase {
+        case .getReady:
+            return Color.white
+        case .work:
+            return Theme.cardBackgrounds[3]   // redish
+        case .rest:
+            return Theme.cardBackgrounds[5]   // blueish
+        case .complete:
+            return Theme.cardBackgrounds[2]   // greenish
+        }
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // — AUTO‑DISMISSING BANNER —
-                if showBanner {
-                    IntentionBanner(
-                        onTap:     { showIntentions = true },
-                        onDismiss: { showBanner = false }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                }
+        GeometryReader { geo in
+            ZStack {
+                backgroundColor
+                    .ignoresSafeArea()
 
-                Spacer()
-
-                // Big timer
-                Text(formatTime(seconds: currentTime))
-                    .font(.system(
-                        size: geometry.size.width > geometry.size.height ? 120 : 100,
-                        weight: .bold,
-                        design: .monospaced
-                    ))
-                    .foregroundColor(activityComplete ? .black : .primary)
-
-                // Subtitle
-                Text(activityComplete
-                     ? "Great Work!"
-                     : (isResting ? "Rest Time" : "Set \(currentSet) of \(sets)")
-                )
-                .font(activityComplete ? .title : .title2)
-                .foregroundColor(activityComplete ? .black : .secondary)
-
-                Spacer()
-
-                // Progress bar
-                ProgressView(value: Double(elapsedTime),
-                             total: Double(totalDuration))
-                    .progressViewStyle(
-                        LinearProgressViewStyle(
-                            tint: isResting ? .cyan : .green
+                VStack(spacing: 0) {
+                    if showBanner {
+                        IntentionBanner(
+                            onTap:     { showIntentions = true },
+                            onDismiss: { showBanner = false }
                         )
-                    )
-                    .scaleEffect(x: 1, y: 4)
-                    .padding(.horizontal)
-
-                Spacer()
-
-                // Play / Reset controls
-                HStack(spacing: 40) {
-                    Button(action: startTimer) {
-                        ZStack {
-                            Circle()
-                                .fill(isRunning
-                                      ? Color.red.opacity(0.2)
-                                      : Color.blue.opacity(0.2))
-                                .frame(width: 80, height: 80)
-                            Image(systemName: isRunning
-                                  ? "pause.circle.fill"
-                                  : "play.circle.fill")
-                                .resizable()
-                                .frame(width: 60, height: 60)
-                                .foregroundColor(isRunning ? .red : .blue)
-                        }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
                     }
 
-                    Button(action: resetTimer) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(width: 80, height: 80)
-                            Image(systemName: "arrow.clockwise.circle.fill")
-                                .resizable()
-                                .frame(width: 60, height: 60)
-                                .foregroundColor(.gray)
+                    Spacer()
+
+                    // MARK: – Main countdown display
+                    Text(formatTime(seconds: currentTime))
+                        .font(.system(
+                            size: geo.size.width > geo.size.height ? 120 : 100,
+                            weight: .bold,
+                            design: .monospaced
+                        ))
+                        .foregroundColor(phase == .getReady ? .primary : .white)
+
+                    // MARK: – Subtitle
+                    Text(subtitle)
+                        .font(phase == .getReady ? .title2 : .title)
+                        .foregroundColor(phase == .getReady ? .secondary : .white.opacity(0.8))
+
+                    Spacer()
+
+                    // MARK: – Progress bar (hidden during Get Ready)
+                    if phase != .getReady {
+                        ProgressView(value: Double(elapsedTime),
+                                     total: Double(totalDuration))
+                            .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                            .scaleEffect(x: 1, y: 4)
+                            .padding(.horizontal)
+                        Spacer()
+                    }
+
+                    // MARK: – Controls (disabled during Get Ready)
+                    HStack(spacing: 40) {
+                        Button(action: toggleTimer) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.3))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: isRunning
+                                      ? "pause.circle.fill"
+                                      : "play.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .disabled(phase == .getReady)
+
+                        Button(action: resetAll) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.3))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: "arrow.clockwise.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.white)
+                            }
                         }
                     }
+                    .padding(.bottom, 20)
                 }
-                .padding(.bottom, 20)
+                .frame(minHeight: geo.size.height)
             }
-            .frame(minHeight: geometry.size.height)
-            .ignoresSafeArea(edges: .top)
-            // — Intentions sheet —
+            .onAppear(perform: startGetReady)
             .sheet(isPresented: $showIntentions) {
                 IntentionsView()
             }
         }
-        // Sync on settings change
-        .task { syncWithSettings() }
-        .task(id: timerDuration) { syncWithSettings() }
-        .task(id: restDuration)  { syncWithSettings() }
-        .task(id: sets)          { syncWithSettings() }
     }
 
-    // MARK: – Sync / Control logic
+    // MARK: – Helpers & logic
 
-    private func syncWithSettings() {
-        timer?.invalidate()
-        isRunning        = false
-        activityComplete = false
-        isResting        = false
-        currentSet       = 1
-        currentTime      = timerDuration
+    private var isRunning: Bool {
+        timer != nil
     }
 
-    private func startTimer() {
-        if isRunning {
-            timer?.invalidate()
-        } else {
-            if currentTime == 0 { advancePhase() }
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if currentTime > 0 {
-                    currentTime -= 1
-                } else {
-                    advancePhase()
-                }
-            }
+    private var subtitle: String {
+        switch phase {
+        case .getReady: return "Get Ready..."
+        case .work:     return "Set \(currentSet) of \(sets)"
+        case .rest:     return "Rest Time"
+        case .complete: return "Great Work!"
         }
-        isRunning.toggle()
+    }
+
+    private func startGetReady() {
+        phase = .getReady
+        currentTime = getReadyDuration
+        startTimerLoop()
+    }
+
+    private func startTimerLoop() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            guard currentTime > 0 else {
+                advancePhase()
+                return
+            }
+            currentTime -= 1
+        }
+    }
+
+    private func toggleTimer() {
+        if isRunning {
+            timer?.invalidate(); timer = nil
+        } else {
+            startTimerLoop()
+        }
     }
 
     private func advancePhase() {
-        if isResting {
+        timer?.invalidate()
+        timer = nil
+
+        switch phase {
+        case .getReady:
+            phase = .work
+            currentTime = timerDuration
+            playSound(named: "work")
+            startTimerLoop()
+
+        case .work:
             if currentSet < sets {
-                playSound(named: "work")
-                currentSet += 1
-                isResting = false
-                currentTime = timerDuration
+                phase = .rest
+                currentTime = restDuration
+                playSound(named: "rest")
+                startTimerLoop()
             } else {
-                completeActivity()
+                phase = .complete
+                currentTime = 1
+                playSound(named: "complete")
+                completeAndSave()
             }
-        } else {
-            playSound(named: "rest")
-            isResting   = true
-            currentTime = restDuration
+
+        case .rest:
+            currentSet += 1
+            phase = .work
+            currentTime = timerDuration
+            playSound(named: "work")
+            startTimerLoop()
+
+        case .complete:
+            // done
+            break
         }
     }
 
-    private func resetTimer() {
-        syncWithSettings()
-    }
-
-    private func completeActivity() {
+    private func resetAll() {
         timer?.invalidate()
-        isRunning        = false
-        activityComplete = true
-        playSound(named: "complete")
-        saveSessionRecord()
+        timer = nil
+        currentSet = 1
+        startGetReady()
     }
 
-    // MARK: – Persistence
-
-    private func saveSessionRecord() {
+    private func completeAndSave() {
+        // persist session record
         var history: [SessionRecord] = []
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
-        let record = SessionRecord(
+        history.append(.init(
             date:          Date(),
             timerDuration: timerDuration,
             restDuration:  restDuration,
             sets:          sets
-        )
-        history.append(record)
+        ))
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: "sessionHistory")
         }
     }
-
-    // MARK: – Helpers
 
     private func formatTime(seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
     private func playSound(named name: String) {
-        guard let asset = NSDataAsset(name: name) else {
-            print("Sound asset \(name) not found.")
-            return
-        }
-        do {
-            audioPlayer = try AVAudioPlayer(data: asset.data)
-            audioPlayer?.play()
-        } catch {
-            print("Audio error: \(error.localizedDescription)")
-        }
+        guard let asset = NSDataAsset(name: name) else { return }
+        audioPlayer = try? AVAudioPlayer(data: asset.data)
+        audioPlayer?.play()
     }
 }
 
