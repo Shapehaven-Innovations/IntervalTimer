@@ -39,29 +39,19 @@ struct TimerView: View {
         totalDuration - currentTime
     }
 
-    // MARK: – Dynamic colors for controls
-    private var controlForeground: Color {
-        phase == .getReady ? .accentColor : .white
-    }
-    private var controlBackgroundTint: Color {
-        phase == .getReady
-            ? Color.accentColor.opacity(0.3)
-            : Color.white.opacity(0.3)
-    }
-
     // MARK: – Dynamic background
     private var backgroundColor: Color {
         switch phase {
-        case .getReady:
-            return Color.white
-        case .work:
-            return Theme.cardBackgrounds[3]   // redish
-        case .rest:
-            return Theme.cardBackgrounds[5]   // blueish
-        case .complete:
-            return Theme.cardBackgrounds[2]   // greenish
+        case .getReady: return Theme.cardBackgrounds[0]   // yellow
+        case .work:     return Theme.cardBackgrounds[3]   // redish
+        case .rest:     return Theme.cardBackgrounds[5]   // blueish
+        case .complete: return Theme.cardBackgrounds[2]   // greenish
         }
     }
+
+    // MARK: – Controls style
+    private let controlBackground = Color.white.opacity(0.3)
+    private let controlForeground = Color.white
 
     var body: some View {
         GeometryReader { geo in
@@ -70,6 +60,7 @@ struct TimerView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    // — Banner (optional) —
                     if showBanner {
                         IntentionBanner(
                             onTap:     { showIntentions = true },
@@ -79,42 +70,44 @@ struct TimerView: View {
                         .padding(.top, 8)
                     }
 
+                    // — Top Spacer —
                     Spacer()
 
-                    // MARK: – Main countdown display
+                    // — Time & Subtitle —
                     Text(formatTime(seconds: currentTime))
                         .font(.system(
                             size: geo.size.width > geo.size.height ? 120 : 100,
                             weight: .bold,
                             design: .monospaced
                         ))
-                        .foregroundColor(phase == .getReady ? .primary : .white)
+                        .foregroundColor(.white)
 
-                    // MARK: – Subtitle
                     Text(subtitle)
-                        .font(phase == .getReady ? .title2 : .title)
-                        .foregroundColor(phase == .getReady
-                                         ? .secondary
-                                         : .white.opacity(0.8))
+                        .font(.title)
+                        .foregroundColor(.white.opacity(0.8))
 
+                    // — Spacer between text and progress —
                     Spacer()
 
-                    // MARK: – Progress bar (hidden during Get Ready)
-                    if phase != .getReady {
-                        ProgressView(value: Double(elapsedTime),
-                                     total: Double(totalDuration))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .white))
-                            .scaleEffect(x: 1, y: 4)
-                            .padding(.horizontal)
-                        Spacer()
-                    }
+                    // — Progress bar (always there, hidden during Get Ready) —
+                    ProgressView(
+                        value: phase == .getReady ? 0 : Double(elapsedTime),
+                        total: Double(totalDuration)
+                    )
+                    .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                    .scaleEffect(x: 1, y: 4)
+                    .padding(.horizontal)
+                    .opacity(phase == .getReady ? 0 : 1)
 
-                    // MARK: – Controls (always visible)
+                    // — Spacer between progress and controls —
+                    Spacer()
+
+                    // — Controls —
                     HStack(spacing: 40) {
                         Button(action: toggleTimer) {
                             ZStack {
                                 Circle()
-                                    .fill(controlBackgroundTint)
+                                    .fill(controlBackground)
                                     .frame(width: 80, height: 80)
                                 Image(systemName: isRunning
                                       ? "pause.circle.fill"
@@ -128,7 +121,7 @@ struct TimerView: View {
                         Button(action: resetAll) {
                             ZStack {
                                 Circle()
-                                    .fill(controlBackgroundTint)
+                                    .fill(controlBackground)
                                     .frame(width: 80, height: 80)
                                 Image(systemName: "arrow.clockwise.circle.fill")
                                     .resizable()
@@ -242,15 +235,15 @@ struct TimerView: View {
         // Persist session record
         var history: [SessionRecord] = []
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder()
-             .decode([SessionRecord].self, from: data) {
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
         history.append(.init(
-            date:          Date(),
-            timerDuration: timerDuration,
-            restDuration:  restDuration,
-            sets:          sets
+            name:           "",
+            date:           Date(),
+            timerDuration:  timerDuration,
+            restDuration:   restDuration,
+            sets:           sets
         ))
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: "sessionHistory")
