@@ -15,8 +15,8 @@ struct TimerView: View {
     // MARK: – Timer phases
     private enum Phase { case getReady, work, rest, complete }
     @State private var phase: Phase = .getReady
-    @State private var currentTime: Int   = 0
-    @State private var currentSet:  Int   = 1
+    @State private var currentTime: Int = 0
+    @State private var currentSet:  Int = 1
     @State private var timer:        Timer?
 
     // MARK: – Banner & Intentions sheet
@@ -37,6 +37,16 @@ struct TimerView: View {
     }
     private var elapsedTime: Int {
         totalDuration - currentTime
+    }
+
+    // MARK: – Dynamic colors for controls
+    private var controlForeground: Color {
+        phase == .getReady ? .accentColor : .white
+    }
+    private var controlBackgroundTint: Color {
+        phase == .getReady
+            ? Color.accentColor.opacity(0.3)
+            : Color.white.opacity(0.3)
     }
 
     // MARK: – Dynamic background
@@ -83,7 +93,9 @@ struct TimerView: View {
                     // MARK: – Subtitle
                     Text(subtitle)
                         .font(phase == .getReady ? .title2 : .title)
-                        .foregroundColor(phase == .getReady ? .secondary : .white.opacity(0.8))
+                        .foregroundColor(phase == .getReady
+                                         ? .secondary
+                                         : .white.opacity(0.8))
 
                     Spacer()
 
@@ -97,32 +109,31 @@ struct TimerView: View {
                         Spacer()
                     }
 
-                    // MARK: – Controls (disabled during Get Ready)
+                    // MARK: – Controls (always visible)
                     HStack(spacing: 40) {
                         Button(action: toggleTimer) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.white.opacity(0.3))
+                                    .fill(controlBackgroundTint)
                                     .frame(width: 80, height: 80)
                                 Image(systemName: isRunning
                                       ? "pause.circle.fill"
                                       : "play.circle.fill")
                                     .resizable()
                                     .frame(width: 60, height: 60)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(controlForeground)
                             }
                         }
-                        .disabled(phase == .getReady)
 
                         Button(action: resetAll) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.white.opacity(0.3))
+                                    .fill(controlBackgroundTint)
                                     .frame(width: 80, height: 80)
                                 Image(systemName: "arrow.clockwise.circle.fill")
                                     .resizable()
                                     .frame(width: 60, height: 60)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(controlForeground)
                             }
                         }
                     }
@@ -130,7 +141,16 @@ struct TimerView: View {
                 }
                 .frame(minHeight: geo.size.height)
             }
-            .onAppear(perform: startGetReady)
+            .onAppear {
+                // Prepare for manual start
+                phase = .getReady
+                currentTime = getReadyDuration
+            }
+            .onDisappear {
+                // Clean up timer
+                timer?.invalidate()
+                timer = nil
+            }
             .sheet(isPresented: $showIntentions) {
                 IntentionsView()
             }
@@ -152,10 +172,14 @@ struct TimerView: View {
         }
     }
 
-    private func startGetReady() {
-        phase = .getReady
-        currentTime = getReadyDuration
-        startTimerLoop()
+    private func toggleTimer() {
+        if isRunning {
+            timer?.invalidate()
+            timer = nil
+        } else {
+            // Start or resume current phase
+            startTimerLoop()
+        }
     }
 
     private func startTimerLoop() {
@@ -166,14 +190,6 @@ struct TimerView: View {
                 return
             }
             currentTime -= 1
-        }
-    }
-
-    private func toggleTimer() {
-        if isRunning {
-            timer?.invalidate(); timer = nil
-        } else {
-            startTimerLoop()
         }
     }
 
@@ -209,7 +225,7 @@ struct TimerView: View {
             startTimerLoop()
 
         case .complete:
-            // done
+            // Completed; wait for reset
             break
         }
     }
@@ -218,14 +234,16 @@ struct TimerView: View {
         timer?.invalidate()
         timer = nil
         currentSet = 1
-        startGetReady()
+        phase = .getReady
+        currentTime = getReadyDuration
     }
 
     private func completeAndSave() {
-        // persist session record
+        // Persist session record
         var history: [SessionRecord] = []
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
+           let decoded = try? JSONDecoder()
+             .decode([SessionRecord].self, from: data) {
             history = decoded
         }
         history.append(.init(
@@ -262,22 +280,17 @@ struct IntentionBanner: View {
         HStack(spacing: 8) {
             Image(systemName: "lightbulb.fill")
                 .foregroundColor(.yellow)
-
             Text("Tap to set today’s intention")
                 .font(.headline)
                 .foregroundStyle(.white)
-
             Spacer(minLength: 0)
-
             Button(role: .cancel, action: onDismiss) {
-                Image(systemName: "xmark")
-                    .padding(6)
+                Image(systemName: "xmark").padding(6)
             }
             .tint(.white)
         }
         .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
+        .frame(maxWidth: .infinity, minHeight: 52)
         .background(Color.accentColor)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(radius: 4, y: 2)
