@@ -23,21 +23,15 @@ struct WorkoutLogView: View {
             .navigationTitle("Workout Log")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Clear All") {
-                        showingClearAlert = true
-                    }
+                    Button("Clear All") { showingClearAlert = true }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    Button("Done") { presentationMode.wrappedValue.dismiss() }
                 }
             }
             .alert("Clear Workout Log?", isPresented: $showingClearAlert) {
                 Button("Cancel", role: .cancel) { }
-                Button("Clear", role: .destructive) {
-                    clearHistory()
-                }
+                Button("Clear", role: .destructive) { clearHistory() }
             } message: {
                 Text("This cannot be undone.")
             }
@@ -69,21 +63,37 @@ private struct WorkoutCard: View {
 
     // pick a background from Theme by cycling index
     private var backgroundTint: Color {
-        let colors = Theme.cardBackgrounds
-        return colors[index % colors.count].opacity(0.1)
+        Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.1)
     }
     private var shadowTint: Color {
-        let colors = Theme.cardBackgrounds
-        return colors[index % colors.count].opacity(0.2)
+        Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.2)
     }
     private var foreground: Color {
         Theme.accent
     }
 
+    /// Title: saved name if non‑empty, otherwise fallback to "YYYYDDMM"
+    private var displayName: String {
+        if !record.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            return record.name
+        } else {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "yyyyddMM"
+            return fmt.string(from: record.date)
+        }
+    }
+
+    /// Subtitle: day‑of‑week, date & time
+    private var subtitle: String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "EEEE, MMM d, yyyy 'at' h:mm a"
+        return fmt.string(from: record.date)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(record.name.isEmpty ? "Unnamed Workout" : record.name)
+                Text(displayName)
                     .font(.headline)
                 Spacer()
                 Text(totalTimeString)
@@ -91,7 +101,7 @@ private struct WorkoutCard: View {
                     .foregroundColor(.secondary)
             }
 
-            Text(dateString)
+            Text(subtitle)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
@@ -114,14 +124,7 @@ private struct WorkoutCard: View {
         .padding(.horizontal)
     }
 
-    // MARK: – Formatting Helpers
-
-    private var dateString: String {
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .short
-        return fmt.string(from: record.date)
-    }
+    // MARK: – Helpers
 
     private var totalTimeString: String {
         let totalRest = max(0, record.restDuration * (record.sets - 1))

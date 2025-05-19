@@ -1,10 +1,14 @@
 // TimerView.swift
 // IntervalTimer
+// Core timer UI with Get‑Ready + mixing with background audio
 
 import SwiftUI
 import AVFoundation
 
 struct TimerView: View {
+    /// Passed in from ContentView
+    let workoutName: String
+
     // MARK: – User‑configurable settings
     @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
     @AppStorage("timerDuration")    private var timerDuration:    Int = 60
@@ -18,14 +22,14 @@ struct TimerView: View {
     @State private var currentSet:  Int = 1
     @State private var timer:        Timer?
 
-    // MARK: – Banner & Intentions sheet
+    // MARK: – Banner & Intentions
     @State private var showBanner:     Bool = true
     @State private var showIntentions: Bool = false
 
     // MARK: – Audio
     @State private var audioPlayer: AVAudioPlayer?
 
-    // Computed for ProgressView
+    // Computed
     private var totalDuration: Int {
         switch phase {
         case .getReady: return getReadyDuration
@@ -34,32 +38,27 @@ struct TimerView: View {
         case .complete: return 1
         }
     }
-    private var elapsedTime: Int {
-        totalDuration - currentTime
-    }
+    private var elapsedTime: Int { totalDuration - currentTime }
 
-    // MARK: – Dynamic background
+    // Dynamic background
     private var backgroundColor: Color {
         switch phase {
-        case .getReady: return Theme.cardBackgrounds[0]   // yellow
-        case .work:     return Theme.cardBackgrounds[3]   // redish
-        case .rest:     return Theme.cardBackgrounds[5]   // blueish
-        case .complete: return Theme.cardBackgrounds[2]   // greenish
+        case .getReady: return Theme.cardBackgrounds[0]
+        case .work:     return Theme.cardBackgrounds[3]
+        case .rest:     return Theme.cardBackgrounds[5]
+        case .complete: return Theme.cardBackgrounds[2]
         }
     }
 
-    // MARK: – Controls style
+    // Controls style
     private let controlBackground = Color.white.opacity(0.3)
     private let controlForeground = Color.white
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                backgroundColor
-                    .ignoresSafeArea()
-
+                backgroundColor.ignoresSafeArea()
                 VStack(spacing: 0) {
-                    // — Banner (optional) —
                     if showBanner {
                         IntentionBanner(
                             onTap:     { showIntentions = true },
@@ -69,10 +68,8 @@ struct TimerView: View {
                         .padding(.top, 8)
                     }
 
-                    // — Top Spacer —
                     Spacer()
 
-                    // — Time & Subtitle —
                     Text(formatTime(seconds: currentTime))
                         .font(.system(
                             size: geo.size.width > geo.size.height ? 120 : 100,
@@ -85,10 +82,8 @@ struct TimerView: View {
                         .font(.title)
                         .foregroundColor(.white.opacity(0.8))
 
-                    // — Spacer between text and progress —
                     Spacer()
 
-                    // — Progress bar (hidden during Get Ready) —
                     ProgressView(
                         value: phase == .getReady ? 0 : Double(elapsedTime),
                         total: Double(totalDuration)
@@ -98,10 +93,8 @@ struct TimerView: View {
                     .padding(.horizontal)
                     .opacity(phase == .getReady ? 0 : 1)
 
-                    // — Spacer between progress and controls —
                     Spacer()
 
-                    // — Controls —
                     HStack(spacing: 40) {
                         Button(action: toggleTimer) {
                             ZStack {
@@ -148,11 +141,9 @@ struct TimerView: View {
         }
     }
 
-    // MARK: – Helpers & logic
+    // MARK: – Helpers
 
-    private var isRunning: Bool {
-        timer != nil
-    }
+    private var isRunning: Bool { timer != nil }
 
     private var subtitle: String {
         switch phase {
@@ -182,7 +173,7 @@ struct TimerView: View {
             currentTime -= 1
         }
         timer = newTimer
-        RunLoop.main.add(newTimer, forMode: .common)  // fires during UI interactions
+        RunLoop.main.add(newTimer, forMode: .common)
     }
 
     private func advancePhase() {
@@ -235,13 +226,14 @@ struct TimerView: View {
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded
         }
-        history.append(.init(
-            name:           "",
+        let record = SessionRecord(
+            name:           workoutName,
             date:           Date(),
             timerDuration:  timerDuration,
             restDuration:   restDuration,
             sets:           sets
-        ))
+        )
+        history.append(record)
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: "sessionHistory")
         }
@@ -257,14 +249,13 @@ struct TimerView: View {
         audioPlayer?.play()
     }
 
-    /// Ensure Audio sessions are still active
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, options: [.mixWithOthers])
             try session.setActive(true)
         } catch {
-            print("⚠️ Audio session re‑configuration failed: \(error)")
+            print("⚠️ Audio session config failed: \(error)")
         }
     }
 }
@@ -286,11 +277,13 @@ struct IntentionBanner: View {
                 .foregroundStyle(.white)
             Spacer(minLength: 0)
             Button(role: .cancel, action: onDismiss) {
-                Image(systemName: "xmark").padding(6)
+                Image(systemName: "xmark")
+                    .padding(6)
             }
             .tint(.white)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal)
+        .padding(.top, 8)
         .frame(maxWidth: .infinity, minHeight: 52)
         .background(Color.accentColor)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -311,7 +304,7 @@ struct IntentionBanner: View {
 
 struct TimerView_Previews: PreviewProvider {
     static var previews: some View {
-        TimerView()
+        TimerView(workoutName: "Demo")
     }
 }
 

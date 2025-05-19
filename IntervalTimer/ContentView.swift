@@ -1,23 +1,47 @@
 // ContentView.swift
 // IntervalTimer
-// Main dashboard with config + action tiles
 
 import SwiftUI
-import UIKit   // for UIDevice.current.name
+import UIKit
 
 struct ContentView: View {
     @Environment(\.presentationMode) private var presentationMode
 
     // MARK: – User Identity
-    private var name: String {
-        UIDevice.current.name
-    }
+    private var name: String { UIDevice.current.name }
 
-    // MARK: – Live settings
-    @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
-    @AppStorage("timerDuration")    private var timerDuration:    Int = 20
-    @AppStorage("restDuration")     private var restDuration:     Int = 10
-    @AppStorage("sets")             private var sets:             Int = 8
+    // MARK: – Backing storage for AppStorage (to intercept writes)
+    @AppStorage("getReadyDuration") private var _getReadyDuration: Int = 3
+    @AppStorage("timerDuration")    private var _timerDuration:    Int = 20
+    @AppStorage("restDuration")     private var _restDuration:     Int = 10
+    @AppStorage("sets")             private var _sets:             Int = 8
+
+    // MARK: – Last workout name
+    @AppStorage("lastWorkoutName") private var lastWorkoutName: String = ""
+
+    // MARK: – Computed properties for display
+    private var getReadyDuration: Int { _getReadyDuration }
+    private var timerDuration:    Int { _timerDuration }
+    private var restDuration:     Int { _restDuration }
+    private var sets:             Int { _sets }
+
+    // MARK: – Bindings that clear lastWorkoutName on manual change
+    private var getReadyBinding: Binding<Int> {
+        Binding(get: { _getReadyDuration },
+                set: { new in _getReadyDuration = new; lastWorkoutName = "" })
+    }
+    private var timerBinding: Binding<Int> {
+        Binding(get: { _timerDuration },
+                set: { new in _timerDuration = new; lastWorkoutName = "" })
+    }
+    private var restBinding: Binding<Int> {
+        Binding(get: { _restDuration },
+                set: { new in _restDuration = new; lastWorkoutName = "" })
+    }
+    private var setsBinding: Binding<Int> {
+        Binding(get: { _sets },
+                set: { new in _sets = new; lastWorkoutName = "" })
+    }
 
     // MARK: – Saved configurations
     @AppStorage("savedConfigurations") private var configsData: Data = Data()
@@ -51,7 +75,7 @@ struct ContentView: View {
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
                     spacing: 20
                 ) {
-                    // — CONFIG TILES —
+                    // CONFIG TILES
                     tile(icon: "bolt.fill",
                          label: "Get Ready",
                          value: format(getReadyDuration),
@@ -80,7 +104,7 @@ struct ContentView: View {
                         activePicker = .rest
                     }
 
-                    // — ACTION TILES —
+                    // ACTION TILES
                     tile(icon: "play.circle.fill",
                          label: "Start Workout",
                          color: .orange) {
@@ -111,43 +135,57 @@ struct ContentView: View {
                         showingAnalytics = true
                     }
 
-                    // — SAVED WORKOUTS —
+                    // SAVED WORKOUTS WITH DELETE CONTEXT MENU
                     ForEach(configs) { record in
                         tile(icon: "slider.horizontal.3",
                              label: record.name,
                              value: "\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x",
                              color: .gray) {
-                            timerDuration = record.timerDuration
-                            restDuration  = record.restDuration
-                            sets          = record.sets
+                            // apply this saved configuration
+                            _timerDuration  = record.timerDuration
+                            _restDuration   = record.restDuration
+                            _sets           = record.sets
+                            lastWorkoutName = record.name
+                        }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                if let idx = configs.firstIndex(where: { $0.id == record.id }) {
+                                    configs.remove(at: idx)
+                                    saveConfigs()
+                                }
+                            } label: {
+                                Label("Delete \"\(record.name)\"", systemImage: "trash")
+                            }
                         }
                     }
                 }
                 .padding()
             }
-            .navigationTitle("Hello, \(name)!")   // updated to use the new `name` property
-            // — PICKER SHEET —
+            .navigationTitle("Hello, \(name)!")
+            // PICKER SHEET
             .sheet(item: $activePicker) { picker in
                 PickerSheet(
                     type: picker,
-                    getReady: $getReadyDuration,
-                    rounds:   $sets,
-                    work:     $timerDuration,
-                    rest:     $restDuration
+                    getReady: getReadyBinding,
+                    rounds:   setsBinding,
+                    work:     timerBinding,
+                    rest:     restBinding
                 )
             }
-            // — OTHER SHEETS —
+            // TIMER SHEET
             .sheet(isPresented: $showingTimer) {
-                TimerView()
+                TimerView(workoutName: lastWorkoutName)
             }
+            // CONFIG EDITOR SHEET
             .sheet(isPresented: $showingConfigEditor) {
                 ConfigurationEditorView(
-                    timerDuration: timerDuration,
+                    timerDuration: getReadyDuration,
                     restDuration:  restDuration,
                     sets:          sets
                 ) { newRecord in
                     configs.insert(newRecord, at: 0)
                     saveConfigs()
+                    lastWorkoutName = newRecord.name
                 }
             }
             .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
@@ -188,8 +226,7 @@ struct ContentView: View {
     }
 
     private func loadConfigs() {
-        if let decoded = try? JSONDecoder()
-            .decode([SessionRecord].self, from: configsData) {
+        if let decoded = try? JSONDecoder().decode([SessionRecord].self, from: configsData) {
             configs = decoded
         }
     }
@@ -201,7 +238,8 @@ struct ContentView: View {
     }
 }
 
-// MARK: – Inline PickerSheet (unchanged)
+// MARK: – Inline PickerSheet
+
 struct PickerSheet: View {
     let type: ContentView.PickerType
     @Binding var getReady: Int
