@@ -1,6 +1,5 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with Get‑Ready countdown + auto‑dismissing IntentionBanner
 
 import SwiftUI
 import AVFoundation
@@ -89,7 +88,7 @@ struct TimerView: View {
                     // — Spacer between text and progress —
                     Spacer()
 
-                    // — Progress bar (always there, hidden during Get Ready) —
+                    // — Progress bar (hidden during Get Ready) —
                     ProgressView(
                         value: phase == .getReady ? 0 : Double(elapsedTime),
                         total: Double(totalDuration)
@@ -135,12 +134,11 @@ struct TimerView: View {
                 .frame(minHeight: geo.size.height)
             }
             .onAppear {
-                // Prepare for manual start
+                configureAudioSession()
                 phase = .getReady
                 currentTime = getReadyDuration
             }
             .onDisappear {
-                // Clean up timer
                 timer?.invalidate()
                 timer = nil
             }
@@ -170,20 +168,21 @@ struct TimerView: View {
             timer?.invalidate()
             timer = nil
         } else {
-            // Start or resume current phase
             startTimerLoop()
         }
     }
 
     private func startTimerLoop() {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+        let newTimer = Timer(timeInterval: 1, repeats: true) { _ in
             guard currentTime > 0 else {
                 advancePhase()
                 return
             }
             currentTime -= 1
         }
+        timer = newTimer
+        RunLoop.main.add(newTimer, forMode: .common)  // fires during UI interactions
     }
 
     private func advancePhase() {
@@ -218,7 +217,6 @@ struct TimerView: View {
             startTimerLoop()
 
         case .complete:
-            // Completed; wait for reset
             break
         }
     }
@@ -232,7 +230,6 @@ struct TimerView: View {
     }
 
     private func completeAndSave() {
-        // Persist session record
         var history: [SessionRecord] = []
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
@@ -258,6 +255,17 @@ struct TimerView: View {
         guard let asset = NSDataAsset(name: name) else { return }
         audioPlayer = try? AVAudioPlayer(data: asset.data)
         audioPlayer?.play()
+    }
+
+    /// Ensure Audio sessions are still active
+    private func configureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, options: [.mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            print("⚠️ Audio session re‑configuration failed: \(error)")
+        }
     }
 }
 
