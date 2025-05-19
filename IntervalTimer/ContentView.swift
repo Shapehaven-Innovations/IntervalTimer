@@ -8,8 +8,8 @@ import UIKit   // for UIDevice.current.name
 struct ContentView: View {
     @Environment(\.presentationMode) private var presentationMode
 
-    // MARK: – Device Info
-    private var deviceName: String {
+    // MARK: – User Identity
+    private var name: String {
         UIDevice.current.name
     }
 
@@ -27,7 +27,7 @@ struct ContentView: View {
     @State private var activePicker: PickerType?
     @State private var showingConfigEditor = false
     @State private var showingWorkoutLog   = false
-    @State private var showingIntention        = false
+    @State private var showingIntention    = false
     @State private var showingAnalytics    = false
     @State private var showingTimer        = false
 
@@ -125,10 +125,7 @@ struct ContentView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Hello, \(deviceName)!")
-            // .navigationBarItems(trailing: Button("Done") {
-            //     presentationMode.wrappedValue.dismiss()
-            // })
+            .navigationTitle("Hello, \(name)!")   // updated to use the new `name` property
             // — PICKER SHEET —
             .sheet(item: $activePicker) { picker in
                 PickerSheet(
@@ -154,7 +151,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
-            .sheet(isPresented: $showingIntention)        { IntentionsView() }
+            .sheet(isPresented: $showingIntention)    { IntentionsView() }
             .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
             .onAppear(perform: loadConfigs)
         }
