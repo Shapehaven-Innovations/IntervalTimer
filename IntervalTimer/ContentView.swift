@@ -79,59 +79,59 @@ struct ContentView: View {
                     tile(icon: "bolt.fill",
                          label: "Get Ready",
                          value: format(getReadyDuration),
-                         color: .yellow) {
+                         color: Theme.cardBackgrounds[0]) {
                         activePicker = .getReady
                     }
 
                     tile(icon: "repeat.circle.fill",
                          label: "Rounds",
                          value: "\(sets)",
-                         color: .mint) {
+                         color: Theme.cardBackgrounds[1]) {
                         activePicker = .rounds
                     }
 
                     tile(icon: "flame.fill",
                          label: "Work",
                          value: format(timerDuration),
-                         color: .green) {
+                         color: Theme.cardBackgrounds[2]) {
                         activePicker = .work
                     }
 
                     tile(icon: "bed.double.fill",
                          label: "Rest",
                          value: format(restDuration),
-                         color: .red) {
+                         color: Theme.cardBackgrounds[3]) {
                         activePicker = .rest
                     }
 
                     // ACTION TILES
                     tile(icon: "play.circle.fill",
                          label: "Start Workout",
-                         color: .orange) {
+                         color: Theme.cardBackgrounds[4]) {
                         showingTimer = true
                     }
 
                     tile(icon: "plus.circle.fill",
                          label: "Save Workout",
-                         color: .teal) {
+                         color: Theme.cardBackgrounds[5]) {
                         showingConfigEditor = true
                     }
 
                     tile(icon: "list.bullet.clipboard.fill",
                          label: "Workout Log",
-                         color: .indigo) {
+                         color: Theme.cardBackgrounds[6]) {
                         showingWorkoutLog = true
                     }
 
                     tile(icon: "target",
                          label: "Intention",
-                         color: .pink) {
+                         color: Theme.cardBackgrounds[7]) {
                         showingIntention = true
                     }
 
                     tile(icon: "chart.bar.doc.horizontal.fill",
                          label: "Analytics",
-                         color: .blue) {
+                         color: Theme.accent) {
                         showingAnalytics = true
                     }
 
@@ -141,7 +141,6 @@ struct ContentView: View {
                              label: record.name,
                              value: "\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x",
                              color: .gray) {
-                            // apply this saved configuration
                             _timerDuration  = record.timerDuration
                             _restDuration   = record.restDuration
                             _sets           = record.sets
@@ -238,7 +237,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: – Inline PickerSheet
+// MARK: – Inline PickerSheet (updated)
 
 struct PickerSheet: View {
     let type: ContentView.PickerType
@@ -249,30 +248,65 @@ struct PickerSheet: View {
 
     @Environment(\.presentationMode) private var presentationMode
 
+    /// Map each picker to its Theme color
+    private var themeColor: Color {
+        switch type {
+        case .getReady: return Theme.cardBackgrounds[0]
+        case .rounds:   return Theme.cardBackgrounds[1]
+        case .work:     return Theme.cardBackgrounds[2]
+        case .rest:     return Theme.cardBackgrounds[3]
+        }
+    }
+
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text(type.title)) {
-                    if type == .rounds {
-                        Picker("Rounds", selection: $rounds) {
-                            ForEach(1...20, id: \.self) { Text("\($0)").tag($0) }
+            ZStack {
+                themeColor.opacity(0.1)
+                    .ignoresSafeArea()
+
+                Form {
+                    Section(header:
+                        Text(type.title)
+                            .font(.headline)
+                            .foregroundColor(themeColor)
+                    ) {
+                        if type == .rounds {
+                            Picker("Rounds", selection: $rounds) {
+                                ForEach(1...20, id: \.self) {
+                                    Text("\($0)").tag($0)
+                                }
+                            }
+                            .pickerStyle(WheelPickerStyle())
+                            .frame(maxHeight: 200)
+                        } else {
+                            Picker("\(type.title) Duration", selection: bindingFor(type)) {
+                                ForEach(1...300, id: \.self) {
+                                    Text(format($0)).tag($0)
+                                }
+                            }
+                            .pickerStyle(WheelPickerStyle())
+                            .frame(maxHeight: 200)
                         }
-                        .pickerStyle(WheelPickerStyle())
-                    } else {
-                        Picker("\(type.title) Duration", selection: bindingFor(type)) {
-                            ForEach(1...300, id: \.self) { Text(format($0)).tag($0) }
-                        }
-                        .pickerStyle(WheelPickerStyle())
                     }
+                    .listRowBackground(Color(.systemBackground))
                 }
+                .tint(themeColor)
+                .scrollContentBackground(.hidden)
             }
             .navigationTitle(type.title)
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() },
-                trailing: Button("Save")   { presentationMode.wrappedValue.dismiss() }
+                leading: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button("Save") {
+                    presentationMode.wrappedValue.dismiss()
+                }
             )
         }
     }
+
+    // MARK: – Helpers
 
     private func bindingFor(_ type: ContentView.PickerType) -> Binding<Int> {
         switch type {
@@ -284,8 +318,9 @@ struct PickerSheet: View {
     }
 
     private func format(_ seconds: Int) -> String {
-        let m = seconds / 60, s = seconds % 60
-        return String(format: "%02d:%02d", m, s)
+        let minutes = seconds / 60
+        let secs    = seconds % 60
+        return String(format: "%02d:%02d", minutes, secs)
     }
 }
 
@@ -294,4 +329,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
