@@ -1,6 +1,6 @@
 // TimerView.swift
 // IntervalTimer
-// Core timer UI with Get‑Ready + mixing with background audio
+// Core timer UI with Get‑Ready + mixing with background audio + in‑view IntentionBanner
 
 import SwiftUI
 import AVFoundation
@@ -277,13 +277,12 @@ struct IntentionBanner: View {
                 .foregroundStyle(.white)
             Spacer(minLength: 0)
             Button(role: .cancel, action: onDismiss) {
-                Image(systemName: "xmark")
-                    .padding(6)
+                Image(systemName: "xmark").padding(6)
             }
             .tint(.white)
         }
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, minHeight: 52)
         .background(Color.accentColor)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

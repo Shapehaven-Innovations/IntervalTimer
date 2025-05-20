@@ -1,6 +1,6 @@
 // AnalyticsView.swift
 // IntervalTimer
-// Tracks summary + compares against goals, now also shows onboarded user info
+
 
 import SwiftUI
 
@@ -17,6 +17,7 @@ struct AnalyticsView: View {
     @AppStorage("userSex")    private var userSex:    String = ""
     @AppStorage("userHeight") private var userHeight: Int    = 0
     @AppStorage("userWeight") private var userWeight: Int    = 0
+    @AppStorage("weightUnit") private var weightUnit: String = "kg"
 
     private var totalSessions: Int { history.count }
     private var daysCompleted:  Int {
@@ -51,7 +52,7 @@ struct AnalyticsView: View {
                     HStack {
                         Text("Weight")
                         Spacer()
-                        Text("\(userWeight) kg").bold()
+                        Text("\(userWeight) \(weightUnit)").bold()
                     }
                 }
 
@@ -78,6 +79,16 @@ struct AnalyticsView: View {
                     ProgressRow(title: "Month",
                                 current: monthCount,
                                 goal: monthlyGoal)
+                }
+
+                // Privacy footer
+                Section(footer:
+                    Text("Your data is not shared — we stand for data privacy.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                ) {
+                    EmptyView()
                 }
             }
             .listStyle(InsetGroupedListStyle())

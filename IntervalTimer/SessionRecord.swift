@@ -26,3 +26,4 @@ struct SessionRecord: Identifiable, Codable {
         self.sets = sets
     }
 }
+

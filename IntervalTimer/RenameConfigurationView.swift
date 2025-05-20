@@ -1,11 +1,3 @@
-//
-//  RenameConfigurationView.swift
-//  IntervalTimer
-//
-//  Created by user on 5/8/25.
-//
-
-
 // RenameConfigurationView.swift
 // IntervalTimer
 // Sheet for renaming an existing configuration
@@ -44,3 +36,4 @@ struct RenameConfigurationView: View {
         }
     }
 }
+

@@ -39,8 +39,6 @@ struct WorkoutLogView: View {
         }
     }
 
-    // MARK: – Data
-
     private func loadHistory() {
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
            let decoded = try? JSONDecoder()
@@ -55,13 +53,10 @@ struct WorkoutLogView: View {
     }
 }
 
-// MARK: – Workout Card
-
 private struct WorkoutCard: View {
     let record: SessionRecord
     let index: Int
 
-    // pick a background from Theme by cycling index
     private var backgroundTint: Color {
         Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.1)
     }
@@ -72,7 +67,6 @@ private struct WorkoutCard: View {
         Theme.accent
     }
 
-    /// Title: saved name if non‑empty, otherwise fallback to "YYYYDDMM"
     private var displayName: String {
         if !record.name.trimmingCharacters(in: .whitespaces).isEmpty {
             return record.name
@@ -83,7 +77,6 @@ private struct WorkoutCard: View {
         }
     }
 
-    /// Subtitle: day‑of‑week, date & time
     private var subtitle: String {
         let fmt = DateFormatter()
         fmt.dateFormat = "EEEE, MMM d, yyyy 'at' h:mm a"
@@ -93,18 +86,13 @@ private struct WorkoutCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(displayName)
-                    .font(.headline)
+                Text(displayName).font(.headline)
                 Spacer()
                 Text(totalTimeString)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.subheadline).foregroundColor(.secondary)
             }
-
             Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
+                .font(.subheadline).foregroundColor(.secondary)
             HStack(spacing: 16) {
                 Label(format(record.timerDuration), systemImage: "flame.fill")
                 Spacer()
@@ -112,8 +100,7 @@ private struct WorkoutCard: View {
                 Spacer()
                 Label("\(record.sets)x", systemImage: "repeat.circle.fill")
             }
-            .font(.footnote)
-            .foregroundColor(foreground)
+            .font(.footnote).foregroundColor(foreground)
         }
         .padding()
         .background(
@@ -123,8 +110,6 @@ private struct WorkoutCard: View {
         .shadow(color: shadowTint, radius: 4, x: 0, y: 2)
         .padding(.horizontal)
     }
-
-    // MARK: – Helpers
 
     private var totalTimeString: String {
         let totalRest = max(0, record.restDuration * (record.sets - 1))

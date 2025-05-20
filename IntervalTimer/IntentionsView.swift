@@ -153,7 +153,7 @@ struct IntentionsView: View {
                     presentationMode.wrappedValue.dismiss()
                 },
                 trailing: Button("Save") {
-                    // TODO: persist selections
+                    // TODO: persist selections if you want
                     presentationMode.wrappedValue.dismiss()
                 }
             )
@@ -161,22 +161,29 @@ struct IntentionsView: View {
     }
 }
 
-// MARK: – Color Helpers & Supporting Types
+// MARK: – Color Helper
 
 extension Color {
+    /// Darken by subtracting 0.2 from each component
     func darker() -> Color {
         let ui = UIColor(self)
         var r: CGFloat=0, g: CGFloat=0, b: CGFloat=0, a: CGFloat=0
         ui.getRed(&r, green:&g, blue:&b, alpha:&a)
-        return Color(red: Double(max(r-0.2,0)),
-                     green: Double(max(g-0.2,0)),
-                     blue: Double(max(b-0.2,0)),
-                     opacity: Double(a))
+        return Color(
+            red: Double(max(r-0.2, 0)),
+            green: Double(max(g-0.2, 0)),
+            blue: Double(max(b-0.2, 0)),
+            opacity: Double(a)
+        )
     }
 }
 
+// MARK: – Supporting Types
+
 enum StateOfMind: String, CaseIterable {
     case Calm, Anxious, Focused, Confused, Happy, Sad, Angry, Curious
+
+    /// Pull colors from your Theme.swift
     var color: Color {
         Theme.cardBackgrounds[
             StateOfMind.allCases.firstIndex(of: self) ?? 0
@@ -187,6 +194,7 @@ enum StateOfMind: String, CaseIterable {
 enum TimeGoal: String, CaseIterable, Identifiable {
     case greater30 = "> 30 min", less30 = "< 30 min", equal30 = "= 30 min"
     var id: String { rawValue }
+
     var color: Color {
         switch self {
         case .greater30: return .green
@@ -199,6 +207,7 @@ enum TimeGoal: String, CaseIterable, Identifiable {
 enum Intensity: String, CaseIterable, Identifiable {
     case easy, medium, hard
     var id: String { rawValue }
+
     var color: Color {
         switch self {
         case .easy:   return .green
@@ -212,7 +221,9 @@ enum WorkoutMindset: String, CaseIterable, Identifiable {
     case completion   = "Completion Mindset"
     case performance  = "Performance Driven"
     case appreciation = "Effort Appreciation"
+
     var id: String { rawValue }
+
     var color: Color {
         switch self {
         case .completion:   return .mint
@@ -221,6 +232,8 @@ enum WorkoutMindset: String, CaseIterable, Identifiable {
         }
     }
 }
+
+// MARK: – Preview
 
 struct IntentionsView_Previews: PreviewProvider {
     static var previews: some View {
