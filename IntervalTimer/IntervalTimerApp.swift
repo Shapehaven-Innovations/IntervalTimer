@@ -1,19 +1,25 @@
 // IntervalTimerApp.swift
 // IntervalTimer
-// Entry point
+// Entry point with onboarding gating
 
 import SwiftUI
 import AVFoundation
 
 @main
 struct IntervalTimerApp: App {
+    @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
+
     init() {
         configureAudioSession()
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if hasOnboarded {
+                ContentView()
+            } else {
+                OnboardingView()
+            }
         }
     }
 
@@ -28,3 +34,4 @@ struct IntervalTimerApp: App {
         }
     }
 }
+

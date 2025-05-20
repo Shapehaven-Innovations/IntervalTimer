@@ -1,6 +1,6 @@
 // AnalyticsView.swift
 // IntervalTimer
-// Tracks summary + compares against goals
+// Tracks summary + compares against goals, now also shows onboarded user info
 
 import SwiftUI
 
@@ -8,9 +8,15 @@ struct AnalyticsView: View {
     @Environment(\.presentationMode) private var presentationMode
     @State private var history: [SessionRecord] = []
 
+    // Goals
     @AppStorage("dailyGoal")   private var dailyGoal:   Int = 1
     @AppStorage("weeklyGoal")  private var weeklyGoal:  Int = 7
     @AppStorage("monthlyGoal") private var monthlyGoal: Int = 30
+
+    // User info from onboarding
+    @AppStorage("userSex")    private var userSex:    String = ""
+    @AppStorage("userHeight") private var userHeight: Int    = 0
+    @AppStorage("userWeight") private var userWeight: Int    = 0
 
     private var totalSessions: Int { history.count }
     private var daysCompleted:  Int {
@@ -31,6 +37,24 @@ struct AnalyticsView: View {
     var body: some View {
         NavigationView {
             List {
+                Section(header: Text("User Info")) {
+                    HStack {
+                        Text("Sex")
+                        Spacer()
+                        Text(userSex).bold()
+                    }
+                    HStack {
+                        Text("Height")
+                        Spacer()
+                        Text("\(userHeight) cm").bold()
+                    }
+                    HStack {
+                        Text("Weight")
+                        Spacer()
+                        Text("\(userWeight) kg").bold()
+                    }
+                }
+
                 Section(header: Text("Overview")) {
                     HStack {
                         Text("Total Sessions")
@@ -82,8 +106,7 @@ private struct ProgressRow: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text("\(current)/\(goal)")
-                    .bold()
+                Text("\(current)/\(goal)").bold()
             }
             ProgressView(value: Double(min(current, goal)),
                          total: Double(goal))

@@ -1,29 +1,33 @@
 // OnboardingView.swift
 // IntervalTimer
-// Animated fireball onboarding, collects sex, height, weight
+// Animated fireball onboarding, collects sex, height, weight (kg or lbs)
 
 import SwiftUI
 
 struct OnboardingView: View {
-    @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
-    @AppStorage("userSex")     private var userSex:     String = ""
-    @AppStorage("userHeight")  private var userHeight:  Int    = 170
-    @AppStorage("userWeight")  private var userWeight:  Int    = 70
+    @AppStorage("hasOnboarded")  private var hasOnboarded: Bool   = false
+    @AppStorage("userSex")      private var userSex:     String = ""
+    @AppStorage("userHeight")   private var userHeight:  Int    = 170
+    @AppStorage("userWeight")   private var userWeight:  Int    = 70
+    @AppStorage("weightUnit")   private var weightUnit:  String = "kg"
 
-    @State private var selectedSex: String = "Male"
-    @State private var height:      Int    = 170
-    @State private var weight:      Int    = 70
+    @State private var selectedSex:  String = "Male"
+    @State private var height:       Int    = 170
+    @State private var weight:       Int    = 70
+    @State private var selectedUnit: String = "kg"
 
     var body: some View {
         ZStack {
             FireballBackground()
                 .ignoresSafeArea()
+
             VStack(spacing: 24) {
                 Text("Welcome")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .shadow(radius: 10)
+
                 Text("Let's get to know you")
                     .font(.title2)
                     .foregroundColor(.white.opacity(0.8))
@@ -41,11 +45,29 @@ struct OnboardingView: View {
                         Stepper("\(height) cm", value: $height, in: 100...250)
                     }
 
-                    Section(header: Text("Weight (kg)")) {
-                        Stepper("\(weight) kg", value: $weight, in: 30...200)
+                    Section(header: Text("Units")) {
+                        Picker("Units", selection: $selectedUnit) {
+                            Text("kg").tag("kg")
+                            Text("lbs").tag("lbs")
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        // NEW: use the two‑parameter closure form
+                        .onChange(of: selectedUnit) { oldValue, newValue in
+                            if newValue == "lbs" {
+                                weight = Int(round(Double(weight) * 2.20462))
+                            } else {
+                                weight = Int(round(Double(weight) / 2.20462))
+                            }
+                        }
+                    }
+
+                    Section(header: Text("Weight (\(selectedUnit))")) {
+                        Stepper("\(weight) \(selectedUnit)",
+                                value: $weight,
+                                in: selectedUnit == "kg" ? 30...200 : 66...440)
                     }
                 }
-                .frame(maxHeight: 300)
+                .frame(maxHeight: 360)
                 .background(Color(.systemBackground).opacity(0.8))
                 .cornerRadius(12)
                 .padding(.horizontal)
@@ -63,13 +85,21 @@ struct OnboardingView: View {
                 .padding(.horizontal)
             }
             .padding(.top, 60)
+            .onAppear {
+                // Sync UI with stored values
+                selectedSex  = userSex.isEmpty ? "Male" : userSex
+                height       = userHeight
+                selectedUnit = weightUnit
+                weight       = userWeight
+            }
         }
     }
 
     private func finishOnboarding() {
-        userSex    = selectedSex
-        userHeight = height
-        userWeight = weight
+        userSex      = selectedSex
+        userHeight   = height
+        userWeight   = weight
+        weightUnit   = selectedUnit
         hasOnboarded = true
     }
 }
@@ -80,12 +110,12 @@ struct FireballBackground: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                gradient: Gradient(colors: [.black, .purple]),
+                gradient: Gradient(colors: [.black, .blue]),
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            ForEach(0..<5) { i in
+            ForEach(0..<5) { _ in
                 Circle()
                     .fill(
                         RadialGradient(
@@ -115,3 +145,10 @@ struct FireballBackground: View {
         .onAppear { animate = true }
     }
 }
+
+struct OnboardingView_Previews: PreviewProvider {
+    static var previews: some View {
+        OnboardingView()
+    }
+}
+
