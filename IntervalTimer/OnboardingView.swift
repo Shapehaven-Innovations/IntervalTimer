@@ -1,6 +1,6 @@
 // OnboardingView.swift
 // IntervalTimer
-// Animated fireball onboarding, collects sex, height (ft/in & cm), weight (text) + privacy footer
+// Animated colorful “fireballs” onboarding, collects sex, height (ft/in & cm), weight + privacy footer
 
 import SwiftUI
 
@@ -25,6 +25,9 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
+            // White canvas
+            Color.white.ignoresSafeArea()
+            // Animated colored “fireballs”
             FireballBackground().ignoresSafeArea()
 
             VStack(spacing: 24) {
@@ -32,19 +35,18 @@ struct OnboardingView: View {
                 VStack(spacing: 4) {
                     Text("Welcome \(name)!")
                         .font(.largeTitle).fontWeight(.bold)
-                        .foregroundColor(.white).shadow(radius: 10)
-                    Text("Let's get started.")
+                        .foregroundColor(.primary)
+                    Text("Let’s get started.")
                         .font(.title3)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.secondary)
                 }
 
                 Form {
-                    // SEX
-                    Section(
-                        header:
-                            Text("SEX")
-                                .font(.caption)
-                                .foregroundColor(.black.opacity(0.3))
+                    // SEX (darker)
+                    Section(header:
+                        Text("SEX")
+                            .font(.caption)
+                            .foregroundColor(.primary.opacity(0.6))
                     ) {
                         Picker("", selection: $selectedSex) {
                             Text("Male").tag("Male")
@@ -53,53 +55,45 @@ struct OnboardingView: View {
                         .pickerStyle(.segmented)
                     }
 
-                    // HEIGHT
-                    Section(
-                        header:
-                            Text("HEIGHT")
-                                .font(.caption)
-                                .foregroundColor(.black.opacity(0.3))
+                    // HEIGHT (darker)
+                    Section(header:
+                        Text("HEIGHT")
+                            .font(.caption)
+                            .foregroundColor(.primary.opacity(0.6))
                     ) {
-                        Stepper(value: $heightFeet, in: 3...7) {
-                            Text("Feet: \(heightFeet)′")
-                        }
-
-                        Stepper(value: $heightInches, in: 0...11) {
-                            Text("Inches: \(heightInches)″")
-                        }
-
+                        Stepper("Feet: \(heightFeet)′", value: $heightFeet, in: 3...7)
+                        Stepper("Inches: \(heightInches)″", value: $heightInches, in: 0...11)
                         HStack {
                             Text("≈ \(heightCm) cm")
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
                     }
+                    // iOS‑17 style onChange
                     .onChange(of: heightFeet) { updateCm() }
                     .onChange(of: heightInches) { updateCm() }
 
-                    // UNITS (unchanged)
-                    Section(
-                        header:
-                            Text("UNITS")
-                                .font(.caption)
-                                .foregroundColor(.black.opacity(0.2))
+                    // UNITS
+                    Section(header:
+                        Text("UNITS")
+                            .font(.caption)
+                            .foregroundColor(.primary.opacity(0.3))
                     ) {
                         Picker("", selection: $selectedUnit) {
                             Text("kg").tag("kg")
                             Text("lbs").tag("lbs")
                         }
                         .pickerStyle(.segmented)
-                        .onChange(of: selectedUnit) { old, new in
-                            convertWeight(from: old, to: new)
+                        .onChange(of: selectedUnit) { oldUnit, newUnit in
+                            convertWeight(from: oldUnit, to: newUnit)
                         }
                     }
 
                     // WEIGHT
-                    Section(
-                        header:
-                            Text("WEIGHT (\(selectedUnit.uppercased()))")
-                                .font(.caption)
-                                .foregroundColor(.black.opacity(0.2))
+                    Section(header:
+                        Text("WEIGHT (\(selectedUnit.uppercased()))")
+                            .font(.caption)
+                            .foregroundColor(.primary.opacity(0.3))
                     ) {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.numberPad)
@@ -109,18 +103,17 @@ struct OnboardingView: View {
                     }
 
                     // PRIVACY FOOTER
-                    Section(
-                        footer:
-                            Text("Your data is not shared — we stand for data privacy.")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
+                    Section(footer:
+                        Text("Your data is not shared — we stand for data privacy.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                     ) {
                         EmptyView()
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color(.systemBackground).opacity(0.8))
+                .background(Color.white.opacity(0.9))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 .listStyle(InsetGroupedListStyle())
@@ -128,7 +121,8 @@ struct OnboardingView: View {
 
                 Button(action: finishOnboarding) {
                     Text("Continue")
-                        .font(.headline).foregroundColor(.white)
+                        .font(.headline)
+                        .foregroundColor(.white)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.accentColor)
@@ -151,7 +145,7 @@ struct OnboardingView: View {
 
     private func convertWeight(from old: String, to new: String) {
         guard let value = Int(weightText) else { return }
-        let converted = new == "lbs"
+        let converted = (new == "lbs")
             ? Double(value) * 2.20462
             : Double(value) / 2.20462
         weightText = String(Int(round(converted)))
@@ -180,18 +174,19 @@ struct OnboardingView: View {
 
 private struct FireballBackground: View {
     @State private var animate = false
+    private let themeColors: [Color] = [
+        .yellow, .teal, .green, .red,
+        .orange, .blue, .purple, .pink
+    ]
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [.black, .blue]),
-                startPoint: .top, endPoint: .bottom
-            )
-            ForEach(0..<5) { _ in
+            ForEach(0..<8, id: \.self) { idx in
+                let color = themeColors[idx]
                 Circle()
                     .fill(
                         RadialGradient(
-                            gradient: Gradient(colors: [.orange, .red]),
+                            gradient: Gradient(colors: [color.opacity(0.6), color.opacity(0.2)]),
                             center: .center,
                             startRadius: 20,
                             endRadius: 80

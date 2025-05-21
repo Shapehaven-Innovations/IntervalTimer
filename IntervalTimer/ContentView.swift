@@ -1,3 +1,4 @@
+
 // ContentView.swift
 // IntervalTimer
 
@@ -329,4 +330,5 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
 
