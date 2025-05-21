@@ -4,6 +4,9 @@
 
 import SwiftUI
 
+// MARK: – User Identity
+private var name: String { UIDevice.current.name }
+
 struct OnboardingView: View {
     // MARK: – Stored
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool   = false
@@ -27,10 +30,10 @@ struct OnboardingView: View {
             VStack(spacing: 24) {
                 // Title
                 VStack(spacing: 4) {
-                    Text("Welcome")
+                    Text("Welcome \(name)!")
                         .font(.largeTitle).fontWeight(.bold)
                         .foregroundColor(.white).shadow(radius: 10)
-                    Text("Let's get to know you")
+                    Text("Let's get started.")
                         .font(.title3)
                         .foregroundColor(.white.opacity(0.8))
                 }
@@ -41,7 +44,7 @@ struct OnboardingView: View {
                         header:
                             Text("SEX")
                                 .font(.caption)
-                                .foregroundColor(.black.opacity(0.4))
+                                .foregroundColor(.black.opacity(0.3))
                     ) {
                         Picker("", selection: $selectedSex) {
                             Text("Male").tag("Male")
@@ -55,7 +58,7 @@ struct OnboardingView: View {
                         header:
                             Text("HEIGHT")
                                 .font(.caption)
-                                .foregroundColor(.black.opacity(0.4))
+                                .foregroundColor(.black.opacity(0.3))
                     ) {
                         Stepper(value: $heightFeet, in: 3...7) {
                             Text("Feet: \(heightFeet)′")
