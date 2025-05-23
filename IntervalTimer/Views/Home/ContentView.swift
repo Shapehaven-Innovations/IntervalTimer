@@ -2,8 +2,8 @@
 //  ContentView.swift
 //  IntervalTimer
 //
-//  Created by You on \(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .none))
-//  Updated with bed wobble, bolt pulse & target pulse animations.
+//  Created by You on May 23 2025
+//  Updated: PickerSheet extracted to its own file.
 //
 
 import SwiftUI
@@ -36,8 +36,8 @@ private struct FireballView: View {
             .offset(
                 x: (fb.x - 0.5) * geoSize.width,
                 y: animate
-                    ? -geoSize.height/2 - fb.size
-                    : geoSize.height/2 + fb.size
+                    ? -geoSize.height / 2 - fb.size
+                    : geoSize.height / 2 + fb.size
             )
             .onAppear {
                 withAnimation(.linear(duration: fb.speed)) {
@@ -92,7 +92,7 @@ private struct FireballBackground: View {
             .onReceive(timer) { _ in
                 fireballs.append(
                     Fireball(
-                        x: .random(in: 0...1),
+                        x:    .random(in: 0...1),
                         size: .random(in: 30...70),
                         speed: .random(in: 4...7)
                     )
@@ -208,13 +208,13 @@ private struct ConfigTileView: View {
                         if icon == "bed.double.fill" {
                             withAnimation(
                                 .easeInOut(duration: 0.4)
-                                .repeatForever(autoreverses: true)
+                                    .repeatForever(autoreverses: true)
                             ) { wobble.toggle() }
                         }
                         if icon == "bolt.fill" {
                             withAnimation(
                                 .easeInOut(duration: 0.6)
-                                .repeatForever(autoreverses: true)
+                                    .repeatForever(autoreverses: true)
                             ) { shrink.toggle() }
                         }
                     }
@@ -259,32 +259,32 @@ struct ContentView: View {
         var id: Int { rawValue }
         var title: String {
             switch self {
-                case .getReady: return "Get Ready"
-                case .rounds:   return "Rounds"
-                case .work:     return "Work"
-                case .rest:     return "Rest"
+            case .getReady: return "Get Ready"
+            case .rounds:   return "Rounds"
+            case .work:     return "Work"
+            case .rest:     return "Rest"
             }
         }
     }
 
     private func binding(for type: PickerType) -> Binding<Int> {
         switch type {
-            case .getReady:
-                return Binding(get: { _getReadyDuration },
-                               set: { _getReadyDuration = $0; lastWorkoutName = "" })
-            case .rounds:
-                return Binding(get: { _sets },
-                               set: { _sets = $0; lastWorkoutName = "" })
-            case .work:
-                return Binding(get: { _timerDuration },
-                               set: { _timerDuration = $0; lastWorkoutName = "" })
-            case .rest:
-                return Binding(get: { _restDuration },
-                               set: { _restDuration = $0; lastWorkoutName = "" })
+        case .getReady:
+            return Binding(get: { _getReadyDuration },
+                           set: { _getReadyDuration = $0; lastWorkoutName = "" })
+        case .rounds:
+            return Binding(get: { _sets },
+                           set: { _sets = $0; lastWorkoutName = "" })
+        case .work:
+            return Binding(get: { _timerDuration },
+                           set: { _timerDuration = $0; lastWorkoutName = "" })
+        case .rest:
+            return Binding(get: { _restDuration },
+                           set: { _restDuration = $0; lastWorkoutName = "" })
         }
     }
 
-    // New state for pulsing target
+    // Pulsing target state
     @State private var pulseTarget = false
 
     var body: some View {
@@ -302,15 +302,14 @@ struct ContentView: View {
                             label: "Get Ready",
                             value: format(_getReadyDuration),
                             color: Theme.cardBackgrounds[0]
-                        ) {
-                            activePicker = .getReady
-                        }
+                        ) { activePicker = .getReady }
                         .animatedTile(index: 0, animate: animateTiles)
 
                         // Rounds
                         ConfigTileView(
                             icon:  "repeat.circle.fill",
-                            label: "Rounds", value: "\(_sets)",
+                            label: "Rounds",
+                            value: "\(_sets)",
                             color: Theme.cardBackgrounds[1]
                         ) { activePicker = .rounds }
                         .animatedTile(index: 1, animate: animateTiles)
@@ -318,7 +317,8 @@ struct ContentView: View {
                         // Work
                         ConfigTileView(
                             icon:  "flame.fill",
-                            label: "Work", value: format(_timerDuration),
+                            label: "Work",
+                            value: format(_timerDuration),
                             color: Theme.cardBackgrounds[2]
                         ) { activePicker = .work }
                         .animatedTile(index: 2, animate: animateTiles)
@@ -326,7 +326,8 @@ struct ContentView: View {
                         // Rest (wobbles)
                         ConfigTileView(
                             icon:  "bed.double.fill",
-                            label: "Rest", value: format(_restDuration),
+                            label: "Rest",
+                            value: format(_restDuration),
                             color: Theme.cardBackgrounds[3]
                         ) { activePicker = .rest }
                         .animatedTile(index: 3, animate: animateTiles)
@@ -462,7 +463,7 @@ struct ContentView: View {
                     }
                     .padding()
                 }
-                .navigationTitle("Hello, \(UIDevice.current.name)!")
+                .navigationTitle("Hello, \(name)!")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbarBackground(.hidden, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
@@ -500,42 +501,10 @@ struct ContentView: View {
         }
     }
 
+    // MARK: – Helpers
+
     private func format(_ seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
-    }
-}
-
-// MARK: – PickerSheet
-
-struct PickerSheet: View {
-    let type: ContentView.PickerType
-    @Binding var value: Int
-    @Environment(\.presentationMode) private var presentationMode
-
-    private var themeColor: Color {
-        switch type {
-            case .getReady: return Theme.cardBackgrounds[0]
-            case .rounds:   return Theme.cardBackgrounds[1]
-            case .work:     return Theme.cardBackgrounds[2]
-            case .rest:     return Theme.cardBackgrounds[3]
-        }
-    }
-
-    var body: some View {
-        NavigationView {
-            ZStack {
-                themeColor.opacity(0.1).ignoresSafeArea()
-                Form {
-                    Section(header: Text(type.title)) {
-                        Stepper("\(value) seconds", value: $value, in: 1...300)
-                    }
-                }
-            }
-            .navigationTitle(type.title)
-            .toolbar {
-                Button("Done") { presentationMode.wrappedValue.dismiss() }
-            }
-        }
     }
 }
 

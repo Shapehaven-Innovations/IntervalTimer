@@ -20,6 +20,7 @@
 		9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */; };
 		9A66D8382DE11474008C73D7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */; };
 		9A66D8392DE11474008C73D7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D8232DE11474008C73D7 /* Assets.xcassets */; };
+		9A66D84D2DE11A45008C73D7 /* PickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		9A66D8292DE11474008C73D7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		9A66D82A2DE11474008C73D7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLogView.swift; sourceTree = "<group>"; };
+		9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -63,7 +65,6 @@
 			isa = PBXGroup;
 			children = (
 				9A66D8402DE114D8008C73D7 /* Home */,
-				9A66D8212DE11474008C73D7 /* OnboardingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -71,7 +72,8 @@
 		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
 			isa = PBXGroup;
 			children = (
-				9A66D8472DE115A2008C73D7 /* SupportingFiles */,
+				9A66D84B2DE11A13008C73D7 /* Onboarding */,
+				9A66D8252DE11474008C73D7 /* Info.plist */,
 				9A66D8462DE1156D008C73D7 /* Assets */,
 				9A66D8442DE1154B008C73D7 /* WorkoutLog */,
 				9A66D8432DE11539008C73D7 /* Analytics */,
@@ -130,6 +132,7 @@
 		9A66D8412DE11501008C73D7 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
+				9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */,
 				9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */,
 				9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */,
 			);
@@ -168,12 +171,12 @@
 			path = Assets;
 			sourceTree = "<group>";
 		};
-		9A66D8472DE115A2008C73D7 /* SupportingFiles */ = {
+		9A66D84B2DE11A13008C73D7 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
-				9A66D8252DE11474008C73D7 /* Info.plist */,
+				9A66D8212DE11474008C73D7 /* OnboardingView.swift */,
 			);
-			path = SupportingFiles;
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		9AE8C0AF2D125E04001E6F92 = {
@@ -276,6 +279,7 @@
 				9A66D8352DE11474008C73D7 /* Theme.swift in Sources */,
 				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
 				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
+				9A66D84D2DE11A45008C73D7 /* PickerSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
