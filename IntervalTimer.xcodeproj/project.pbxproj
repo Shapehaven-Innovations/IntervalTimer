@@ -6,30 +6,39 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */; };
+		9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81F2DE11474008C73D7 /* ContentView.swift */; };
+		9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8202DE11474008C73D7 /* IntentionsView.swift */; };
+		9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8212DE11474008C73D7 /* OnboardingView.swift */; };
+		9A66D8312DE11474008C73D7 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */; };
+		9A66D8322DE11474008C73D7 /* IntervalTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */; };
+		9A66D8332DE11474008C73D7 /* RenameConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */; };
+		9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8282DE11474008C73D7 /* SessionRecord.swift */; };
+		9A66D8352DE11474008C73D7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8292DE11474008C73D7 /* Theme.swift */; };
+		9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D82A2DE11474008C73D7 /* TimerView.swift */; };
+		9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */; };
+		9A66D8382DE11474008C73D7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */; };
+		9A66D8392DE11474008C73D7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D8232DE11474008C73D7 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
+		9A66D81F2DE11474008C73D7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9A66D8202DE11474008C73D7 /* IntentionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentionsView.swift; sourceTree = "<group>"; };
+		9A66D8212DE11474008C73D7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		9A66D8232DE11474008C73D7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
+		9A66D8252DE11474008C73D7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerApp.swift; sourceTree = "<group>"; };
+		9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameConfigurationView.swift; sourceTree = "<group>"; };
+		9A66D8282DE11474008C73D7 /* SessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecord.swift; sourceTree = "<group>"; };
+		9A66D8292DE11474008C73D7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		9A66D82A2DE11474008C73D7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
+		9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLogView.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9AA494782D1503AC002AABC8 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 9AE8C0B72D125E04001E6F92 /* IntervalTimer */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		9AE8C0BA2D125E04001E6F92 /* IntervalTimer */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				9AA494782D1503AC002AABC8 /* Exceptions for "IntervalTimer" folder in "IntervalTimer" target */,
-			);
-			path = IntervalTimer;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9AE8C0B52D125E04001E6F92 /* Frameworks */ = {
@@ -42,10 +51,135 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9A66D81D2DE11474008C73D7 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		9A66D8222DE11474008C73D7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8402DE114D8008C73D7 /* Home */,
+				9A66D8212DE11474008C73D7 /* OnboardingView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8472DE115A2008C73D7 /* SupportingFiles */,
+				9A66D8462DE1156D008C73D7 /* Assets */,
+				9A66D8442DE1154B008C73D7 /* WorkoutLog */,
+				9A66D8432DE11539008C73D7 /* Analytics */,
+				9A66D8422DE11529008C73D7 /* Intentions */,
+				9A66D8412DE11501008C73D7 /* Configuration */,
+				9A66D83F2DE114C6008C73D7 /* Timer */,
+				9A66D83D2DE114AA008C73D7 /* Theme */,
+				9A66D83C2DE1149E008C73D7 /* Models */,
+				9A66D83B2DE11491008C73D7 /* App */,
+				9A66D81D2DE11474008C73D7 /* Preview Content */,
+				9A66D8222DE11474008C73D7 /* Views */,
+			);
+			path = IntervalTimer;
+			sourceTree = "<group>";
+		};
+		9A66D83B2DE11491008C73D7 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9A66D83C2DE1149E008C73D7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8282DE11474008C73D7 /* SessionRecord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		9A66D83D2DE114AA008C73D7 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8292DE11474008C73D7 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		9A66D83F2DE114C6008C73D7 /* Timer */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D82A2DE11474008C73D7 /* TimerView.swift */,
+			);
+			path = Timer;
+			sourceTree = "<group>";
+		};
+		9A66D8402DE114D8008C73D7 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D81F2DE11474008C73D7 /* ContentView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		9A66D8412DE11501008C73D7 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */,
+				9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		9A66D8422DE11529008C73D7 /* Intentions */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8202DE11474008C73D7 /* IntentionsView.swift */,
+			);
+			path = Intentions;
+			sourceTree = "<group>";
+		};
+		9A66D8432DE11539008C73D7 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */,
+			);
+			path = Analytics;
+			sourceTree = "<group>";
+		};
+		9A66D8442DE1154B008C73D7 /* WorkoutLog */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */,
+			);
+			path = WorkoutLog;
+			sourceTree = "<group>";
+		};
+		9A66D8462DE1156D008C73D7 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8232DE11474008C73D7 /* Assets.xcassets */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		9A66D8472DE115A2008C73D7 /* SupportingFiles */ = {
+			isa = PBXGroup;
+			children = (
+				9A66D8252DE11474008C73D7 /* Info.plist */,
+			);
+			path = SupportingFiles;
+			sourceTree = "<group>";
+		};
 		9AE8C0AF2D125E04001E6F92 = {
 			isa = PBXGroup;
 			children = (
-				9AE8C0BA2D125E04001E6F92 /* IntervalTimer */,
+				9A66D82C2DE11474008C73D7 /* IntervalTimer */,
 				9AE8C0B92D125E04001E6F92 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -72,9 +206,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				9AE8C0BA2D125E04001E6F92 /* IntervalTimer */,
 			);
 			name = IntervalTimer;
 			packageProductDependencies = (
@@ -122,6 +253,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A66D8382DE11474008C73D7 /* Preview Assets.xcassets in Resources */,
+				9A66D8392DE11474008C73D7 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +265,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */,
+				9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */,
+				9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */,
+				9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */,
+				9A66D8312DE11474008C73D7 /* ConfigurationEditorView.swift in Sources */,
+				9A66D8322DE11474008C73D7 /* IntervalTimerApp.swift in Sources */,
+				9A66D8332DE11474008C73D7 /* RenameConfigurationView.swift in Sources */,
+				9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */,
+				9A66D8352DE11474008C73D7 /* Theme.swift in Sources */,
+				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
+				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
