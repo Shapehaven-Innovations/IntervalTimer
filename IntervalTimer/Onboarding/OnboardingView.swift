@@ -1,6 +1,6 @@
 // OnboardingView.swift
 // IntervalTimer
-// Animated colorful “fireballs” onboarding, collects sex, height (ft/in & cm), weight + privacy footer
+// Animated colorful “fireballs” onboarding, collects sex, height, weight + privacy footer
 
 import SwiftUI
 
@@ -25,13 +25,10 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // White canvas
             Color.white.ignoresSafeArea()
-            // Animated colored “fireballs”
             FireballBackground().ignoresSafeArea()
 
             VStack(spacing: 24) {
-                // Title
                 VStack(spacing: 4) {
                     Text("Welcome \(name)!")
                         .font(.largeTitle).fontWeight(.bold)
@@ -42,7 +39,6 @@ struct OnboardingView: View {
                 }
 
                 Form {
-                    // SEX (darker)
                     Section(header:
                         Text("SEX")
                             .font(.caption)
@@ -55,7 +51,6 @@ struct OnboardingView: View {
                         .pickerStyle(.segmented)
                     }
 
-                    // HEIGHT (darker)
                     Section(header:
                         Text("HEIGHT")
                             .font(.caption)
@@ -69,11 +64,14 @@ struct OnboardingView: View {
                             Spacer()
                         }
                     }
-                    // iOS‑17 style onChange
-                    .onChange(of: heightFeet) { updateCm() }
-                    .onChange(of: heightInches) { updateCm() }
+                    // Updated to use zero‑parameter onChange overload in iOS 17+
+                    .onChange(of: heightFeet) {
+                        updateCm()
+                    }
+                    .onChange(of: heightInches) {
+                        updateCm()
+                    }
 
-                    // UNITS
                     Section(header:
                         Text("UNITS")
                             .font(.caption)
@@ -89,7 +87,6 @@ struct OnboardingView: View {
                         }
                     }
 
-                    // WEIGHT
                     Section(header:
                         Text("WEIGHT (\(selectedUnit.uppercased()))")
                             .font(.caption)
@@ -97,12 +94,11 @@ struct OnboardingView: View {
                     ) {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.numberPad)
-                            .onChange(of: weightText) { _, new in
-                                weightText = new.filter(\.isNumber)
+                            .onChange(of: weightText) { _, newValue in
+                                weightText = newValue.filter(\.isNumber)
                             }
                     }
 
-                    // PRIVACY FOOTER
                     Section(footer:
                         Text("Your data is not shared — we stand for data privacy.")
                             .font(.footnote)
@@ -166,7 +162,10 @@ struct OnboardingView: View {
         userHeight   = heightCm
         userWeight   = Int(weightText) ?? userWeight
         weightUnit   = selectedUnit
-        hasOnboarded = true
+        // Trigger the animated transition
+        withAnimation {
+            hasOnboarded = true
+        }
     }
 }
 

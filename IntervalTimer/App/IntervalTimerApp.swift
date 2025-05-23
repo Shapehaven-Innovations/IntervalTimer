@@ -1,6 +1,6 @@
 // IntervalTimerApp.swift
 // IntervalTimer
-// Entry point with onboarding gating
+// Entry point with animated onboarding → ContentView transition
 
 import SwiftUI
 import AVFoundation
@@ -15,11 +15,26 @@ struct IntervalTimerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasOnboarded {
-                ContentView()
-            } else {
-                OnboardingView()
+            Group {
+                if hasOnboarded {
+                    ContentView()
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            )
+                        )
+                } else {
+                    OnboardingView()
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .leading).combined(with: .opacity),
+                                removal: .move(edge: .trailing).combined(with: .opacity)
+                            )
+                        )
+                }
             }
+            .animation(.easeInOut(duration: 0.6), value: hasOnboarded)
         }
     }
 
