@@ -2,6 +2,9 @@
 //  ContentView.swift
 //  IntervalTimer
 //
+//  Created by You on \(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .none))
+//  Updated with bed wobble, bolt pulse & target pulse animations.
+//
 
 import SwiftUI
 import UIKit
@@ -34,7 +37,7 @@ private struct FireballView: View {
                 x: (fb.x - 0.5) * geoSize.width,
                 y: animate
                     ? -geoSize.height/2 - fb.size
-                    :  geoSize.height/2 + fb.size
+                    : geoSize.height/2 + fb.size
             )
             .onAppear {
                 withAnimation(.linear(duration: fb.speed)) {
@@ -61,7 +64,7 @@ private struct AnimatedGradientBackground: View {
             ]),
             center: .center,
             startRadius: animate ? 50 : 150,
-            endRadius:   animate ? 500 : 300
+            endRadius: animate ? 500 : 300
         )
         .animation(.easeInOut(duration: 8).repeatForever(autoreverses: true),
                    value: animate)
@@ -73,7 +76,7 @@ private struct AnimatedGradientBackground: View {
 
 private struct FireballBackground: View {
     @State private var fireballs: [Fireball] = []
-    private let launchTimer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
 
     var body: some View {
         GeometryReader { geo in
@@ -86,7 +89,7 @@ private struct FireballBackground: View {
                 }
             }
             .ignoresSafeArea()
-            .onReceive(launchTimer) { _ in
+            .onReceive(timer) { _ in
                 fireballs.append(
                     Fireball(
                         x: .random(in: 0...1),
@@ -108,10 +111,12 @@ fileprivate struct PressableButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.8 : 1)
             .overlay(
                 Circle()
-                    .stroke(Color.white.opacity(configuration.isPressed ? 0.4 : 0), lineWidth: 4)
+                    .stroke(Color.white.opacity(configuration.isPressed ? 0.4 : 0),
+                            lineWidth: 4)
                     .scaleEffect(configuration.isPressed ? 1.3 : 0.1)
                     .opacity(configuration.isPressed ? 0 : 1)
-                    .animation(.easeOut(duration: 0.4), value: configuration.isPressed)
+                    .animation(.easeOut(duration: 0.4),
+                               value: configuration.isPressed)
             )
     }
 }
@@ -138,7 +143,8 @@ fileprivate struct Shimmer: ViewModifier {
             )
             .mask(content)
             .onAppear {
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                withAnimation(.linear(duration: 1.5)
+                                .repeatForever(autoreverses: false)) {
                     phase = 1
                 }
             }
@@ -171,16 +177,7 @@ private extension View {
     }
 }
 
-// MARK: – Haptic Helper
-
-private func withHaptic(_ action: @escaping () -> Void) -> () -> Void {
-    {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        action()
-    }
-}
-
-// MARK: – ConfigTileView (bed wobble & bolt pulse)
+// MARK: – ConfigTileView
 
 private struct ConfigTileView: View {
     let icon: String
@@ -197,13 +194,11 @@ private struct ConfigTileView: View {
             VStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.largeTitle)
-                    // wobble bed
                     .rotationEffect(
                         icon == "bed.double.fill"
                         ? Angle(degrees: wobble ? 10 : -10)
                         : .zero
                     )
-                    // pulse bolt
                     .scaleEffect(
                         icon == "bolt.fill"
                         ? (shrink ? 0.8 : 1.0)
@@ -211,14 +206,16 @@ private struct ConfigTileView: View {
                     )
                     .onAppear {
                         if icon == "bed.double.fill" {
-                            withAnimation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true)) {
-                                wobble.toggle()
-                            }
+                            withAnimation(
+                                .easeInOut(duration: 0.4)
+                                .repeatForever(autoreverses: true)
+                            ) { wobble.toggle() }
                         }
                         if icon == "bolt.fill" {
-                            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
-                                shrink.toggle()
-                            }
+                            withAnimation(
+                                .easeInOut(duration: 0.6)
+                                .repeatForever(autoreverses: true)
+                            ) { shrink.toggle() }
                         }
                     }
 
@@ -287,15 +284,19 @@ struct ContentView: View {
         }
     }
 
+    // New state for pulsing target
+    @State private var pulseTarget = false
+
     var body: some View {
         NavigationView {
             ZStack {
                 FireballBackground()
+
                 ScrollView {
                     LazyVGrid(columns: [
                         GridItem(.flexible()), GridItem(.flexible())
                     ], spacing: 20) {
-                        // Config Tiles
+                        // Bolt (shrinks/grows)
                         ConfigTileView(
                             icon:  "bolt.fill",
                             label: "Get Ready",
@@ -306,119 +307,124 @@ struct ContentView: View {
                         }
                         .animatedTile(index: 0, animate: animateTiles)
 
+                        // Rounds
                         ConfigTileView(
                             icon:  "repeat.circle.fill",
-                            label: "Rounds",
-                            value: "\(_sets)",
+                            label: "Rounds", value: "\(_sets)",
                             color: Theme.cardBackgrounds[1]
-                        ) {
-                            activePicker = .rounds
-                        }
+                        ) { activePicker = .rounds }
                         .animatedTile(index: 1, animate: animateTiles)
 
+                        // Work
                         ConfigTileView(
                             icon:  "flame.fill",
-                            label: "Work",
-                            value: format(_timerDuration),
+                            label: "Work", value: format(_timerDuration),
                             color: Theme.cardBackgrounds[2]
-                        ) {
-                            activePicker = .work
-                        }
+                        ) { activePicker = .work }
                         .animatedTile(index: 2, animate: animateTiles)
 
+                        // Rest (wobbles)
                         ConfigTileView(
                             icon:  "bed.double.fill",
-                            label: "Rest",
-                            value: format(_restDuration),
+                            label: "Rest", value: format(_restDuration),
                             color: Theme.cardBackgrounds[3]
-                        ) {
-                            activePicker = .rest
-                        }
+                        ) { activePicker = .rest }
                         .animatedTile(index: 3, animate: animateTiles)
 
-                        // Action Tiles
-                        Button {
-                            showingTimer = true
-                        } label: {
+                        // Start Workout
+                        Button { showingTimer = true } label: {
                             VStack(spacing: 8) {
-                                Image(systemName: "play.circle.fill").font(.largeTitle)
+                                Image(systemName: "play.circle.fill")
+                                    .font(.largeTitle)
                                 Text("Start Workout").font(.headline)
                             }
-                            .foregroundColor(.white)
                             .frame(minHeight: 140).frame(maxWidth: .infinity)
                             .background(Theme.cardBackgrounds[4])
+                            .foregroundColor(.white)
                             .cornerRadius(16)
                             .shimmer()
-                            .shadow(color: Theme.cardBackgrounds[4].opacity(0.3), radius: 6, x: 0, y: 5)
+                            .shadow(color: Theme.cardBackgrounds[4].opacity(0.3),
+                                    radius: 6, x: 0, y: 5)
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 4, animate: animateTiles)
 
-                        Button {
-                            showingConfigEditor = true
-                        } label: {
+                        // Save Workout
+                        Button { showingConfigEditor = true } label: {
                             VStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill").font(.largeTitle)
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.largeTitle)
                                 Text("Save Workout").font(.headline)
                             }
-                            .foregroundColor(.white)
                             .frame(minHeight: 140).frame(maxWidth: .infinity)
                             .background(Theme.cardBackgrounds[5])
+                            .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: Theme.cardBackgrounds[5].opacity(0.3), radius: 6, x: 0, y: 5)
+                            .shadow(color: Theme.cardBackgrounds[5].opacity(0.3),
+                                    radius: 6, x: 0, y: 5)
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 5, animate: animateTiles)
 
-                        Button {
-                            showingWorkoutLog = true
-                        } label: {
+                        // Workout Log
+                        Button { showingWorkoutLog = true } label: {
                             VStack(spacing: 8) {
-                                Image(systemName: "list.bullet.clipboard.fill").font(.largeTitle)
+                                Image(systemName: "list.bullet.clipboard.fill")
+                                    .font(.largeTitle)
                                 Text("Workout Log").font(.headline)
                             }
-                            .foregroundColor(.white)
                             .frame(minHeight: 140).frame(maxWidth: .infinity)
                             .background(Theme.cardBackgrounds[6])
+                            .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: Theme.cardBackgrounds[6].opacity(0.3), radius: 6, x: 0, y: 5)
+                            .shadow(color: Theme.cardBackgrounds[6].opacity(0.3),
+                                    radius: 6, x: 0, y: 5)
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 6, animate: animateTiles)
 
-                        Button {
-                            showingIntention = true
-                        } label: {
+                        // Intention (pulses)
+                        Button { showingIntention = true } label: {
                             VStack(spacing: 8) {
-                                Image(systemName: "target").font(.largeTitle)
+                                Image(systemName: "target")
+                                    .font(.largeTitle)
+                                    .scaleEffect(pulseTarget ? 1.2 : 0.8)
+                                    .onAppear {
+                                        withAnimation(.easeInOut(duration: 0.9)
+                                                        .repeatForever(autoreverses: true)) {
+                                            pulseTarget.toggle()
+                                        }
+                                    }
                                 Text("Intention").font(.headline)
                             }
-                            .foregroundColor(.white)
                             .frame(minHeight: 140).frame(maxWidth: .infinity)
                             .background(Theme.cardBackgrounds[7])
+                            .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: Theme.cardBackgrounds[7].opacity(0.3), radius: 6, x: 0, y: 5)
+                            .shadow(color: Theme.cardBackgrounds[7].opacity(0.3),
+                                    radius: 6, x: 0, y: 5)
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 7, animate: animateTiles)
 
-                        Button {
-                            showingAnalytics = true
-                        } label: {
+                        // Analytics
+                        Button { showingAnalytics = true } label: {
                             VStack(spacing: 8) {
-                                Image(systemName: "chart.bar.doc.horizontal.fill").font(.largeTitle)
+                                Image(systemName: "chart.bar.doc.horizontal.fill")
+                                    .font(.largeTitle)
                                 Text("Analytics").font(.headline)
                             }
-                            .foregroundColor(.white)
                             .frame(minHeight: 140).frame(maxWidth: .infinity)
                             .background(Theme.accent)
+                            .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: Theme.accent.opacity(0.3), radius: 6, x: 0, y: 5)
+                            .shadow(color: Theme.accent.opacity(0.3),
+                                    radius: 6, x: 0, y: 5)
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 8, animate: animateTiles)
 
-                        // Saved Configurations
+                        // Saved Configs
                         ForEach(Array(configs.enumerated()), id: \.element.id) { idx, record in
                             Button {
                                 _timerDuration  = record.timerDuration
@@ -427,16 +433,18 @@ struct ContentView: View {
                                 lastWorkoutName = record.name
                             } label: {
                                 VStack(spacing: 8) {
-                                    Image(systemName: "slider.horizontal.3").font(.largeTitle)
+                                    Image(systemName: "slider.horizontal.3")
+                                        .font(.largeTitle)
                                     Text(record.name).font(.headline)
                                     Text("\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x")
                                         .font(.subheadline).bold()
                                 }
-                                .foregroundColor(.white)
                                 .frame(minHeight: 140).frame(maxWidth: .infinity)
                                 .background(Color.gray)
+                                .foregroundColor(.white)
                                 .cornerRadius(16)
-                                .shadow(color: Color.gray.opacity(0.3), radius: 6, x: 0, y: 5)
+                                .shadow(color: Color.gray.opacity(0.3),
+                                        radius: 6, x: 0, y: 5)
                             }
                             .buttonStyle(PressableButtonStyle())
                             .contextMenu {
@@ -454,14 +462,14 @@ struct ContentView: View {
                     }
                     .padding()
                 }
-                .navigationTitle("Hello, \(name)!")
+                .navigationTitle("Hello, \(UIDevice.current.name)!")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbarBackground(.hidden, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
 
                 // Sheets & load logic
-                .sheet(item: $activePicker) { picker in
-                    PickerSheet(type: picker, value: binding(for: picker))
+                .sheet(item: $activePicker) { p in
+                    PickerSheet(type: p, value: binding(for: p))
                 }
                 .sheet(isPresented: $showingTimer)        { TimerView(workoutName: lastWorkoutName) }
                 .sheet(isPresented: $showingConfigEditor) {
@@ -469,12 +477,12 @@ struct ContentView: View {
                         timerDuration: _getReadyDuration,
                         restDuration:  _restDuration,
                         sets:          _sets
-                    ) { newRecord in
-                        configs.insert(newRecord, at: 0)
+                    ) { newRec in
+                        configs.insert(newRec, at: 0)
                         if let data = try? JSONEncoder().encode(configs) {
                             configsData = data
                         }
-                        lastWorkoutName = newRecord.name
+                        lastWorkoutName = newRec.name
                     }
                 }
                 .sheet(isPresented: $showingWorkoutLog)   { WorkoutLogView() }
@@ -491,8 +499,6 @@ struct ContentView: View {
             }
         }
     }
-
-    // MARK: – Helpers
 
     private func format(_ seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
