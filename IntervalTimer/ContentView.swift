@@ -1,9 +1,6 @@
-////
+//
 //  ContentView.swift
 //  IntervalTimer
-//
-//  Created by You on \(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .none))
-//  Updated with enhanced animations, white nav title, and all dependencies.
 //
 
 import SwiftUI
@@ -66,11 +63,8 @@ private struct AnimatedGradientBackground: View {
             startRadius: animate ? 50 : 150,
             endRadius:   animate ? 500 : 300
         )
-        .animation(
-            .easeInOut(duration: 8)
-                .repeatForever(autoreverses: true),
-            value: animate
-        )
+        .animation(.easeInOut(duration: 8).repeatForever(autoreverses: true),
+                   value: animate)
         .onAppear { animate = true }
     }
 }
@@ -114,12 +108,10 @@ fileprivate struct PressableButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.8 : 1)
             .overlay(
                 Circle()
-                    .stroke(Color.white.opacity(configuration.isPressed ? 0.4 : 0),
-                            lineWidth: 4)
+                    .stroke(Color.white.opacity(configuration.isPressed ? 0.4 : 0), lineWidth: 4)
                     .scaleEffect(configuration.isPressed ? 1.3 : 0.1)
                     .opacity(configuration.isPressed ? 0 : 1)
-                    .animation(.easeOut(duration: 0.4),
-                               value: configuration.isPressed)
+                    .animation(.easeOut(duration: 0.4), value: configuration.isPressed)
             )
     }
 }
@@ -146,14 +138,12 @@ fileprivate struct Shimmer: ViewModifier {
             )
             .mask(content)
             .onAppear {
-                withAnimation(
-                    .linear(duration: 1.5)
-                        .repeatForever(autoreverses: false)
-                ) { phase = 1 }
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    phase = 1
+                }
             }
     }
 }
-
 fileprivate extension View {
     func shimmer() -> some View { modifier(Shimmer()) }
 }
@@ -167,7 +157,7 @@ private struct AnimatedTile: ViewModifier {
     func body(content: Content) -> some View {
         content
             .opacity(animate ? 1 : 0)
-            .scaleEffect(animate ? 1 : 0.7, anchor: .center)
+            .scaleEffect(animate ? 1 : 0.7)
             .animation(
                 .spring(response: 0.6, dampingFraction: 0.8)
                     .delay(Double(index) * 0.05),
@@ -175,7 +165,6 @@ private struct AnimatedTile: ViewModifier {
             )
     }
 }
-
 private extension View {
     func animatedTile(index: Int, animate: Bool) -> some View {
         modifier(AnimatedTile(index: index, animate: animate))
@@ -185,13 +174,69 @@ private extension View {
 // MARK: – Haptic Helper
 
 private func withHaptic(_ action: @escaping () -> Void) -> () -> Void {
-    return {
+    {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         action()
     }
 }
 
-// MARK: – ContentView
+// MARK: – ConfigTileView (bed wobble & bolt pulse)
+
+private struct ConfigTileView: View {
+    let icon: String
+    let label: String
+    let value: String
+    let color: Color
+    let action: () -> Void
+
+    @State private var wobble = false
+    @State private var shrink = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.largeTitle)
+                    // wobble bed
+                    .rotationEffect(
+                        icon == "bed.double.fill"
+                        ? Angle(degrees: wobble ? 10 : -10)
+                        : .zero
+                    )
+                    // pulse bolt
+                    .scaleEffect(
+                        icon == "bolt.fill"
+                        ? (shrink ? 0.8 : 1.0)
+                        : 1.0
+                    )
+                    .onAppear {
+                        if icon == "bed.double.fill" {
+                            withAnimation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true)) {
+                                wobble.toggle()
+                            }
+                        }
+                        if icon == "bolt.fill" {
+                            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                                shrink.toggle()
+                            }
+                        }
+                    }
+
+                Text(label).font(.headline)
+                Text(value).font(.subheadline).bold()
+            }
+            .foregroundColor(.white)
+            .frame(minHeight: 140)
+            .frame(maxWidth: .infinity)
+            .background(color)
+            .cornerRadius(16)
+            .shadow(color: color.opacity(0.3), radius: 6, x: 0, y: 5)
+        }
+        .buttonStyle(PressableButtonStyle())
+    }
+}
+
+// MARK: – Main ContentView
 
 struct ContentView: View {
     @AppStorage("getReadyDuration")    private var _getReadyDuration = 3
@@ -229,20 +274,16 @@ struct ContentView: View {
         switch type {
             case .getReady:
                 return Binding(get: { _getReadyDuration },
-                               set: { _getReadyDuration = $0
-                                      lastWorkoutName = "" })
+                               set: { _getReadyDuration = $0; lastWorkoutName = "" })
             case .rounds:
                 return Binding(get: { _sets },
-                               set: { _sets = $0
-                                      lastWorkoutName = "" })
+                               set: { _sets = $0; lastWorkoutName = "" })
             case .work:
                 return Binding(get: { _timerDuration },
-                               set: { _timerDuration = $0
-                                      lastWorkoutName = "" })
+                               set: { _timerDuration = $0; lastWorkoutName = "" })
             case .rest:
                 return Binding(get: { _restDuration },
-                               set: { _restDuration = $0
-                                      lastWorkoutName = "" })
+                               set: { _restDuration = $0; lastWorkoutName = "" })
         }
     }
 
@@ -250,110 +291,162 @@ struct ContentView: View {
         NavigationView {
             ZStack {
                 FireballBackground()
-
                 ScrollView {
-                    LazyVGrid(
-                        columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ],
-                        spacing: 20
-                    ) {
-                        // — Config Tiles —
-                        configTile(icon:  "bolt.fill",
-                                   label: "Get Ready",
-                                   value: format(_getReadyDuration),
-                                   type:  .getReady,
-                                   color: Theme.cardBackgrounds[0])
-                            .animatedTile(index: 0, animate: animateTiles)
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()), GridItem(.flexible())
+                    ], spacing: 20) {
+                        // Config Tiles
+                        ConfigTileView(
+                            icon:  "bolt.fill",
+                            label: "Get Ready",
+                            value: format(_getReadyDuration),
+                            color: Theme.cardBackgrounds[0]
+                        ) {
+                            activePicker = .getReady
+                        }
+                        .animatedTile(index: 0, animate: animateTiles)
 
-                        configTile(icon:  "repeat.circle.fill",
-                                   label: "Rounds",
-                                   value: "\(_sets)",
-                                   type:  .rounds,
-                                   color: Theme.cardBackgrounds[1])
-                            .animatedTile(index: 1, animate: animateTiles)
+                        ConfigTileView(
+                            icon:  "repeat.circle.fill",
+                            label: "Rounds",
+                            value: "\(_sets)",
+                            color: Theme.cardBackgrounds[1]
+                        ) {
+                            activePicker = .rounds
+                        }
+                        .animatedTile(index: 1, animate: animateTiles)
 
-                        configTile(icon:  "flame.fill",
-                                   label: "Work",
-                                   value: format(_timerDuration),
-                                   type:  .work,
-                                   color: Theme.cardBackgrounds[2])
-                            .animatedTile(index: 2, animate: animateTiles)
+                        ConfigTileView(
+                            icon:  "flame.fill",
+                            label: "Work",
+                            value: format(_timerDuration),
+                            color: Theme.cardBackgrounds[2]
+                        ) {
+                            activePicker = .work
+                        }
+                        .animatedTile(index: 2, animate: animateTiles)
 
-                        configTile(icon:  "bed.double.fill",
-                                   label: "Rest",
-                                   value: format(_restDuration),
-                                   type:  .rest,
-                                   color: Theme.cardBackgrounds[3])
-                            .animatedTile(index: 3, animate: animateTiles)
+                        ConfigTileView(
+                            icon:  "bed.double.fill",
+                            label: "Rest",
+                            value: format(_restDuration),
+                            color: Theme.cardBackgrounds[3]
+                        ) {
+                            activePicker = .rest
+                        }
+                        .animatedTile(index: 3, animate: animateTiles)
 
-                        // — Action Tiles —
-                        actionTile(icon:  "play.circle.fill",
-                                   label: "Start Workout",
-                                   color: Theme.cardBackgrounds[4],
-                                   action: withHaptic { showingTimer = true })
+                        // Action Tiles
+                        Button {
+                            showingTimer = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "play.circle.fill").font(.largeTitle)
+                                Text("Start Workout").font(.headline)
+                            }
+                            .foregroundColor(.white)
+                            .frame(minHeight: 140).frame(maxWidth: .infinity)
+                            .background(Theme.cardBackgrounds[4])
+                            .cornerRadius(16)
                             .shimmer()
-                            .animatedTile(index: 4, animate: animateTiles)
+                            .shadow(color: Theme.cardBackgrounds[4].opacity(0.3), radius: 6, x: 0, y: 5)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .animatedTile(index: 4, animate: animateTiles)
 
-                        actionTile(icon:  "plus.circle.fill",
-                                   label: "Save Workout",
-                                   color: Theme.cardBackgrounds[5],
-                                   action: withHaptic { showingConfigEditor = true })
-                            .animatedTile(index: 5, animate: animateTiles)
+                        Button {
+                            showingConfigEditor = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill").font(.largeTitle)
+                                Text("Save Workout").font(.headline)
+                            }
+                            .foregroundColor(.white)
+                            .frame(minHeight: 140).frame(maxWidth: .infinity)
+                            .background(Theme.cardBackgrounds[5])
+                            .cornerRadius(16)
+                            .shadow(color: Theme.cardBackgrounds[5].opacity(0.3), radius: 6, x: 0, y: 5)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .animatedTile(index: 5, animate: animateTiles)
 
-                        actionTile(icon:  "list.bullet.clipboard.fill",
-                                   label: "Workout Log",
-                                   color: Theme.cardBackgrounds[6],
-                                   action: withHaptic { showingWorkoutLog = true })
-                            .animatedTile(index: 6, animate: animateTiles)
+                        Button {
+                            showingWorkoutLog = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "list.bullet.clipboard.fill").font(.largeTitle)
+                                Text("Workout Log").font(.headline)
+                            }
+                            .foregroundColor(.white)
+                            .frame(minHeight: 140).frame(maxWidth: .infinity)
+                            .background(Theme.cardBackgrounds[6])
+                            .cornerRadius(16)
+                            .shadow(color: Theme.cardBackgrounds[6].opacity(0.3), radius: 6, x: 0, y: 5)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .animatedTile(index: 6, animate: animateTiles)
 
-                        actionTile(icon:  "target",
-                                   label: "Intention",
-                                   color: Theme.cardBackgrounds[7],
-                                   action: withHaptic { showingIntention = true })
-                            .animatedTile(index: 7, animate: animateTiles)
+                        Button {
+                            showingIntention = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "target").font(.largeTitle)
+                                Text("Intention").font(.headline)
+                            }
+                            .foregroundColor(.white)
+                            .frame(minHeight: 140).frame(maxWidth: .infinity)
+                            .background(Theme.cardBackgrounds[7])
+                            .cornerRadius(16)
+                            .shadow(color: Theme.cardBackgrounds[7].opacity(0.3), radius: 6, x: 0, y: 5)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .animatedTile(index: 7, animate: animateTiles)
 
-                        actionTile(icon:  "chart.bar.doc.horizontal.fill",
-                                   label: "Analytics",
-                                   color: Theme.accent,
-                                   action: withHaptic { showingAnalytics = true })
-                            .animatedTile(index: 8, animate: animateTiles)
+                        Button {
+                            showingAnalytics = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "chart.bar.doc.horizontal.fill").font(.largeTitle)
+                                Text("Analytics").font(.headline)
+                            }
+                            .foregroundColor(.white)
+                            .frame(minHeight: 140).frame(maxWidth: .infinity)
+                            .background(Theme.accent)
+                            .cornerRadius(16)
+                            .shadow(color: Theme.accent.opacity(0.3), radius: 6, x: 0, y: 5)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .animatedTile(index: 8, animate: animateTiles)
 
-                        // — Saved Configurations —
+                        // Saved Configurations
                         ForEach(Array(configs.enumerated()), id: \.element.id) { idx, record in
                             Button {
-                                UIImpactFeedbackGenerator(style: .light)
-                                    .impactOccurred()
                                 _timerDuration  = record.timerDuration
                                 _restDuration   = record.restDuration
                                 _sets           = record.sets
                                 lastWorkoutName = record.name
                             } label: {
                                 VStack(spacing: 8) {
-                                    Image(systemName: "slider.horizontal.3")
-                                        .font(.largeTitle)
-                                    Text(record.name)
-                                        .font(.headline)
+                                    Image(systemName: "slider.horizontal.3").font(.largeTitle)
+                                    Text(record.name).font(.headline)
                                     Text("\(format(record.timerDuration)) / \(format(record.restDuration)) / \(record.sets)x")
-                                        .font(.subheadline)
-                                        .bold()
+                                        .font(.subheadline).bold()
                                 }
                                 .foregroundColor(.white)
-                                .frame(minHeight: 140)
-                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 140).frame(maxWidth: .infinity)
                                 .background(Color.gray)
                                 .cornerRadius(16)
-                                .shadow(color: Color.gray.opacity(0.3),
-                                        radius: 6, x: 0, y: 5)
+                                .shadow(color: Color.gray.opacity(0.3), radius: 6, x: 0, y: 5)
                             }
                             .buttonStyle(PressableButtonStyle())
                             .contextMenu {
                                 Button(role: .destructive) {
                                     configs.removeAll { $0.id == record.id }
-                                    saveConfigs()
+                                    if let data = try? JSONEncoder().encode(configs) {
+                                        configsData = data
+                                    }
                                 } label: {
-                                    Label("Delete \"\(record.name)\"", systemImage: "trash")
+                                    Label("Delete “\(record.name)”", systemImage: "trash")
                                 }
                             }
                             .animatedTile(index: 9 + idx, animate: animateTiles)
@@ -361,116 +454,48 @@ struct ContentView: View {
                     }
                     .padding()
                 }
-            }
-            // — make nav title & buttons white —
-            .navigationTitle("Hello, \(name)!")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+                .navigationTitle("Hello, \(name)!")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
 
-            // — sheets & onAppear —
-            .sheet(item: $activePicker) { picker in
-                PickerSheet(type: picker, value: binding(for: picker))
-            }
-            .sheet(isPresented: $showingTimer)        { TimerView(workoutName: lastWorkoutName) }
-            .sheet(isPresented: $showingConfigEditor) {
-                ConfigurationEditorView(
-                    timerDuration: _timerDuration,
-                    restDuration:  _restDuration,
-                    sets:          _sets
-                ) { newRecord in
-                    configs.insert(newRecord, at: 0)
-                    saveConfigs()
-                    lastWorkoutName = newRecord.name
+                // Sheets & load logic
+                .sheet(item: $activePicker) { picker in
+                    PickerSheet(type: picker, value: binding(for: picker))
                 }
-            }
-            .sheet(isPresented: $showingWorkoutLog)   { WorkoutLogView() }
-            .sheet(isPresented: $showingIntention)    { IntentionsView() }
-            .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
-            .onAppear {
-                if let decoded = try? JSONDecoder()
-                    .decode([SessionRecord].self, from: configsData) {
-                    configs = decoded
+                .sheet(isPresented: $showingTimer)        { TimerView(workoutName: lastWorkoutName) }
+                .sheet(isPresented: $showingConfigEditor) {
+                    ConfigurationEditorView(
+                        timerDuration: _getReadyDuration,
+                        restDuration:  _restDuration,
+                        sets:          _sets
+                    ) { newRecord in
+                        configs.insert(newRecord, at: 0)
+                        if let data = try? JSONEncoder().encode(configs) {
+                            configsData = data
+                        }
+                        lastWorkoutName = newRecord.name
+                    }
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    animateTiles = true
+                .sheet(isPresented: $showingWorkoutLog)   { WorkoutLogView() }
+                .sheet(isPresented: $showingIntention)    { IntentionsView() }
+                .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
+                .onAppear {
+                    if let decoded = try? JSONDecoder().decode([SessionRecord].self, from: configsData) {
+                        configs = decoded
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        animateTiles = true
+                    }
                 }
             }
         }
-    }
-
-    // MARK: – Tile Builders
-
-    private func configTile(icon: String,
-                            label: String,
-                            value: String,
-                            type:  PickerType,
-                            color: Color) -> some View
-    {
-        Button {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            activePicker = type
-        } label: {
-            VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.largeTitle)
-                    .rotationEffect(.degrees(activePicker == type ? 15 : -15))
-                    .animation(
-                        .easeInOut(duration: 1)
-                            .repeatForever(autoreverses: true),
-                        value: activePicker
-                    )
-                Text(label).font(.headline)
-                Text(value).font(.subheadline).bold()
-            }
-            .foregroundColor(.white)
-            .frame(minHeight: 140)
-            .frame(maxWidth: .infinity)
-            .background(color)
-            .cornerRadius(16)
-            .shadow(color: color.opacity(0.3), radius: 6, x: 0, y: 5)
-        }
-        .buttonStyle(PressableButtonStyle())
-    }
-
-    private func actionTile(icon: String,
-                            label: String,
-                            color: Color,
-                            action: @escaping () -> Void) -> some View
-    {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.largeTitle)
-                    .scaleEffect(1.1)
-                    .animation(
-                        .easeInOut(duration: 1.2)
-                            .repeatForever(autoreverses: true),
-                        value: animateTiles
-                    )
-                Text(label).font(.headline)
-            }
-            .foregroundColor(.white)
-            .frame(minHeight: 140)
-            .frame(maxWidth: .infinity)
-            .background(color)
-            .cornerRadius(16)
-            .shadow(color: color.opacity(0.3), radius: 6, x: 0, y: 5)
-        }
-        .buttonStyle(PressableButtonStyle())
     }
 
     // MARK: – Helpers
 
     private func format(_ seconds: Int) -> String {
-        let m = seconds / 60, s = seconds % 60
-        return String(format: "%02d:%02d", m, s)
-    }
-
-    private func saveConfigs() {
-        if let encoded = try? JSONEncoder().encode(configs) {
-            configsData = encoded
-        }
+        String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 }
 
