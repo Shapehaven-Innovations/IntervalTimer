@@ -2,6 +2,7 @@
 // IntervalTimer
 // Detailed list of every session, now with theming from Theme.swift
 
+
 import SwiftUI
 
 struct WorkoutLogView: View {
@@ -9,12 +10,37 @@ struct WorkoutLogView: View {
     @State private var history: [SessionRecord] = []
     @State private var showingClearAlert = false
 
+    // MARK: – Pull in user info from Onboarding
+    @AppStorage("userWeight") private var userWeight: Int = 70
+    @AppStorage("weightUnit")  private var weightUnit: String = "kg"
+    @AppStorage("userHeight") private var userHeight: Int = 170
+
+    /// Converts stored weight into kilograms
+    private var weightKg: Double {
+        weightUnit == "lbs"
+            ? Double(userWeight) / 2.20462
+            : Double(userWeight)
+    }
+
+    /// Simple MET‐based calorie estimate (MET = 8)
+    private func caloriesBurned(for record: SessionRecord) -> Int {
+        let workSeconds = record.timerDuration * record.sets
+        let minutes     = Double(workSeconds) / 60.0
+        let met: Double = 8.0
+        let cals = 0.0175 * met * weightKg * minutes
+        return Int(round(cals))
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 16) {
                     ForEach(Array(history.enumerated()), id: \.element.id) { index, record in
-                        WorkoutCard(record: record, index: index)
+                        WorkoutCard(
+                            record: record,
+                            index: index,
+                            calories: caloriesBurned(for: record)
+                        )
                     }
                 }
                 .padding(.vertical)
@@ -30,7 +56,7 @@ struct WorkoutLogView: View {
                 }
             }
             .alert("Clear Workout Log?", isPresented: $showingClearAlert) {
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {}
                 Button("Clear", role: .destructive) { clearHistory() }
             } message: {
                 Text("This cannot be undone.")
@@ -39,10 +65,11 @@ struct WorkoutLogView: View {
         }
     }
 
+    // MARK: – Data
+
     private func loadHistory() {
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder()
-             .decode([SessionRecord].self, from: data) {
+           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
             history = decoded.sorted { $0.date > $1.date }
         }
     }
@@ -56,6 +83,7 @@ struct WorkoutLogView: View {
 private struct WorkoutCard: View {
     let record: SessionRecord
     let index: Int
+    let calories: Int
 
     private var backgroundTint: Color {
         Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.1)
@@ -63,18 +91,14 @@ private struct WorkoutCard: View {
     private var shadowTint: Color {
         Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.2)
     }
-    private var foreground: Color {
-        Theme.accent
-    }
+    private var accent: Color { Theme.accent }
 
     private var displayName: String {
-        if !record.name.trimmingCharacters(in: .whitespaces).isEmpty {
-            return record.name
-        } else {
-            let fmt = DateFormatter()
-            fmt.dateFormat = "yyyyddMM"
-            return fmt.string(from: record.date)
-        }
+        let trimmed = record.name.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty { return trimmed }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyyMMdd"
+        return fmt.string(from: record.date)
     }
 
     private var subtitle: String {
@@ -83,43 +107,47 @@ private struct WorkoutCard: View {
         return fmt.string(from: record.date)
     }
 
+    private var totalTimeString: String {
+        let restTotal = max(0, record.restDuration * (record.sets - 1))
+        let totalSec  = record.timerDuration * record.sets + restTotal
+        let m = totalSec / 60, s = totalSec % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+
+    private func formatTime(_ seconds: Int) -> String {
+        let m = seconds / 60, s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(displayName).font(.headline)
                 Spacer()
                 Text(totalTimeString)
-                    .font(.subheadline).foregroundColor(.secondary)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
             Text(subtitle)
-                .font(.subheadline).foregroundColor(.secondary)
-            HStack(spacing: 16) {
-                Label(format(record.timerDuration), systemImage: "flame.fill")
-                Spacer()
-                Label(format(record.restDuration), systemImage: "bed.double.fill")
-                Spacer()
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 24) {
+                Label(formatTime(record.timerDuration), systemImage: "flame.fill")
+                Label(formatTime(record.restDuration), systemImage: "bed.double.fill")
                 Label("\(record.sets)x", systemImage: "repeat.circle.fill")
+                Label("\(calories) kcal", systemImage: "figure.walk")
             }
-            .font(.footnote).foregroundColor(foreground)
+            .font(.footnote)
+            .foregroundColor(accent)
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(backgroundTint)
         )
         .shadow(color: shadowTint, radius: 4, x: 0, y: 2)
         .padding(.horizontal)
-    }
-
-    private var totalTimeString: String {
-        let totalRest = max(0, record.restDuration * (record.sets - 1))
-        let total    = record.timerDuration * record.sets + totalRest
-        return format(total)
-    }
-
-    private func format(_ seconds: Int) -> String {
-        let m = seconds / 60, s = seconds % 60
-        return String(format: "%02d:%02d", m, s)
     }
 }
 
