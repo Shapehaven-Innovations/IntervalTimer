@@ -1,12 +1,4 @@
 //
-//  PressableButtonStyle.swift
-//  IntervalTimer
-//
-//  Created by user on 5/24/25.
-//
-
-
-//
 //  Styles.swift
 //  IntervalTimer
 //
@@ -59,7 +51,6 @@ struct Shimmer: ViewModifier {
             }
     }
 }
-
 extension View {
     func shimmer() -> some View {
         modifier(Shimmer())
@@ -81,9 +72,9 @@ struct AnimatedTile: ViewModifier {
             )
     }
 }
-
 extension View {
     func animatedTile(index: Int, animate: Bool) -> some View {
         modifier(AnimatedTile(index: index, animate: animate))
     }
 }
+

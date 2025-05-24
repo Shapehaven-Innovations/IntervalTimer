@@ -1,11 +1,16 @@
-// TimerView.swift
-// IntervalTimer
-// Core timer UI with Get‑Ready + mixing with background audio + in‑view IntentionBanner
+//
+//  TimerView.swift
+//  IntervalTimer
+//  Core timer UI with Get‑Ready + mixing with background audio + in‑view IntentionBanner
+//  Refactored to use ThemeManager for live theming.
+//
 
 import SwiftUI
 import AVFoundation
 
 struct TimerView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+
     /// Passed in from ContentView
     let workoutName: String
 
@@ -40,13 +45,14 @@ struct TimerView: View {
     }
     private var elapsedTime: Int { totalDuration - currentTime }
 
-    // Dynamic background
+    // Dynamic background via ThemeManager
     private var backgroundColor: Color {
+        let palette = themeManager.selected.cardBackgrounds
         switch phase {
-        case .getReady: return Theme.cardBackgrounds[0]
-        case .work:     return Theme.cardBackgrounds[3]
-        case .rest:     return Theme.cardBackgrounds[5]
-        case .complete: return Theme.cardBackgrounds[2]
+        case .getReady: return palette[0]
+        case .work:     return palette[2]
+        case .rest:     return palette[3]
+        case .complete: return palette[5]
         }
     }
 
@@ -58,6 +64,7 @@ struct TimerView: View {
         GeometryReader { geo in
             ZStack {
                 backgroundColor.ignoresSafeArea()
+
                 VStack(spacing: 0) {
                     if showBanner {
                         IntentionBanner(
@@ -263,6 +270,8 @@ struct TimerView: View {
 // MARK: – IntentionBanner
 
 struct IntentionBanner: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+
     var onTap:     () -> Void
     var onDismiss: () -> Void
 
@@ -274,7 +283,7 @@ struct IntentionBanner: View {
                 .foregroundColor(.yellow)
             Text("Tap to set today’s intention")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
             Spacer(minLength: 0)
             Button(role: .cancel, action: onDismiss) {
                 Image(systemName: "xmark").padding(6)
@@ -284,7 +293,7 @@ struct IntentionBanner: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, minHeight: 52)
-        .background(Color.accentColor)
+        .background(themeManager.selected.accent)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(radius: 4, y: 2)
         .onTapGesture {
@@ -304,6 +313,7 @@ struct IntentionBanner: View {
 struct TimerView_Previews: PreviewProvider {
     static var previews: some View {
         TimerView(workoutName: "Demo")
+            .environmentObject(ThemeManager.shared)
     }
 }
 

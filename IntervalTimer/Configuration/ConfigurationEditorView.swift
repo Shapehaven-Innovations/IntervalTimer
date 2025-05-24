@@ -1,30 +1,34 @@
-// ConfigurationEditorView.swift
-// IntervalTimer
-// Sheet for creating a new custom configuration
+//
+//  ConfigurationEditorView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/23/25.
+//
 
 import SwiftUI
 
 struct ConfigurationEditorView: View {
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject    private var themeManager: ThemeManager
 
     // Inputs from ContentView
     let timerDuration: Int
-    let restDuration: Int
-    let sets:          Int
-    let onSave:       (SessionRecord) -> Void
+    let restDuration:  Int
+    let sets:           Int
+    let onSave:        (SessionRecord) -> Void
 
     // Local state
     @State private var name: String = ""
 
-    // use the same “Save Workout” tile color (index 5) as our theme
-    private let themeColor = Theme.cardBackgrounds[5]
+    /// Use the “Save Workout” tile color (index 5) from the current theme.
+    private var themeColor: Color {
+        themeManager.selected.cardBackgrounds[5]
+    }
 
     var body: some View {
         NavigationView {
             ZStack {
-                // Light background wash
-                themeColor.opacity(0.1)
-                    .ignoresSafeArea()
+                themeColor.opacity(0.1).ignoresSafeArea()
 
                 Form {
                     Section(header:
@@ -58,18 +62,14 @@ struct ConfigurationEditorView: View {
                         }
                     }
                 }
-                .tint(themeColor)                    // tint pickers & buttons
-                .scrollContentBackground(.hidden)    // remove default gray
+                .tint(themeColor)
+                .scrollContentBackground(.hidden)
             }
             .navigationTitle("New Configuration")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                leading: Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("Save") {
-                    saveConfiguration()
-                }
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() },
+                trailing: Button("Save")   { saveConfiguration() }
             )
         }
     }
@@ -78,17 +78,18 @@ struct ConfigurationEditorView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
         let record = SessionRecord(
-            name:           trimmed,
-            date:           Date(),
-            timerDuration:  timerDuration,
-            restDuration:   restDuration,
-            sets:           sets
+            name:          trimmed,
+            date:          Date(),
+            timerDuration: timerDuration,
+            restDuration:  restDuration,
+            sets:          sets
         )
         onSave(record)
         presentationMode.wrappedValue.dismiss()
     }
 }
 
+#if DEBUG
 struct ConfigurationEditorView_Previews: PreviewProvider {
     static var previews: some View {
         ConfigurationEditorView(
@@ -96,6 +97,8 @@ struct ConfigurationEditorView_Previews: PreviewProvider {
             restDuration:  10,
             sets:          5
         ) { _ in }
+        .environmentObject(ThemeManager.shared)
     }
 }
+#endif
 

@@ -38,7 +38,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
         }
     }
     
-    /// Accent color (used for “Analytics”, etc.)
+    /// Accent color (used for the Analytics tile, etc.)
     var accent: Color {
         switch self {
         case .colorful: return Color.accentColor
@@ -49,3 +49,4 @@ enum ThemeType: String, CaseIterable, Identifiable {
         }
     }
 }
+

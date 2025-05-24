@@ -1,11 +1,14 @@
-// IntentionsView.swift
-// IntervalTimer
-// Log your intention before starting a session (dynamic title)
+//
+//  IntentionsView.swift
+//  IntervalTimer
+//  Refactored to use ThemeManager for dynamic colors.
+//
 
 import SwiftUI
 
 struct IntentionsView: View {
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject private var themeManager: ThemeManager
 
     // MARK: – Selection State
     @State private var selectedMind:    StateOfMind?      = nil
@@ -35,14 +38,17 @@ struct IntentionsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.white.ignoresSafeArea()            // white background
+                Color.white.ignoresSafeArea()
                 Form {
+                    // MARK: – State of Mind
                     Section(header: Text("STATE OF MIND")) {
                         LazyVGrid(
                             columns: [GridItem(.flexible()), GridItem(.flexible())],
                             spacing: 12
                         ) {
                             ForEach(StateOfMind.allCases, id: \.self) { mind in
+                                let idx = StateOfMind.allCases.firstIndex(of: mind) ?? 0
+                                let baseColor = themeManager.selected.cardBackgrounds[idx]
                                 Button {
                                     selectedMind = mind
                                 } label: {
@@ -51,13 +57,17 @@ struct IntentionsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(selectedMind == mind
-                                                      ? mind.color.opacity(0.6)
-                                                      : mind.color.opacity(0.2))
+                                                .fill(
+                                                    selectedMind == mind
+                                                        ? baseColor.opacity(0.6)
+                                                        : baseColor.opacity(0.2)
+                                                )
                                         )
-                                        .foregroundColor(selectedMind == mind
-                                                         ? .white
-                                                         : mind.color.darker())
+                                        .foregroundColor(
+                                            selectedMind == mind
+                                                ? .white
+                                                : baseColor.darker()
+                                        )
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .contentShape(RoundedRectangle(cornerRadius: 12))
@@ -65,6 +75,7 @@ struct IntentionsView: View {
                         }
                     }
 
+                    // MARK: – Session Time Goal
                     Section(header: Text("SESSION TIME GOAL")) {
                         HStack(spacing: 12) {
                             ForEach(TimeGoal.allCases) { goal in
@@ -76,13 +87,17 @@ struct IntentionsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 8)
-                                                .fill(timeGoal == goal
-                                                      ? goal.color.opacity(0.6)
-                                                      : Color(.systemGray6))
+                                                .fill(
+                                                    timeGoal == goal
+                                                        ? goal.color.opacity(0.6)
+                                                        : Color(.systemGray6)
+                                                )
                                         )
-                                        .foregroundColor(timeGoal == goal
-                                                         ? .white
-                                                         : goal.color)
+                                        .foregroundColor(
+                                            timeGoal == goal
+                                                ? .white
+                                                : goal.color
+                                        )
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .contentShape(RoundedRectangle(cornerRadius: 8))
@@ -90,6 +105,7 @@ struct IntentionsView: View {
                         }
                     }
 
+                    // MARK: – Rated Intensity
                     Section(header: Text("RATED INTENSITY")) {
                         HStack(spacing: 12) {
                             ForEach(Intensity.allCases) { level in
@@ -101,13 +117,17 @@ struct IntentionsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 8)
-                                                .fill(intensity == level
-                                                      ? level.color.opacity(0.6)
-                                                      : Color(.systemGray6))
+                                                .fill(
+                                                    intensity == level
+                                                        ? level.color.opacity(0.6)
+                                                        : Color(.systemGray6)
+                                                )
                                         )
-                                        .foregroundColor(intensity == level
-                                                         ? .white
-                                                         : level.color)
+                                        .foregroundColor(
+                                            intensity == level
+                                                ? .white
+                                                : level.color
+                                        )
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .contentShape(RoundedRectangle(cornerRadius: 8))
@@ -115,11 +135,13 @@ struct IntentionsView: View {
                         }
                     }
 
+                    // MARK: – Day of Week
                     Section(header: Text("DAY OF WEEK")) {
                         Text(currentDay)
                             .foregroundColor(.secondary)
                     }
 
+                    // MARK: – Workout Mindset
                     Section(header: Text("WORKOUT MINDSET")) {
                         VStack(spacing: 12) {
                             ForEach(WorkoutMindset.allCases, id: \.self) { mindset in
@@ -131,13 +153,17 @@ struct IntentionsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(workoutMindset == mindset
-                                                      ? mindset.color.opacity(0.6)
-                                                      : mindset.color.opacity(0.2))
+                                                .fill(
+                                                    workoutMindset == mindset
+                                                        ? mindset.color.opacity(0.6)
+                                                        : mindset.color.opacity(0.2)
+                                                )
                                         )
-                                        .foregroundColor(workoutMindset == mindset
-                                                         ? .white
-                                                         : mindset.color.darker())
+                                        .foregroundColor(
+                                            workoutMindset == mindset
+                                                ? .white
+                                                : mindset.color.darker()
+                                        )
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .contentShape(RoundedRectangle(cornerRadius: 12))
@@ -145,7 +171,7 @@ struct IntentionsView: View {
                         }
                     }
                 }
-                .scrollContentBackground(.hidden)  // remove form gray
+                .scrollContentBackground(.hidden)
             }
             .navigationTitle(greetingTitle)
             .navigationBarItems(
@@ -153,7 +179,7 @@ struct IntentionsView: View {
                     presentationMode.wrappedValue.dismiss()
                 },
                 trailing: Button("Save") {
-                    // TODO: persist selections if you want
+                    // TODO: persist selections if desired
                     presentationMode.wrappedValue.dismiss()
                 }
             )
@@ -170,9 +196,9 @@ extension Color {
         var r: CGFloat=0, g: CGFloat=0, b: CGFloat=0, a: CGFloat=0
         ui.getRed(&r, green:&g, blue:&b, alpha:&a)
         return Color(
-            red: Double(max(r-0.2, 0)),
+            red:   Double(max(r-0.2, 0)),
             green: Double(max(g-0.2, 0)),
-            blue: Double(max(b-0.2, 0)),
+            blue:  Double(max(b-0.2, 0)),
             opacity: Double(a)
         )
     }
@@ -182,19 +208,11 @@ extension Color {
 
 enum StateOfMind: String, CaseIterable {
     case Calm, Anxious, Focused, Confused, Happy, Sad, Angry, Curious
-
-    /// Pull colors from your Theme.swift
-    var color: Color {
-        Theme.cardBackgrounds[
-            StateOfMind.allCases.firstIndex(of: self) ?? 0
-        ]
-    }
 }
 
 enum TimeGoal: String, CaseIterable, Identifiable {
     case greater30 = "> 30 min", less30 = "< 30 min", equal30 = "= 30 min"
     var id: String { rawValue }
-
     var color: Color {
         switch self {
         case .greater30: return .green
@@ -207,7 +225,6 @@ enum TimeGoal: String, CaseIterable, Identifiable {
 enum Intensity: String, CaseIterable, Identifiable {
     case easy, medium, hard
     var id: String { rawValue }
-
     var color: Color {
         switch self {
         case .easy:   return .green
@@ -221,9 +238,7 @@ enum WorkoutMindset: String, CaseIterable, Identifiable {
     case completion   = "Completion Mindset"
     case performance  = "Performance Driven"
     case appreciation = "Effort Appreciation"
-
     var id: String { rawValue }
-
     var color: Color {
         switch self {
         case .completion:   return .mint
@@ -238,6 +253,7 @@ enum WorkoutMindset: String, CaseIterable, Identifiable {
 struct IntentionsView_Previews: PreviewProvider {
     static var previews: some View {
         IntentionsView()
+            .environmentObject(ThemeManager.shared)
     }
 }
 

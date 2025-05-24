@@ -1,21 +1,22 @@
-// OnboardingView.swift
-// IntervalTimer
-// Animated colorful “fireballs” onboarding, collects sex, height, weight + privacy footer
+//
+//  OnboardingView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/??/25.
+//
 
 import SwiftUI
 
-// MARK: – User Identity
 private var name: String { UIDevice.current.name }
 
 struct OnboardingView: View {
-    // MARK: – Stored
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool   = false
     @AppStorage("userSex")      private var userSex:     String = ""
     @AppStorage("userHeight")   private var userHeight:  Int    = 170
     @AppStorage("userWeight")   private var userWeight:  Int    = 70
     @AppStorage("weightUnit")   private var weightUnit:  String = "kg"
 
-    // MARK: – UI State
+    // UI State
     @State private var selectedSex:  String = "Male"
     @State private var heightFeet:   Int    = 5
     @State private var heightInches: Int    = 7
@@ -56,7 +57,7 @@ struct OnboardingView: View {
                             .font(.caption)
                             .foregroundColor(.primary.opacity(0.6))
                     ) {
-                        Stepper("Feet: \(heightFeet)′", value: $heightFeet, in: 3...7)
+                        Stepper("Feet: \(heightFeet)′",   value: $heightFeet, in: 3...7)
                         Stepper("Inches: \(heightInches)″", value: $heightInches, in: 0...11)
                         HStack {
                             Text("≈ \(heightCm) cm")
@@ -64,13 +65,8 @@ struct OnboardingView: View {
                             Spacer()
                         }
                     }
-                    // Updated to use zero‑parameter onChange overload in iOS 17+
-                    .onChange(of: heightFeet) {
-                        updateCm()
-                    }
-                    .onChange(of: heightInches) {
-                        updateCm()
-                    }
+                    .onChange(of: heightFeet)   { _ in updateCm() }
+                    .onChange(of: heightInches) { _ in updateCm() }
 
                     Section(header:
                         Text("UNITS")
@@ -82,8 +78,8 @@ struct OnboardingView: View {
                             Text("lbs").tag("lbs")
                         }
                         .pickerStyle(.segmented)
-                        .onChange(of: selectedUnit) { oldUnit, newUnit in
-                            convertWeight(from: oldUnit, to: newUnit)
+                        .onChange(of: selectedUnit) { old, new in
+                            convertWeight(from: old, to: new)
                         }
                     }
 
@@ -94,8 +90,8 @@ struct OnboardingView: View {
                     ) {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.numberPad)
-                            .onChange(of: weightText) { _, newValue in
-                                weightText = newValue.filter(\.isNumber)
+                            .onChange(of: weightText) { _, new in
+                                weightText = new.filter(\.isNumber)
                             }
                     }
 
@@ -132,7 +128,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: – Helpers
+    // Helpers…
 
     private func updateCm() {
         let totalInches = heightFeet * 12 + heightInches
@@ -140,10 +136,10 @@ struct OnboardingView: View {
     }
 
     private func convertWeight(from old: String, to new: String) {
-        guard let value = Int(weightText) else { return }
+        guard let v = Int(weightText) else { return }
         let converted = (new == "lbs")
-            ? Double(value) * 2.20462
-            : Double(value) / 2.20462
+            ? Double(v) * 2.20462
+            : Double(v) / 2.20462
         weightText = String(Int(round(converted)))
     }
 
@@ -162,59 +158,15 @@ struct OnboardingView: View {
         userHeight   = heightCm
         userWeight   = Int(weightText) ?? userWeight
         weightUnit   = selectedUnit
-        // Trigger the animated transition
-        withAnimation {
-            hasOnboarded = true
-        }
+        withAnimation { hasOnboarded = true }
     }
 }
 
-// MARK: – Fireball Background
-
-private struct FireballBackground: View {
-    @State private var animate = false
-    private let themeColors: [Color] = [
-        .yellow, .teal, .green, .red,
-        .orange, .blue, .purple, .pink
-    ]
-
-    var body: some View {
-        ZStack {
-            ForEach(0..<8, id: \.self) { idx in
-                let color = themeColors[idx]
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            gradient: Gradient(colors: [color.opacity(0.6), color.opacity(0.2)]),
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 120, height: 120)
-                    .blur(radius: 30)
-                    .offset(
-                        x: animate
-                            ? CGFloat.random(in: -200...200)
-                            : CGFloat.random(in: -200...200),
-                        y: animate
-                            ? CGFloat.random(in: -600...0)
-                            : CGFloat.random(in: -600...0)
-                    )
-                    .animation(
-                        .easeInOut(duration: Double.random(in: 3...6))
-                            .repeatForever(autoreverses: true),
-                        value: animate
-                    )
-            }
-        }
-        .onAppear { animate = true }
-    }
-}
-
+#if DEBUG
 struct OnboardingView_Previews: PreviewProvider {
     static var previews: some View {
         OnboardingView()
     }
 }
+#endif
 

@@ -1,12 +1,4 @@
 //
-//  Fireball.swift
-//  IntervalTimer
-//
-//  Created by user on 5/24/25.
-//
-
-
-//
 //  FireballBackground.swift
 //  IntervalTimer
 //
@@ -99,3 +91,4 @@ struct FireballBackground: View {
         }
     }
 }
+

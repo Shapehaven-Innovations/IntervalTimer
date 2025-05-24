@@ -1,4 +1,4 @@
-//
+///
 //  ConfigTileView.swift
 //  IntervalTimer
 //
@@ -56,3 +56,4 @@ struct ConfigTileView: View {
         .buttonStyle(PressableButtonStyle())
     }
 }
+

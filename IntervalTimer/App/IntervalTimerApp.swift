@@ -1,44 +1,34 @@
-// IntervalTimerApp.swift
-// IntervalTimer
-// Entry point with animated onboarding → ContentView transition
+//
+//  IntervalTimerApp.swift
+//  IntervalTimer
+//
+//  Created by You on 5/23/25
+//
 
 import SwiftUI
 import AVFoundation
 
 @main
 struct IntervalTimerApp: App {
+    @StateObject private var themeManager = ThemeManager.shared
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
 
-    init() {
-        configureAudioSession()
-    }
+    init() { configureAudioSession() }
 
     var body: some Scene {
         WindowGroup {
             Group {
                 if hasOnboarded {
                     ContentView()
-                        .transition(
-                            .asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .move(edge: .leading).combined(with: .opacity)
-                            )
-                        )
                 } else {
                     OnboardingView()
-                        .transition(
-                            .asymmetric(
-                                insertion: .move(edge: .leading).combined(with: .opacity),
-                                removal: .move(edge: .trailing).combined(with: .opacity)
-                            )
-                        )
                 }
             }
+            .environmentObject(themeManager)
             .animation(.easeInOut(duration: 0.6), value: hasOnboarded)
         }
     }
 
-    /// Configure AVAudioSession at launch so our cues mix with any background music
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {

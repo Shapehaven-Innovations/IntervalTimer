@@ -11,16 +11,21 @@
 		9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81F2DE11474008C73D7 /* ContentView.swift */; };
 		9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8202DE11474008C73D7 /* IntentionsView.swift */; };
 		9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8212DE11474008C73D7 /* OnboardingView.swift */; };
-		9A66D8312DE11474008C73D7 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */; };
 		9A66D8322DE11474008C73D7 /* IntervalTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */; };
 		9A66D8332DE11474008C73D7 /* RenameConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */; };
 		9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8282DE11474008C73D7 /* SessionRecord.swift */; };
-		9A66D8352DE11474008C73D7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8292DE11474008C73D7 /* Theme.swift */; };
 		9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D82A2DE11474008C73D7 /* TimerView.swift */; };
 		9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */; };
 		9A66D8382DE11474008C73D7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */; };
 		9A66D8392DE11474008C73D7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A66D8232DE11474008C73D7 /* Assets.xcassets */; };
-		9A66D84D2DE11A45008C73D7 /* PickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */; };
+		9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB32DE24AEF00435DE8 /* SettingsView.swift */; };
+		9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB52DE24EF500435DE8 /* ThemeManager.swift */; };
+		9A768BB82DE24FDE00435DE8 /* ThemeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB72DE24FDE00435DE8 /* ThemeType.swift */; };
+		9A768BBA2DE2506D00435DE8 /* FireballBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB92DE2506D00435DE8 /* FireballBackground.swift */; };
+		9A768BBC2DE2507F00435DE8 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBB2DE2507F00435DE8 /* Styles.swift */; };
+		9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */; };
+		9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */; };
+		9A768BC22DE252A500435DE8 /* PickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BC12DE252A500435DE8 /* PickerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,15 +35,20 @@
 		9A66D8202DE11474008C73D7 /* IntentionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentionsView.swift; sourceTree = "<group>"; };
 		9A66D8212DE11474008C73D7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9A66D8232DE11474008C73D7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
 		9A66D8252DE11474008C73D7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerApp.swift; sourceTree = "<group>"; };
 		9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameConfigurationView.swift; sourceTree = "<group>"; };
 		9A66D8282DE11474008C73D7 /* SessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecord.swift; sourceTree = "<group>"; };
-		9A66D8292DE11474008C73D7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		9A66D82A2DE11474008C73D7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		9A66D82B2DE11474008C73D7 /* WorkoutLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLogView.swift; sourceTree = "<group>"; };
-		9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
+		9A768BB32DE24AEF00435DE8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9A768BB52DE24EF500435DE8 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		9A768BB72DE24FDE00435DE8 /* ThemeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeType.swift; sourceTree = "<group>"; };
+		9A768BB92DE2506D00435DE8 /* FireballBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireballBackground.swift; sourceTree = "<group>"; };
+		9A768BBB2DE2507F00435DE8 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTileView.swift; sourceTree = "<group>"; };
+		9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
+		9A768BC12DE252A500435DE8 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -64,6 +74,7 @@
 		9A66D8222DE11474008C73D7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				9A768BB22DE24AE900435DE8 /* Settings */,
 				9A66D8402DE114D8008C73D7 /* Home */,
 			);
 			path = Views;
@@ -108,7 +119,10 @@
 		9A66D83D2DE114AA008C73D7 /* Theme */ = {
 			isa = PBXGroup;
 			children = (
-				9A66D8292DE11474008C73D7 /* Theme.swift */,
+				9A768BBB2DE2507F00435DE8 /* Styles.swift */,
+				9A768BB92DE2506D00435DE8 /* FireballBackground.swift */,
+				9A768BB72DE24FDE00435DE8 /* ThemeType.swift */,
+				9A768BB52DE24EF500435DE8 /* ThemeManager.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -132,9 +146,10 @@
 		9A66D8412DE11501008C73D7 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
-				9A66D84C2DE11A45008C73D7 /* PickerSheet.swift */,
-				9A66D8242DE11474008C73D7 /* ConfigurationEditorView.swift */,
+				9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */,
 				9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */,
+				9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */,
+				9A768BC12DE252A500435DE8 /* PickerSheet.swift */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -177,6 +192,14 @@
 				9A66D8212DE11474008C73D7 /* OnboardingView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		9A768BB22DE24AE900435DE8 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				9A768BB32DE24AEF00435DE8 /* SettingsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		9AE8C0AF2D125E04001E6F92 = {
@@ -268,18 +291,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A768BC22DE252A500435DE8 /* PickerSheet.swift in Sources */,
 				9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */,
 				9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */,
+				9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */,
 				9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */,
 				9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */,
-				9A66D8312DE11474008C73D7 /* ConfigurationEditorView.swift in Sources */,
+				9A768BB82DE24FDE00435DE8 /* ThemeType.swift in Sources */,
 				9A66D8322DE11474008C73D7 /* IntervalTimerApp.swift in Sources */,
 				9A66D8332DE11474008C73D7 /* RenameConfigurationView.swift in Sources */,
+				9A768BBC2DE2507F00435DE8 /* Styles.swift in Sources */,
 				9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */,
-				9A66D8352DE11474008C73D7 /* Theme.swift in Sources */,
+				9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */,
+				9A768BBA2DE2506D00435DE8 /* FireballBackground.swift in Sources */,
 				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
 				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
-				9A66D84D2DE11A45008C73D7 /* PickerSheet.swift in Sources */,
+				9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */,
+				9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

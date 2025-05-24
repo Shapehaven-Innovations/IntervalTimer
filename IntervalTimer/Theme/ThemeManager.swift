@@ -8,25 +8,24 @@
 import SwiftUI
 import Combine
 
-/// Observable theme store: when `selected` changes, views watching it will update.
+/// Observable theme store.  When `selected` changes, SwiftUI views observing it will update.
 final class ThemeManager: ObservableObject {
     @Published var selected: ThemeType
     
-    /// Singleton instance
     static let shared = ThemeManager()
-    
     private var cancellable: AnyCancellable?
     
     private init() {
-        // Load from UserDefaults (default to .colorful)
+        // Load last‑saved theme (default to .colorful)
         let raw = UserDefaults.standard.string(forKey: "selectedTheme")
                 ?? ThemeType.colorful.rawValue
         selected = ThemeType(rawValue: raw) ?? .colorful
         
-        // Persist any updates
+        // Persist any future changes
         cancellable = $selected
             .sink { new in
                 UserDefaults.standard.set(new.rawValue, forKey: "selectedTheme")
             }
     }
 }
+

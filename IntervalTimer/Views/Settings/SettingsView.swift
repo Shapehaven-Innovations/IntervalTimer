@@ -2,26 +2,22 @@
 //  SettingsView.swift
 //  IntervalTimer
 //
-//  Created by user on 5/24/25.
+//  Created by You on 5/24/25.
 //
-
-
-// SettingsView.swift
-// Allows the user to pick from all ThemeType cases
 
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.presentationMode) private var presentationMode
-    @AppStorage("selectedTheme") private var selectedThemeRaw: String = ThemeType.colorful.rawValue
-    
+    @EnvironmentObject    private var themeManager: ThemeManager
+
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("App Theme")) {
-                    Picker("Theme", selection: $selectedThemeRaw) {
+                    Picker("Theme", selection: $themeManager.selected) {
                         ForEach(ThemeType.allCases) { theme in
-                            Text(theme.rawValue).tag(theme.rawValue)
+                            Text(theme.rawValue).tag(theme)
                         }
                     }
                     .pickerStyle(.inline)
@@ -40,5 +36,7 @@ struct SettingsView: View {
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView()
+            .environmentObject(ThemeManager.shared)
     }
 }
+

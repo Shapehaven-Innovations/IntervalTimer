@@ -1,19 +1,20 @@
 // WorkoutLogView.swift
 // IntervalTimer
-// Detailed list of every session, now with theming from Theme.swift
-
+// Detailed list of every session, now with live theming from ThemeManager
 
 import SwiftUI
 
 struct WorkoutLogView: View {
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject private var themeManager: ThemeManager
+
     @State private var history: [SessionRecord] = []
     @State private var showingClearAlert = false
 
     // MARK: – Pull in user info from Onboarding
     @AppStorage("userWeight") private var userWeight: Int = 70
     @AppStorage("weightUnit")  private var weightUnit: String = "kg"
-    @AppStorage("userHeight") private var userHeight: Int = 170
+    @AppStorage("userHeight")  private var userHeight: Int    = 170
 
     /// Converts stored weight into kilograms
     private var weightKg: Double {
@@ -37,10 +38,11 @@ struct WorkoutLogView: View {
                 VStack(spacing: 16) {
                     ForEach(Array(history.enumerated()), id: \.element.id) { index, record in
                         WorkoutCard(
-                            record: record,
-                            index: index,
+                            record:   record,
+                            index:    index,
                             calories: caloriesBurned(for: record)
                         )
+                        .environmentObject(themeManager)
                     }
                 }
                 .padding(.vertical)
@@ -81,17 +83,28 @@ struct WorkoutLogView: View {
 }
 
 private struct WorkoutCard: View {
-    let record: SessionRecord
-    let index: Int
+    @EnvironmentObject private var themeManager: ThemeManager
+
+    let record:   SessionRecord
+    let index:    Int
     let calories: Int
 
+    /// Light background tint from the theme
     private var backgroundTint: Color {
-        Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.1)
+        let palette = themeManager.selected.cardBackgrounds
+        return palette[index % palette.count].opacity(0.1)
     }
+
+    /// Slightly stronger shadow tint
     private var shadowTint: Color {
-        Theme.cardBackgrounds[index % Theme.cardBackgrounds.count].opacity(0.2)
+        let palette = themeManager.selected.cardBackgrounds
+        return palette[index % palette.count].opacity(0.2)
     }
-    private var accent: Color { Theme.accent }
+
+    /// Accent color (for labels)
+    private var accent: Color {
+        themeManager.selected.accent
+    }
 
     private var displayName: String {
         let trimmed = record.name.trimmingCharacters(in: .whitespaces)
@@ -134,9 +147,9 @@ private struct WorkoutCard: View {
 
             HStack(spacing: 24) {
                 Label(formatTime(record.timerDuration), systemImage: "flame.fill")
-                Label(formatTime(record.restDuration), systemImage: "bed.double.fill")
-                Label("\(record.sets)x", systemImage: "repeat.circle.fill")
-                Label("\(calories) kcal", systemImage: "figure.walk")
+                Label(formatTime(record.restDuration),    systemImage: "bed.double.fill")
+                Label("\(record.sets)x",                  systemImage: "repeat.circle.fill")
+                Label("\(calories) kcal",                 systemImage: "figure.walk")
             }
             .font(.footnote)
             .foregroundColor(accent)
@@ -154,6 +167,7 @@ private struct WorkoutCard: View {
 struct WorkoutLogView_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutLogView()
+            .environmentObject(ThemeManager.shared)
     }
 }
 

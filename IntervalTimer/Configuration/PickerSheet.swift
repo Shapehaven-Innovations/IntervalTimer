@@ -5,15 +5,6 @@
 //  Created by user on 5/23/25.
 //
 
-
-//
-//  PickerSheet.swift
-//  IntervalTimer
-//
-//  Extracted from ContentView on May 23 2025.
-//  A reusable stepped-value sheet for Get-Ready, Rounds, Work, and Rest.
-//
-
 import SwiftUI
 
 /// A modal sheet that lets the user adjust one `Int`-based workout parameter.
@@ -22,14 +13,15 @@ struct PickerSheet: View {
     @Binding var value: Int                   // two-way binding to that value
 
     @Environment(\.presentationMode) private var dismiss
+    @EnvironmentObject    private var themeManager: ThemeManager
 
-    /// Accent colour pulled from the Theme for visual context.
+    /// Accent colour pulled from the current theme for visual context.
     private var themeColor: Color {
         switch type {
-        case .getReady: return Theme.cardBackgrounds[0]
-        case .rounds:   return Theme.cardBackgrounds[1]
-        case .work:     return Theme.cardBackgrounds[2]
-        case .rest:     return Theme.cardBackgrounds[3]
+        case .getReady: return themeManager.selected.cardBackgrounds[0]
+        case .rounds:   return themeManager.selected.cardBackgrounds[1]
+        case .work:     return themeManager.selected.cardBackgrounds[2]
+        case .rest:     return themeManager.selected.cardBackgrounds[3]
         }
     }
 
@@ -62,21 +54,20 @@ struct PickerSheet: View {
                     Button("Cancel") { dismiss.wrappedValue.dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss.wrappedValue.dismiss() }
+                    Button("Done")   { dismiss.wrappedValue.dismiss() }
                 }
             }
         }
     }
 }
 
-// MARK: - Preview
-
 #if DEBUG
 struct PickerSheet_Previews: PreviewProvider {
     @State static var temp = 45
     static var previews: some View {
         PickerSheet(type: .work, value: $temp)
-            .preferredColorScheme(.dark)
+            .environmentObject(ThemeManager.shared)
     }
 }
 #endif
+
