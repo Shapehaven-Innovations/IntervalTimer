@@ -2,8 +2,8 @@
 //  ContentView.swift
 //  IntervalTimer
 //
-//  Created by You on 5/23/25
-//  Refactored: live theme updates via ThemeManager.
+//  Created by You on 5/23/25.
+//  Updated on 5/25/25 to respect the user‑chosen screen background and include all sheets & onAppear logic.
 //
 
 import SwiftUI
@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
+    // Workout configuration storage
     @AppStorage("getReadyDuration")    private var _getReadyDuration = 3
     @AppStorage("timerDuration")       private var _timerDuration    = 20
     @AppStorage("restDuration")        private var _restDuration     = 10
@@ -18,6 +19,13 @@ struct ContentView: View {
     @AppStorage("lastWorkoutName")     private var lastWorkoutName  = ""
     @AppStorage("savedConfigurations") private var configsData: Data = Data()
 
+    // Screen background choice
+    @AppStorage("screenBackground")    private var backgroundRaw: String = BackgroundOption.white.rawValue
+    private var screenBackground: BackgroundOption {
+        BackgroundOption(rawValue: backgroundRaw) ?? .white
+    }
+
+    // Local state
     @State private var configs: [SessionRecord] = []
     @State private var activePicker: PickerType?
     @State private var showingTimer        = false
@@ -47,30 +55,42 @@ struct ContentView: View {
     private func binding(for type: PickerType) -> Binding<Int> {
         switch type {
         case .getReady:
-            return Binding(get: { _getReadyDuration },
-                           set: { _getReadyDuration = $0; lastWorkoutName = "" })
+            return Binding(
+                get: { _getReadyDuration },
+                set: { _getReadyDuration = $0; lastWorkoutName = "" }
+            )
         case .rounds:
-            return Binding(get: { _sets },
-                           set: { _sets = $0; lastWorkoutName = "" })
+            return Binding(
+                get: { _sets },
+                set: { _sets = $0; lastWorkoutName = "" }
+            )
         case .work:
-            return Binding(get: { _timerDuration },
-                           set: { _timerDuration = $0; lastWorkoutName = "" })
+            return Binding(
+                get: { _timerDuration },
+                set: { _timerDuration = $0; lastWorkoutName = "" }
+            )
         case .rest:
-            return Binding(get: { _restDuration },
-                           set: { _restDuration = $0; lastWorkoutName = "" })
+            return Binding(
+                get: { _restDuration },
+                set: { _restDuration = $0; lastWorkoutName = "" }
+            )
         }
     }
 
     var body: some View {
         NavigationView {
             ZStack {
-                FireballBackground()
+                // Draw the user-selected background color
+                screenBackground.color
+                    .ignoresSafeArea()
 
                 ScrollView {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()), GridItem(.flexible())
-                    ], spacing: 20) {
-                        // Get Ready
+                    LazyVGrid(
+                        columns: [ GridItem(.flexible()), GridItem(.flexible()) ],
+                        spacing: 20
+                    ) {
+                        // MARK: – Configuration Tiles
+
                         ConfigTileView(
                             icon:  "bolt.fill",
                             label: "Get Ready",
@@ -79,7 +99,6 @@ struct ContentView: View {
                         ) { activePicker = .getReady }
                         .animatedTile(index: 0, animate: animateTiles)
 
-                        // Rounds
                         ConfigTileView(
                             icon:  "repeat.circle.fill",
                             label: "Rounds",
@@ -88,7 +107,6 @@ struct ContentView: View {
                         ) { activePicker = .rounds }
                         .animatedTile(index: 1, animate: animateTiles)
 
-                        // Work
                         ConfigTileView(
                             icon:  "flame.fill",
                             label: "Work",
@@ -97,7 +115,6 @@ struct ContentView: View {
                         ) { activePicker = .work }
                         .animatedTile(index: 2, animate: animateTiles)
 
-                        // Rest
                         ConfigTileView(
                             icon:  "bed.double.fill",
                             label: "Rest",
@@ -106,7 +123,8 @@ struct ContentView: View {
                         ) { activePicker = .rest }
                         .animatedTile(index: 3, animate: animateTiles)
 
-                        // Start Workout
+                        // MARK: – Action Buttons
+
                         Button { showingTimer = true } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "play.circle.fill")
@@ -118,13 +136,14 @@ struct ContentView: View {
                             .foregroundColor(.white)
                             .cornerRadius(16)
                             .shimmer()
-                            .shadow(color: themeManager.selected.cardBackgrounds[4].opacity(0.3),
-                                    radius: 6, x: 0, y: 5)
+                            .shadow(
+                                color: themeManager.selected.cardBackgrounds[4].opacity(0.3),
+                                radius: 6, x: 0, y: 5
+                            )
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 4, animate: animateTiles)
 
-                        // Save Workout
                         Button { showingConfigEditor = true } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
@@ -135,13 +154,14 @@ struct ContentView: View {
                             .background(themeManager.selected.cardBackgrounds[5])
                             .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: themeManager.selected.cardBackgrounds[5].opacity(0.3),
-                                    radius: 6, x: 0, y: 5)
+                            .shadow(
+                                color: themeManager.selected.cardBackgrounds[5].opacity(0.3),
+                                radius: 6, x: 0, y: 5
+                            )
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 5, animate: animateTiles)
 
-                        // Workout Log
                         Button { showingWorkoutLog = true } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "list.bullet.clipboard.fill")
@@ -152,21 +172,24 @@ struct ContentView: View {
                             .background(themeManager.selected.cardBackgrounds[6])
                             .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: themeManager.selected.cardBackgrounds[6].opacity(0.3),
-                                    radius: 6, x: 0, y: 5)
+                            .shadow(
+                                color: themeManager.selected.cardBackgrounds[6].opacity(0.3),
+                                radius: 6, x: 0, y: 5
+                            )
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 6, animate: animateTiles)
 
-                        // Intention
                         Button { showingIntention = true } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "target")
                                     .font(.largeTitle)
                                     .scaleEffect(pulseTarget ? 1.2 : 0.8)
                                     .onAppear {
-                                        withAnimation(.easeInOut(duration: 0.9)
-                                                        .repeatForever(autoreverses: true)) {
+                                        withAnimation(
+                                            .easeInOut(duration: 0.9)
+                                                .repeatForever(autoreverses: true)
+                                        ) {
                                             pulseTarget.toggle()
                                         }
                                     }
@@ -176,13 +199,14 @@ struct ContentView: View {
                             .background(themeManager.selected.cardBackgrounds[7])
                             .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: themeManager.selected.cardBackgrounds[7].opacity(0.3),
-                                    radius: 6, x: 0, y: 5)
+                            .shadow(
+                                color: themeManager.selected.cardBackgrounds[7].opacity(0.3),
+                                radius: 6, x: 0, y: 5
+                            )
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 7, animate: animateTiles)
 
-                        // Analytics
                         Button { showingAnalytics = true } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "chart.bar.doc.horizontal.fill")
@@ -193,13 +217,13 @@ struct ContentView: View {
                             .background(themeManager.selected.accent)
                             .foregroundColor(.white)
                             .cornerRadius(16)
-                            .shadow(color: themeManager.selected.accent.opacity(0.3),
-                                    radius: 6, x: 0, y: 5)
+                            .shadow(
+                                color: themeManager.selected.accent.opacity(0.3),
+                                radius: 6, x: 0, y: 5
+                            )
                         }
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 8, animate: animateTiles)
-
-                        // … your saved configurations buttons …
                     }
                     .padding()
                 }
@@ -216,9 +240,14 @@ struct ContentView: View {
                     }
                 }
             }
-            // MARK: – sheets
-            .sheet(item: $activePicker)       { p in PickerSheet(type: p, value: binding(for: p)) }
-            .sheet(isPresented: $showingTimer)        { TimerView(workoutName: lastWorkoutName) }
+            // MARK: – Sheets
+
+            .sheet(item: $activePicker) { p in
+                PickerSheet(type: p, value: binding(for: p))
+            }
+            .sheet(isPresented: $showingTimer) {
+                TimerView(workoutName: lastWorkoutName)
+            }
             .sheet(isPresented: $showingConfigEditor) {
                 ConfigurationEditorView(
                     timerDuration: _getReadyDuration,
@@ -232,12 +261,24 @@ struct ContentView: View {
                     lastWorkoutName = newRec.name
                 }
             }
-            .sheet(isPresented: $showingWorkoutLog)   { WorkoutLogView() }
-            .sheet(isPresented: $showingIntention)    { IntentionsView() }
-            .sheet(isPresented: $showingAnalytics)    { AnalyticsView() }
-            .sheet(isPresented: $showingSettings)     { SettingsView() }
+            .sheet(isPresented: $showingWorkoutLog) {
+                WorkoutLogView()
+            }
+            .sheet(isPresented: $showingIntention) {
+                IntentionsView()
+            }
+            .sheet(isPresented: $showingAnalytics) {
+                AnalyticsView()
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
+            }
+            // MARK: – On‑Appear
+
             .onAppear {
-                if let decoded = try? JSONDecoder().decode([SessionRecord].self, from: configsData) {
+                if let decoded = try? JSONDecoder()
+                    .decode([SessionRecord].self, from: configsData)
+                {
                     configs = decoded
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

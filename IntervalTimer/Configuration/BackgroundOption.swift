@@ -2,6 +2,14 @@
 //  BackgroundOption.swift
 //  IntervalTimer
 //
+//  Created by user on 5/25/25.
+//
+
+
+//
+//  BackgroundOption.swift
+//  IntervalTimer
+//
 //  Created by You on 5/25/25.
 //
 

@@ -26,6 +26,7 @@
 		9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */; };
 		9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */; };
 		9A768BC22DE252A500435DE8 /* PickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BC12DE252A500435DE8 /* PickerSheet.swift */; };
+		9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 		9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTileView.swift; sourceTree = "<group>"; };
 		9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
 		9A768BC12DE252A500435DE8 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
+		9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundOption.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -146,6 +148,7 @@
 		9A66D8412DE11501008C73D7 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
+				9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */,
 				9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */,
 				9A66D8272DE11474008C73D7 /* RenameConfigurationView.swift */,
 				9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */,
@@ -295,6 +298,7 @@
 				9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */,
 				9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */,
 				9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */,
+				9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */,
 				9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */,
 				9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */,
 				9A768BB82DE24FDE00435DE8 /* ThemeType.swift in Sources */,

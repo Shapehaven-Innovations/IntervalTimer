@@ -3,6 +3,7 @@
 //  IntervalTimer
 //
 //  Created by You on 5/24/25.
+//  Updated on 5/25/25 to expose backgroundColor.
 //
 
 import SwiftUI
@@ -24,9 +25,19 @@ enum ThemeType: String, CaseIterable, Identifiable {
             return [.yellow, .mint, .green, .red,
                     .orange, .blue, .purple, .pink]
         case .dark:
-            return Array(repeating: Color(.secondarySystemBackground), count: 8)
+            return Array(
+                repeating: Color(.secondarySystemBackground),
+                count: 8
+            )
         case .light:
-            return Array(repeating: Color(.systemBackground),         count: 8)
+            let silver = Color(UIColor.lightGray)
+            let gold   = Color(red: 212/255, green: 175/255, blue: 55/255)
+            return [
+                silver,             gold,
+                silver.opacity(0.8), gold.opacity(0.8),
+                silver.opacity(0.6), gold.opacity(0.6),
+                silver.opacity(0.4), gold.opacity(0.4)
+            ]
         case .flame:
             return [.red, .orange, .yellow,
                     .red.opacity(0.8), .orange.opacity(0.8), .yellow.opacity(0.8),
@@ -38,7 +49,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
         }
     }
     
-    /// Accent color (used for the Analytics tile, etc.)
+    /// Accent color (used for Analytics tile, etc.)
     var accent: Color {
         switch self {
         case .colorful: return Color.accentColor
@@ -46,6 +57,21 @@ enum ThemeType: String, CaseIterable, Identifiable {
         case .light:    return .blue
         case .flame:    return .orange
         case .ocean:    return .teal
+        }
+    }
+    
+    /// Solid background color for all non-Colorful themes.
+    /// `.colorful` still uses FireballBackground().
+    var backgroundColor: Color {
+        switch self {
+        case .colorful:
+            return Color(.systemBackground)
+        case .dark:
+            return .black
+        case .light:
+            return Color(.systemBackground)
+        case .flame, .ocean:
+            return Color(.systemBackground)
         }
     }
 }
