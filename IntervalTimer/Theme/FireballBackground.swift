@@ -1,92 +1,90 @@
-//
-//  FireballBackground.swift
-//  IntervalTimer
-//
-//  Created by You on 5/24/25.
-//
+// FireballBackground.swift
+// IntervalTimer
+// Updated 05/25/25 to a dynamic, theme-aware gradient + subtle particle effect
 
 import SwiftUI
 
-struct Fireball: Identifiable {
+struct Particle: Identifiable {
     let id = UUID()
     let x: CGFloat
     let size: CGFloat
     let speed: Double
+    let color: Color
 }
 
-private struct FireballView: View {
-    let fb: Fireball
+private struct ParticleView: View {
+    let particle: Particle
     let geoSize: CGSize
     let onComplete: () -> Void
-
     @State private var animate = false
 
     var body: some View {
-        Image(systemName: "flame.fill")
-            .font(.system(size: fb.size))
-            .foregroundColor(.orange)
-            .shadow(color: .red, radius: fb.size * 0.3)
-            .rotationEffect(.degrees(animate ? 360 : 0))
+        Circle()
+            .fill(particle.color.opacity(0.7))
+            .frame(width: particle.size, height: particle.size)
             .offset(
-                x: (fb.x - 0.5) * geoSize.width,
+                x: (particle.x - 0.5) * geoSize.width,
                 y: animate
-                    ? -geoSize.height / 2 - fb.size
-                    : geoSize.height / 2 + fb.size
+                    ? -geoSize.height/2 - particle.size
+                    : geoSize.height/2 + particle.size
             )
             .onAppear {
-                withAnimation(.linear(duration: fb.speed)) {
+                withAnimation(.linear(duration: particle.speed)) {
                     animate = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + fb.speed) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + particle.speed) {
                     onComplete()
                 }
             }
     }
 }
 
-private struct AnimatedGradientBackground: View {
+private struct DynamicGradientBackground: View {
+    @EnvironmentObject private var themeManager: ThemeManager
     @State private var animate = false
 
     var body: some View {
+        let colors = themeManager.selected.cardBackgrounds
         RadialGradient(
             gradient: Gradient(colors: [
-                Color.purple.opacity(0.6),
-                Color.blue.opacity(0.4),
-                Color.black
+                colors.randomElement() ?? .black,
+                colors.randomElement() ?? .black,
+                themeManager.selected.backgroundColor
             ]),
             center: .center,
-            startRadius: animate ? 50 : 150,
-            endRadius: animate ? 500 : 300
+            startRadius: animate ? 50 : 200,
+            endRadius: animate ? 400 : 600
         )
-        .animation(.easeInOut(duration: 8).repeatForever(autoreverses: true),
+        .animation(.easeInOut(duration: 10).repeatForever(autoreverses: true),
                    value: animate)
         .onAppear { animate = true }
     }
 }
 
 struct FireballBackground: View {
-    @State private var fireballs: [Fireball] = []
-    private let timer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
+    @EnvironmentObject private var themeManager: ThemeManager
+    @State private var particles: [Particle] = []
+    private let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                AnimatedGradientBackground()
-                ForEach(fireballs) { fb in
-                    FireballView(fb: fb, geoSize: geo.size) {
-                        fireballs.removeAll { $0.id == fb.id }
+                DynamicGradientBackground()
+                ForEach(particles) { p in
+                    ParticleView(particle: p, geoSize: geo.size) {
+                        particles.removeAll { $0.id == p.id }
                     }
                 }
             }
             .ignoresSafeArea()
             .onReceive(timer) { _ in
-                fireballs.append(
-                    Fireball(
-                        x:    .random(in: 0...1),
-                        size: .random(in: 30...70),
-                        speed: .random(in: 4...7)
-                    )
-                )
+                let palette = themeManager.selected.cardBackgrounds
+                particles.append(.init(
+                    x: CGFloat.random(in: 0...1),
+                    size: CGFloat.random(in: 20...60),
+                    speed: Double.random(in: 4...8),
+                    color: palette.randomElement() ?? .white
+                ))
             }
         }
     }

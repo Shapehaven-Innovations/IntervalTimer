@@ -1,14 +1,10 @@
-//
-//  ThemeManager.swift
-//  IntervalTimer
-//
-//  Created by You on 5/24/25.
-//
+// ThemeManager.swift
+// IntervalTimer
+// Updated 05/25/25 to default to Pastel Minimal and persist any new choice
 
 import SwiftUI
 import Combine
 
-/// Observable theme store.  When `selected` changes, SwiftUI views observing it will update.
 final class ThemeManager: ObservableObject {
     @Published var selected: ThemeType
     
@@ -16,12 +12,12 @@ final class ThemeManager: ObservableObject {
     private var cancellable: AnyCancellable?
     
     private init() {
-        // Load last‑saved theme (default to .colorful)
+        // Load last-saved or default to Pastel Minimal
         let raw = UserDefaults.standard.string(forKey: "selectedTheme")
-                ?? ThemeType.colorful.rawValue
-        selected = ThemeType(rawValue: raw) ?? .colorful
+                  ?? ThemeType.pastelMinimal.rawValue
+        selected = ThemeType(rawValue: raw) ?? .pastelMinimal
         
-        // Persist any future changes
+        // Persist future changes
         cancellable = $selected
             .sink { new in
                 UserDefaults.standard.set(new.rawValue, forKey: "selectedTheme")
