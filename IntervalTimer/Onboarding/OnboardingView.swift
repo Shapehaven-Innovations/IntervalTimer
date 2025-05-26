@@ -1,6 +1,7 @@
 // OnboardingView.swift
 // IntervalTimer
 // Updated 05/26/25 to show particles in onboarding and fix @AppStorage declarations
+// Updated 05/27/25 to remove deprecated onChange signatures
 
 import SwiftUI
 
@@ -73,8 +74,9 @@ struct OnboardingView: View {
                             Spacer()
                         }
                     }
-                    .onChange(of: heightFeet)   { _ in recalcCm() }
-                    .onChange(of: heightInches) { _ in recalcCm() }
+                    // use the new zero‑parameter onChange to avoid deprecation
+                    .onChange(of: heightFeet)   { recalcCm() }
+                    .onChange(of: heightInches) { recalcCm() }
 
                     Section(header: Text("UNITS")
                                 .font(.caption)
@@ -96,6 +98,7 @@ struct OnboardingView: View {
                     ) {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.numberPad)
+                            // this two‑parameter onChange is already the new form
                             .onChange(of: weightText) { _, new in
                                 weightText = new.filter(\.isNumber)
                             }
