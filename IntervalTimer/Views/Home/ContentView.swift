@@ -1,46 +1,79 @@
-// ContentView.swift
-// IntervalTimer
-// Restored all tiles & functionality, broken into small sub‑views to avoid compiler timeouts
+//
+//  ContentView.swift
+//  IntervalTimer
+//
+//  Now with a fully custom header for perfect control of title color.
+//
 
-// ContentView.swift
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+
+    // The user’s chosen “Screen Background” from Settings:
     @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
+    
+    // Shows the Settings sheet:
     @State private var showingSettings = false
 
+    /// Map the stored raw String back to our enum.
     private var screenBackground: BackgroundOption {
         BackgroundOption(rawValue: backgroundRaw) ?? .white
     }
 
-    var body: some View {
-        NavigationView {
-            ZStack {
-                screenBackground.color.ignoresSafeArea()
+    /// What color should the header text & icon be?
+    private var headerColor: Color {
+        screenBackground == .black ? .white : .black
+    }
 
-                ScrollView {
-                    LazyVGrid(
-                        columns: [ .init(.flexible()), .init(.flexible()) ],
-                        spacing: 20
-                    ) {
-                        ConfigTilesView()   // your new 4‑tile subview
-                        ActionTilesView()   // your new 5‑tile subview
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                // 1) Fill the full screen (including under the status bar)
+                screenBackground.color
+                    .ignoresSafeArea()
+
+                // 2) Our vertical stack, pushed beneath the status‐bar safe area
+                VStack(spacing: 0) {
+                    // ─── CUSTOM HEADER ───
+                    HStack {
+                        Text("Hello, \(UIDevice.current.name)!")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(headerColor)
+
+                        Spacer()
+
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .foregroundColor(headerColor)
+                        }
                     }
-                    .padding()
+                    // Respect the top safe area + add a little padding
+                    .padding(.horizontal)
+                    .padding(.top, geo.safeAreaInsets.top + 12)
+
+                    // ─── GRID OF TILES ───
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [ .init(.flexible()), .init(.flexible()) ],
+                            spacing: 20
+                        ) {
+                            ConfigTilesView()
+                            ActionTilesView()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 16)
+                    }
                 }
             }
-            .navigationTitle("Hello, \(UIDevice.current.name)!")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showingSettings = true } label: {
-                        Image(systemName: "gearshape.fill")
-                    }
-                }
-            }
+            // Present Settings modally
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
+                    .environmentObject(themeManager)
             }
         }
     }
@@ -48,7 +81,21 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
-          .environmentObject(ThemeManager.shared)
+        Group {
+            ContentView()
+                .environmentObject(ThemeManager.shared)
+                .previewDisplayName("White BG")
+
+            ContentView()
+                .environmentObject(ThemeManager.shared)
+                .onAppear {
+                    UserDefaults.standard.set(
+                        BackgroundOption.black.rawValue,
+                        forKey: "screenBackground"
+                    )
+                }
+                .previewDisplayName("Black BG")
+        }
     }
 }
+

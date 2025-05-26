@@ -2,8 +2,6 @@
 //  IntervalTimerApp.swift
 //  IntervalTimer
 //
-//  Created by You on 5/23/25
-//
 
 import SwiftUI
 import AVFoundation
