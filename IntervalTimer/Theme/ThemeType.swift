@@ -1,13 +1,13 @@
 //
 //  ThemeType.swift
 //  IntervalTimer
-//  Updated 05/27/25 to refine Gamer palette from cyberpunk/“spectacular gaming adventure” neon scene
+//  Updated 05/27/25 to give Rave a nature‑inspired greens & browns palette
 //
 
 import SwiftUI
 
 enum ThemeType: String, CaseIterable, Identifiable {
-    case rave      = "Rave"
+    case rave      = "Nature"
     case neonPop   = "Neon"
     case starburst = "Starburst"
     case gamer     = "Gamer"
@@ -19,15 +19,16 @@ enum ThemeType: String, CaseIterable, Identifiable {
     var cardBackgrounds: [Color] {
         switch self {
         case .rave:
+            // nature‑inspired greens & browns
             return [
-                Color(red: 0.20, green: 0.00, blue: 0.50),
-                Color(red: 0.00, green: 0.50, blue: 1.00),
-                Color(red: 1.00, green: 0.00, blue: 0.50),
-                Color(red: 0.00, green: 1.00, blue: 1.00),
-                Color(red: 0.50, green: 1.00, blue: 0.00),
-                Color(red: 1.00, green: 1.00, blue: 0.00),
-                Color(red: 1.00, green: 0.20, blue: 0.60),
-                Color(red: 1.00, green: 0.40, blue: 0.00)
+                Color(red: 0.13, green: 0.55, blue: 0.13), // forest green
+                Color(red: 0.24, green: 0.71, blue: 0.44), // medium sea green
+                Color(red: 0.42, green: 0.56, blue: 0.14), // olive green
+                Color(red: 0.56, green: 0.74, blue: 0.56), // light green
+                Color(red: 0.33, green: 0.42, blue: 0.19), // dark olive
+                Color(red: 0.55, green: 0.27, blue: 0.07), // saddle brown
+                Color(red: 0.71, green: 0.40, blue: 0.11), // sienna
+                Color(red: 0.80, green: 0.80, blue: 0.50)  // khaki
             ]
 
         case .neonPop:
@@ -55,16 +56,15 @@ enum ThemeType: String, CaseIterable, Identifiable {
             ]
 
         case .gamer:
-            // cyberpunk‑style neon: blues, cyans, purples, pinks, with deep midnight
             return [
-                Color(red: 0.00, green: 0.90, blue: 0.90), // neon cyan
-                Color(red: 0.75, green: 0.00, blue: 1.00), // electric purple
-                Color(red: 1.00, green: 0.00, blue: 0.50), // hot pink
-                Color(red: 0.00, green: 0.50, blue: 1.00), // vivid blue
-                Color(red: 1.00, green: 0.20, blue: 0.20), // neon red
-                Color(red: 0.00, green: 1.00, blue: 0.00), // neon green
-                Color(red: 0.10, green: 0.10, blue: 0.15), // deep midnight
-                Color(red: 0.60, green: 0.00, blue: 0.60)  // neon magenta
+                Color(red: 0.00, green: 0.90, blue: 0.90),
+                Color(red: 0.75, green: 0.00, blue: 1.00),
+                Color(red: 1.00, green: 0.00, blue: 0.50),
+                Color(red: 0.00, green: 0.50, blue: 1.00),
+                Color(red: 1.00, green: 0.20, blue: 0.20),
+                Color(red: 0.00, green: 1.00, blue: 0.00),
+                Color(red: 0.10, green: 0.10, blue: 0.15),
+                Color(red: 0.60, green: 0.00, blue: 0.60)
             ]
 
         case .ocean:
@@ -73,10 +73,10 @@ enum ThemeType: String, CaseIterable, Identifiable {
                 Color(red: 0.00, green: 0.50, blue: 0.50),
                 Color(red: 0.18, green: 0.55, blue: 0.34),
                 Color(red: 0.13, green: 0.70, blue: 0.67),
-                Color(red: 0.20, green: 0.10, blue: 0.83),
-                Color(red: 0.13, green: 0.31, blue: 0.52),
-                Color(red: 0.39, green: 0.78, blue: 0.30),
-                Color(red: 0.40, green: 0.98, blue: 0.60)
+                Color(red: 0.50, green: 1.00, blue: 0.83),
+                Color(red: 0.53, green: 0.81, blue: 0.92),
+                Color(red: 0.69, green: 0.88, blue: 0.90),
+                Color(red: 0.60, green: 0.98, blue: 0.60)
             ]
         }
     }
@@ -84,7 +84,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Accent color for buttons, nav bars, banners
     var accent: Color {
         switch self {
-        case .rave:      return Color(red: 1.00, green: 0.00, blue: 0.50)
+        case .rave:      return Color(red: 0.33, green: 0.42, blue: 0.19) // dark olive
         case .neonPop:   return .purple
         case .starburst: return .orange
         case .gamer:     return Color(red: 0.00, green: 0.90, blue: 0.90)
@@ -95,10 +95,10 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Overall background for every screen
     var backgroundColor: Color {
         switch self {
-        case .rave, .neonPop, .gamer:
-            return .black
-        case .starburst, .ocean:
+        case .rave, .ocean, .starburst:
             return Color(.systemBackground)
+        case .neonPop, .gamer:
+            return .black
         }
     }
 }
