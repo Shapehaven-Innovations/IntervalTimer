@@ -2,7 +2,6 @@
 //  TimerView.swift
 //  IntervalTimer
 //  Core timer UI with Get‑Ready + mixing with background audio + in‑view IntentionBanner
-//  Refactored to use ThemeManager for live theming.
 //
 
 import SwiftUI
@@ -144,6 +143,7 @@ struct TimerView: View {
             }
             .sheet(isPresented: $showIntentions) {
                 IntentionsView()
+                    .environmentObject(themeManager)
             }
         }
     }
@@ -202,7 +202,7 @@ struct TimerView: View {
                 startTimerLoop()
             } else {
                 phase = .complete
-                currentTime = 1
+                currentTime = 0                  // ← fix: zero‑out so UI shows 00:00
                 playSound(named: "complete")
                 completeAndSave()
             }
