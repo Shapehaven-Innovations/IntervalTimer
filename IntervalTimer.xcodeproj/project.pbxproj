@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A0258022DE4EFC700A85EFE /* PickerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258012DE4EFC700A85EFE /* PickerType.swift */; };
+		9A0258042DE4EFD100A85EFE /* ConfigTilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258032DE4EFD100A85EFE /* ConfigTilesView.swift */; };
+		9A0258062DE4EFE400A85EFE /* ActionTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258052DE4EFE400A85EFE /* ActionTileView.swift */; };
+		9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */; };
+		9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */; };
 		9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */; };
 		9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81F2DE11474008C73D7 /* ContentView.swift */; };
 		9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8202DE11474008C73D7 /* IntentionsView.swift */; };
@@ -30,6 +35,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9A0258012DE4EFC700A85EFE /* PickerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerType.swift; sourceTree = "<group>"; };
+		9A0258032DE4EFD100A85EFE /* ConfigTilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTilesView.swift; sourceTree = "<group>"; };
+		9A0258052DE4EFE400A85EFE /* ActionTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTileView.swift; sourceTree = "<group>"; };
+		9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTilesView.swift; sourceTree = "<group>"; };
+		9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedTile.swift; sourceTree = "<group>"; };
 		9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		9A66D81F2DE11474008C73D7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -140,6 +150,11 @@
 		9A66D8402DE114D8008C73D7 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */,
+				9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */,
+				9A0258052DE4EFE400A85EFE /* ActionTileView.swift */,
+				9A0258032DE4EFD100A85EFE /* ConfigTilesView.swift */,
+				9A0258012DE4EFC700A85EFE /* PickerType.swift */,
 				9A66D81F2DE11474008C73D7 /* ContentView.swift */,
 			);
 			path = Home;
@@ -298,6 +313,7 @@
 				9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */,
 				9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */,
 				9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */,
+				9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */,
 				9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */,
 				9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */,
 				9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */,
@@ -305,13 +321,17 @@
 				9A66D8322DE11474008C73D7 /* IntervalTimerApp.swift in Sources */,
 				9A66D8332DE11474008C73D7 /* RenameConfigurationView.swift in Sources */,
 				9A768BBC2DE2507F00435DE8 /* Styles.swift in Sources */,
+				9A0258062DE4EFE400A85EFE /* ActionTileView.swift in Sources */,
+				9A0258022DE4EFC700A85EFE /* PickerType.swift in Sources */,
 				9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */,
 				9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */,
 				9A768BBA2DE2506D00435DE8 /* ParticleBackground.swift in Sources */,
 				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
 				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
 				9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */,
+				9A0258042DE4EFD100A85EFE /* ConfigTilesView.swift in Sources */,
 				9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */,
+				9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

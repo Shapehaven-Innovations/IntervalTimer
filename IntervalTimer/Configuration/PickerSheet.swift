@@ -9,8 +9,10 @@ import SwiftUI
 
 /// A modal sheet that lets the user adjust one `Int`-based workout parameter.
 struct PickerSheet: View {
-    let type: ContentView.PickerType          // which value we’re editing
-    @Binding var value: Int                   // two-way binding to that value
+    let type: PickerType
+          // which value we’re editing
+    @Binding var value: Int
+    // two-way binding to that value
 
     @Environment(\.presentationMode) private var dismiss
     @EnvironmentObject    private var themeManager: ThemeManager

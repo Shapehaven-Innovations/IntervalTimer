@@ -1,3 +1,11 @@
+//
+//  ConfigTilesView.swift
+//  IntervalTimer
+//
+//  Created by user on 5/26/25.
+//
+
+
 // ConfigTilesView.swift
 import SwiftUI
 
