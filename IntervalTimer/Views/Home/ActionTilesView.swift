@@ -1,0 +1,90 @@
+// ActionTilesView.swift
+import SwiftUI
+
+struct ActionTilesView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+
+    @AppStorage("getReadyDuration") private var getReadyDuration = 3
+    @AppStorage("restDuration")     private var restDuration     = 10
+    @AppStorage("sets")             private var sets             = 8
+    @AppStorage("lastWorkoutName")  private var lastWorkoutName  = ""
+    @AppStorage("savedConfigurations") private var configsData: Data = Data()
+
+    @State private var configs: [SessionRecord] = []
+
+    @State private var showingTimer        = false
+    @State private var showingConfigEditor = false
+    @State private var showingWorkoutLog   = false
+    @State private var showingIntention    = false
+    @State private var showingAnalytics    = false
+
+    var body: some View {
+        Group {
+            ActionTileView(
+                icon:   "play.circle.fill",
+                label:  "Start Workout",
+                bgColor: themeManager.selected.cardBackgrounds[4],
+                index:  4
+            ) { showingTimer = true }
+
+            ActionTileView(
+                icon:   "plus.circle.fill",
+                label:  "Save Workout",
+                bgColor: themeManager.selected.cardBackgrounds[5],
+                index:  5
+            ) { showingConfigEditor = true }
+
+            ActionTileView(
+                icon:   "list.bullet.clipboard.fill",
+                label:  "Workout Log",
+                bgColor: themeManager.selected.cardBackgrounds[6],
+                index:  6
+            ) { showingWorkoutLog = true }
+
+            ActionTileView(
+                icon:   "target",
+                label:  "Intention",
+                bgColor: themeManager.selected.cardBackgrounds[7],
+                index:  7
+            ) { showingIntention = true }
+
+            ActionTileView(
+                icon:   "chart.bar.doc.horizontal.fill",
+                label:  "Analytics",
+                bgColor: themeManager.selected.accent,
+                index:  8
+            ) { showingAnalytics = true }
+        }
+        .sheet(isPresented: $showingTimer) {
+            TimerView(workoutName: lastWorkoutName)
+        }
+        .sheet(isPresented: $showingConfigEditor) {
+            ConfigurationEditorView(
+                timerDuration: getReadyDuration,
+                restDuration:  restDuration,
+                sets:          sets
+            ) { newRec in
+                configs.insert(newRec, at: 0)
+                if let data = try? JSONEncoder().encode(configs) {
+                    configsData = data
+                }
+                lastWorkoutName = newRec.name
+            }
+        }
+        .sheet(isPresented: $showingWorkoutLog) { WorkoutLogView() }
+        .sheet(isPresented: $showingIntention)  { IntentionsView() }
+        .sheet(isPresented: $showingAnalytics)  { AnalyticsView() }
+        .onAppear {
+            if let decoded = try? JSONDecoder().decode([SessionRecord].self, from: configsData) {
+                configs = decoded
+            }
+        }
+    }
+}
+
+struct ActionTilesView_Previews: PreviewProvider {
+    static var previews: some View {
+        ActionTilesView()
+          .environmentObject(ThemeManager.shared)
+    }
+}
