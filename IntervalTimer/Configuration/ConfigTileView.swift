@@ -1,10 +1,6 @@
-//
-//  ConfigTileView.swift
-//  IntervalTimer
-//
-//  Created by You on 5/24/25.
-//  Updated on 5/25/25 to respect the “enableFireballs” setting.
-//
+// ConfigTileView.swift
+// IntervalTimer
+// Updated 05/26/25 to render particles behind each tile
 
 import SwiftUI
 
@@ -18,26 +14,27 @@ struct ConfigTileView: View {
     @State private var wobble = false
     @State private var shrink = false
 
-    /// Honor the user’s preference for fireballs.
-    @AppStorage("enableFireballs") private var enableFireballs: Bool = true
+    /// Honor the user’s preference for particles (was “fireballs”)
+    @AppStorage("enableFireballs") private var enableParticles: Bool = true
 
     var body: some View {
         Button(action: action) {
             ZStack {
-                // 1) Optional Fireballs!
-                if enableFireballs {
+                // 1) Per‑tile particle background
+                if enableParticles {
                     FireballBackground()
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
 
-                // 2) Semi‑opaque color on top so your tile color still shows
+                // 2) Semi‑opaque overlay so tile color still shows through
                 RoundedRectangle(cornerRadius: 16)
                     .fill(color.opacity(0.6))
 
-                // 3) Your normal icon + text
+                // 3) Icon + labels
                 VStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.largeTitle)
+                        // subtle icon animations
                         .rotationEffect(icon == "bed.double.fill"
                                         ? Angle(degrees: wobble ? 10 : -10)
                                         : .zero)
@@ -94,6 +91,7 @@ struct ConfigTileView_Previews: PreviewProvider {
             ) {}
         }
         .padding()
+        .environmentObject(ThemeManager.shared)
     }
 }
 #endif

@@ -1,17 +1,13 @@
-//
-//  ContentView.swift
-//  IntervalTimer
-//
-//  Created by You on 5/23/25.
-//  Updated on 5/25/25 to respect the user‑chosen screen background and include all sheets & onAppear logic.
-//
+// ContentView.swift
+// IntervalTimer
+// Updated 05/26/25 to render particles on every tile using a semi‑transparent overlay
 
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
-    // Workout configuration storage
+    // MARK: – Workout configuration storage
     @AppStorage("getReadyDuration")    private var _getReadyDuration = 3
     @AppStorage("timerDuration")       private var _timerDuration    = 20
     @AppStorage("restDuration")        private var _restDuration     = 10
@@ -19,13 +15,15 @@ struct ContentView: View {
     @AppStorage("lastWorkoutName")     private var lastWorkoutName  = ""
     @AppStorage("savedConfigurations") private var configsData: Data = Data()
 
-    // Screen background choice
-    @AppStorage("screenBackground")    private var backgroundRaw: String = BackgroundOption.white.rawValue
+    // MARK: – App settings
+    @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
+    @AppStorage("enableFireballs")  private var enableParticles: Bool = true
+
     private var screenBackground: BackgroundOption {
         BackgroundOption(rawValue: backgroundRaw) ?? .white
     }
 
-    // Local state
+    // MARK: – Local state
     @State private var configs: [SessionRecord] = []
     @State private var activePicker: PickerType?
     @State private var showingTimer        = false
@@ -39,6 +37,7 @@ struct ContentView: View {
 
     private var name: String { UIDevice.current.name }
 
+    // MARK: – PickerType
     enum PickerType: Int, Identifiable {
         case getReady, rounds, work, rest
         var id: Int { rawValue }
@@ -80,16 +79,12 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Draw the user-selected background color
-                screenBackground.color
-                    .ignoresSafeArea()
+                // Screen background color
+                screenBackground.color.ignoresSafeArea()
 
                 ScrollView {
-                    LazyVGrid(
-                        columns: [ GridItem(.flexible()), GridItem(.flexible()) ],
-                        spacing: 20
-                    ) {
-                        // MARK: – Configuration Tiles
+                    LazyVGrid(columns: [ GridItem(.flexible()), GridItem(.flexible()) ], spacing: 20) {
+                        // MARK: – Upper Tiles (ConfigTileView already handles particles)
 
                         ConfigTileView(
                             icon:  "bolt.fill",
@@ -123,19 +118,26 @@ struct ContentView: View {
                         ) { activePicker = .rest }
                         .animatedTile(index: 3, animate: animateTiles)
 
-                        // MARK: – Action Buttons
+                        // MARK: – Lower Tiles (explicit action buttons)
 
+                        // Start Workout
                         Button { showingTimer = true } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "play.circle.fill")
-                                    .font(.largeTitle)
-                                Text("Start Workout").font(.headline)
+                            ZStack {
+                                if enableParticles {
+                                    FireballBackground()
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(themeManager.selected.cardBackgrounds[4].opacity(0.6))
+                                VStack(spacing: 8) {
+                                    Image(systemName: "play.circle.fill")
+                                        .font(.largeTitle)
+                                    Text("Start Workout").font(.headline)
+                                }
+                                .foregroundColor(.white)
                             }
-                            .frame(minHeight: 140).frame(maxWidth: .infinity)
-                            .background(themeManager.selected.cardBackgrounds[4])
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                            .shimmer()
+                            .frame(minHeight: 140)
+                            .frame(maxWidth: .infinity)
                             .shadow(
                                 color: themeManager.selected.cardBackgrounds[4].opacity(0.3),
                                 radius: 6, x: 0, y: 5
@@ -144,16 +146,24 @@ struct ContentView: View {
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 4, animate: animateTiles)
 
+                        // Save Workout
                         Button { showingConfigEditor = true } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.largeTitle)
-                                Text("Save Workout").font(.headline)
+                            ZStack {
+                                if enableParticles {
+                                    FireballBackground()
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(themeManager.selected.cardBackgrounds[5].opacity(0.6))
+                                VStack(spacing: 8) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.largeTitle)
+                                    Text("Save Workout").font(.headline)
+                                }
+                                .foregroundColor(.white)
                             }
-                            .frame(minHeight: 140).frame(maxWidth: .infinity)
-                            .background(themeManager.selected.cardBackgrounds[5])
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                            .frame(minHeight: 140)
+                            .frame(maxWidth: .infinity)
                             .shadow(
                                 color: themeManager.selected.cardBackgrounds[5].opacity(0.3),
                                 radius: 6, x: 0, y: 5
@@ -162,16 +172,24 @@ struct ContentView: View {
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 5, animate: animateTiles)
 
+                        // Workout Log
                         Button { showingWorkoutLog = true } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "list.bullet.clipboard.fill")
-                                    .font(.largeTitle)
-                                Text("Workout Log").font(.headline)
+                            ZStack {
+                                if enableParticles {
+                                    FireballBackground()
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(themeManager.selected.cardBackgrounds[6].opacity(0.6))
+                                VStack(spacing: 8) {
+                                    Image(systemName: "list.bullet.clipboard.fill")
+                                        .font(.largeTitle)
+                                    Text("Workout Log").font(.headline)
+                                }
+                                .foregroundColor(.white)
                             }
-                            .frame(minHeight: 140).frame(maxWidth: .infinity)
-                            .background(themeManager.selected.cardBackgrounds[6])
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                            .frame(minHeight: 140)
+                            .frame(maxWidth: .infinity)
                             .shadow(
                                 color: themeManager.selected.cardBackgrounds[6].opacity(0.3),
                                 radius: 6, x: 0, y: 5
@@ -180,25 +198,30 @@ struct ContentView: View {
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 6, animate: animateTiles)
 
+                        // Intention
                         Button { showingIntention = true } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "target")
-                                    .font(.largeTitle)
-                                    .scaleEffect(pulseTarget ? 1.2 : 0.8)
-                                    .onAppear {
-                                        withAnimation(
-                                            .easeInOut(duration: 0.9)
-                                                .repeatForever(autoreverses: true)
-                                        ) {
-                                            pulseTarget.toggle()
+                            ZStack {
+                                if enableParticles {
+                                    FireballBackground()
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(themeManager.selected.cardBackgrounds[7].opacity(0.6))
+                                VStack(spacing: 8) {
+                                    Image(systemName: "target")
+                                        .font(.largeTitle)
+                                        .scaleEffect(pulseTarget ? 1.2 : 0.8)
+                                        .onAppear {
+                                            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                                                pulseTarget.toggle()
+                                            }
                                         }
-                                    }
-                                Text("Intention").font(.headline)
+                                    Text("Intention").font(.headline)
+                                }
+                                .foregroundColor(.white)
                             }
-                            .frame(minHeight: 140).frame(maxWidth: .infinity)
-                            .background(themeManager.selected.cardBackgrounds[7])
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                            .frame(minHeight: 140)
+                            .frame(maxWidth: .infinity)
                             .shadow(
                                 color: themeManager.selected.cardBackgrounds[7].opacity(0.3),
                                 radius: 6, x: 0, y: 5
@@ -207,16 +230,24 @@ struct ContentView: View {
                         .buttonStyle(PressableButtonStyle())
                         .animatedTile(index: 7, animate: animateTiles)
 
+                        // Analytics
                         Button { showingAnalytics = true } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "chart.bar.doc.horizontal.fill")
-                                    .font(.largeTitle)
-                                Text("Analytics").font(.headline)
+                            ZStack {
+                                if enableParticles {
+                                    FireballBackground()
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(themeManager.selected.accent.opacity(0.6))
+                                VStack(spacing: 8) {
+                                    Image(systemName: "chart.bar.doc.horizontal.fill")
+                                        .font(.largeTitle)
+                                    Text("Analytics").font(.headline)
+                                }
+                                .foregroundColor(.white)
                             }
-                            .frame(minHeight: 140).frame(maxWidth: .infinity)
-                            .background(themeManager.selected.accent)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                            .frame(minHeight: 140)
+                            .frame(maxWidth: .infinity)
                             .shadow(
                                 color: themeManager.selected.accent.opacity(0.3),
                                 radius: 6, x: 0, y: 5
@@ -236,18 +267,14 @@ struct ContentView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showingSettings = true } label: {
                         Image(systemName: "gearshape.fill")
-                            .imageScale(.large)
                     }
                 }
             }
             // MARK: – Sheets
-
             .sheet(item: $activePicker) { p in
                 PickerSheet(type: p, value: binding(for: p))
             }
-            .sheet(isPresented: $showingTimer) {
-                TimerView(workoutName: lastWorkoutName)
-            }
+            .sheet(isPresented: $showingTimer)        { TimerView(workoutName: lastWorkoutName) }
             .sheet(isPresented: $showingConfigEditor) {
                 ConfigurationEditorView(
                     timerDuration: _getReadyDuration,
@@ -261,24 +288,14 @@ struct ContentView: View {
                     lastWorkoutName = newRec.name
                 }
             }
-            .sheet(isPresented: $showingWorkoutLog) {
-                WorkoutLogView()
-            }
-            .sheet(isPresented: $showingIntention) {
-                IntentionsView()
-            }
-            .sheet(isPresented: $showingAnalytics) {
-                AnalyticsView()
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
+            .sheet(isPresented: $showingWorkoutLog)  { WorkoutLogView() }
+            .sheet(isPresented: $showingIntention)   { IntentionsView() }
+            .sheet(isPresented: $showingAnalytics)   { AnalyticsView() }
+            .sheet(isPresented: $showingSettings)    { SettingsView() }
             // MARK: – On‑Appear
-
             .onAppear {
                 if let decoded = try? JSONDecoder()
-                    .decode([SessionRecord].self, from: configsData)
-                {
+                    .decode([SessionRecord].self, from: configsData) {
                     configs = decoded
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -288,6 +305,7 @@ struct ContentView: View {
         }
     }
 
+    // MARK: – Helper
     private func format(_ seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
