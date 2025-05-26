@@ -21,7 +21,7 @@
 		9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB32DE24AEF00435DE8 /* SettingsView.swift */; };
 		9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB52DE24EF500435DE8 /* ThemeManager.swift */; };
 		9A768BB82DE24FDE00435DE8 /* ThemeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB72DE24FDE00435DE8 /* ThemeType.swift */; };
-		9A768BBA2DE2506D00435DE8 /* FireballBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB92DE2506D00435DE8 /* FireballBackground.swift */; };
+		9A768BBA2DE2506D00435DE8 /* ParticleBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BB92DE2506D00435DE8 /* ParticleBackground.swift */; };
 		9A768BBC2DE2507F00435DE8 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBB2DE2507F00435DE8 /* Styles.swift */; };
 		9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */; };
 		9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */; };
@@ -45,7 +45,7 @@
 		9A768BB32DE24AEF00435DE8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9A768BB52DE24EF500435DE8 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		9A768BB72DE24FDE00435DE8 /* ThemeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeType.swift; sourceTree = "<group>"; };
-		9A768BB92DE2506D00435DE8 /* FireballBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireballBackground.swift; sourceTree = "<group>"; };
+		9A768BB92DE2506D00435DE8 /* ParticleBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticleBackground.swift; sourceTree = "<group>"; };
 		9A768BBB2DE2507F00435DE8 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		9A768BBD2DE250AF00435DE8 /* ConfigTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTileView.swift; sourceTree = "<group>"; };
 		9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
@@ -122,7 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				9A768BBB2DE2507F00435DE8 /* Styles.swift */,
-				9A768BB92DE2506D00435DE8 /* FireballBackground.swift */,
+				9A768BB92DE2506D00435DE8 /* ParticleBackground.swift */,
 				9A768BB72DE24FDE00435DE8 /* ThemeType.swift */,
 				9A768BB52DE24EF500435DE8 /* ThemeManager.swift */,
 			);
@@ -307,7 +307,7 @@
 				9A768BBC2DE2507F00435DE8 /* Styles.swift in Sources */,
 				9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */,
 				9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */,
-				9A768BBA2DE2506D00435DE8 /* FireballBackground.swift in Sources */,
+				9A768BBA2DE2506D00435DE8 /* ParticleBackground.swift in Sources */,
 				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
 				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
 				9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */,

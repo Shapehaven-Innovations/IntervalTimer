@@ -1,10 +1,6 @@
-//
-//  SettingsView.swift
-//  IntervalTimer
-//
-//  Created by You on 5/24/25.
-//  Updated on 5/25/25 to let the user pick screen background and toggle fireballs.
-//
+// SettingsView.swift
+// IntervalTimer
+// Updated 05/26/25 to toggle particles instead of fireballs
 
 import SwiftUI
 
@@ -12,13 +8,9 @@ struct SettingsView: View {
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject    private var themeManager: ThemeManager
 
-    /// Persist the user’s background choice as a raw string.
     @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
+    @AppStorage("enableParticles")  private var enableParticles: Bool = true
 
-    /// Toggle for fireballs behind the tiles.
-    @AppStorage("enableFireballs") private var enableFireballs: Bool = true
-
-    /// A Binding<BackgroundOption> so we can drive a Picker directly.
     private var backgroundBinding: Binding<BackgroundOption> {
         Binding(
             get: { BackgroundOption(rawValue: backgroundRaw) ?? .white },
@@ -47,8 +39,8 @@ struct SettingsView: View {
                     .pickerStyle(.inline)
                 }
 
-                Section(header: Text("Fireballs")) {
-                    Toggle("Fireballs Behind Tiles", isOn: $enableFireballs)
+                Section(header: Text("Particles")) {
+                    Toggle("Particles Behind Tiles", isOn: $enableParticles)
                 }
             }
             .navigationTitle("Settings")
@@ -61,8 +53,7 @@ struct SettingsView: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView()
-            .environmentObject(ThemeManager.shared)
+        SettingsView().environmentObject(ThemeManager.shared)
     }
 }
 

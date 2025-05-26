@@ -1,6 +1,8 @@
-// FireballBackground.swift
+// ParticleBackground.swift
 // IntervalTimer
-// Updated 05/25/25 to a dynamic, theme-aware gradient + subtle particle effect
+// Dynamic, theme‑aware gradient + subtle particle effect
+//
+// Renamed from FireballBackground.swift on 05/26/25
 
 import SwiftUI
 
@@ -61,7 +63,7 @@ private struct DynamicGradientBackground: View {
     }
 }
 
-struct FireballBackground: View {
+struct ParticleBackground: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @State private var particles: [Particle] = []
     private let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()

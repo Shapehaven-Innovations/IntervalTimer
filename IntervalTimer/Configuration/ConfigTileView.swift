@@ -14,27 +14,24 @@ struct ConfigTileView: View {
     @State private var wobble = false
     @State private var shrink = false
 
-    /// Honor the user’s preference for particles (was “fireballs”)
-    @AppStorage("enableFireballs") private var enableParticles: Bool = true
+    /// Honor the user’s preference for particles
+    @AppStorage("enableParticles") private var enableParticles: Bool = true
 
     var body: some View {
         Button(action: action) {
             ZStack {
                 // 1) Per‑tile particle background
                 if enableParticles {
-                    FireballBackground()
+                    ParticleBackground()
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
-
-                // 2) Semi‑opaque overlay so tile color still shows through
+                // 2) Semi‑opaque overlay
                 RoundedRectangle(cornerRadius: 16)
                     .fill(color.opacity(0.6))
-
                 // 3) Icon + labels
                 VStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.largeTitle)
-                        // subtle icon animations
                         .rotationEffect(icon == "bed.double.fill"
                                         ? Angle(degrees: wobble ? 10 : -10)
                                         : .zero)
@@ -55,10 +52,8 @@ struct ConfigTileView: View {
                                 }
                             }
                         }
-
                     Text(label)
                         .font(.headline)
-
                     Text(value)
                         .font(.subheadline).bold()
                 }
@@ -77,18 +72,8 @@ struct ConfigTileView: View {
 struct ConfigTileView_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 20) {
-            ConfigTileView(
-                icon:  "bolt.fill",
-                label: "Get Ready",
-                value: "00:03",
-                color: .red
-            ) {}
-            ConfigTileView(
-                icon:  "repeat.circle.fill",
-                label: "Rounds",
-                value: "8",
-                color: .blue
-            ) {}
+            ConfigTileView(icon: "bolt.fill", label: "Get Ready", value: "00:03", color: .red) {}
+            ConfigTileView(icon: "repeat.circle.fill", label: "Rounds", value: "8", color: .blue) {}
         }
         .padding()
         .environmentObject(ThemeManager.shared)
