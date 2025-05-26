@@ -2,48 +2,60 @@
 //  ContentView.swift
 //  IntervalTimer
 //
-//  Now with a fully custom header for perfect control of title color.
+//  Title + grid in one VStack, gear in another—both layered in a ZStack.
 //
 
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var themeManager: ThemeManager
-
-    // The user’s chosen “Screen Background” from Settings:
     @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
-    
-    // Shows the Settings sheet:
     @State private var showingSettings = false
 
-    /// Map the stored raw String back to our enum.
     private var screenBackground: BackgroundOption {
         BackgroundOption(rawValue: backgroundRaw) ?? .white
     }
-
-    /// What color should the header text & icon be?
     private var headerColor: Color {
         screenBackground == .black ? .white : .black
     }
 
     var body: some View {
         GeometryReader { geo in
-            ZStack(alignment: .top) {
-                // 1) Fill the full screen (including under the status bar)
+            ZStack {
+                // ─── 1) Full‑screen background ───
                 screenBackground.color
                     .ignoresSafeArea()
 
-                // 2) Our vertical stack, pushed beneath the status‐bar safe area
+                // ─── 2) Main content stack ───
                 VStack(spacing: 0) {
-                    // ─── CUSTOM HEADER ───
+                    // Header
                     HStack {
                         Text("Hello, \(UIDevice.current.name)!")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
+                            .font(.largeTitle).bold()
                             .foregroundColor(headerColor)
-
                         Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, geo.safeAreaInsets.top + 12)
 
+                    // Tile grid
+                    ScrollView {
+                        LazyVGrid(columns: [.init(.flexible()), .init(.flexible())],
+                                  spacing: 20) {
+                            ConfigTilesView()
+                            ActionTilesView()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                    }
+                }
+
+                // ─── 3) Gear button in its own stack ───
+                VStack {
+                    // pushes content below the notch
+                    Spacer().frame(height: geo.safeAreaInsets.top + 8)
+                    HStack {
+                        Spacer()
                         Button {
                             showingSettings = true
                         } label: {
@@ -51,26 +63,14 @@ struct ContentView: View {
                                 .font(.title2)
                                 .foregroundColor(headerColor)
                         }
+                        .padding(.trailing, 12)
                     }
-                    // Respect the top safe area + add a little padding
-                    .padding(.horizontal)
-                    .padding(.top, geo.safeAreaInsets.top + 12)
-
-                    // ─── GRID OF TILES ───
-                    ScrollView {
-                        LazyVGrid(
-                            columns: [ .init(.flexible()), .init(.flexible()) ],
-                            spacing: 20
-                        ) {
-                            ConfigTilesView()
-                            ActionTilesView()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 16)
-                    }
+                    Spacer() // fill the rest
                 }
+                // let this VStack go under the notch too
+                .ignoresSafeArea(edges: .top)
             }
-            // Present Settings modally
+            // ─── 4) Settings sheet ───
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
                     .environmentObject(themeManager)
@@ -81,21 +81,10 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            ContentView()
-                .environmentObject(ThemeManager.shared)
-                .previewDisplayName("White BG")
-
-            ContentView()
-                .environmentObject(ThemeManager.shared)
-                .onAppear {
-                    UserDefaults.standard.set(
-                        BackgroundOption.black.rawValue,
-                        forKey: "screenBackground"
-                    )
-                }
-                .previewDisplayName("Black BG")
-        }
+        ContentView()
+            .environmentObject(ThemeManager.shared)
+            .previewLayout(.device)
+            .previewDisplayName("Default")
     }
 }
 
