@@ -1,7 +1,7 @@
 //
 //  ThemeType.swift
 //  IntervalTimer
-//  Updated 05/27/25 to give Rave a nature‑inspired greens & browns palette
+//  Updated 05/27/25 to darken Start Workout, Save Workout, Workout Log, and Intention tiles in Ocean theme
 //
 
 import SwiftUI
@@ -19,16 +19,15 @@ enum ThemeType: String, CaseIterable, Identifiable {
     var cardBackgrounds: [Color] {
         switch self {
         case .rave:
-            // nature‑inspired greens & browns
             return [
-                Color(red: 0.13, green: 0.55, blue: 0.13), // forest green
-                Color(red: 0.24, green: 0.71, blue: 0.44), // medium sea green
-                Color(red: 0.42, green: 0.56, blue: 0.14), // olive green
-                Color(red: 0.56, green: 0.74, blue: 0.56), // light green
-                Color(red: 0.33, green: 0.42, blue: 0.19), // dark olive
-                Color(red: 0.55, green: 0.27, blue: 0.07), // saddle brown
-                Color(red: 0.71, green: 0.40, blue: 0.11), // sienna
-                Color(red: 0.80, green: 0.80, blue: 0.50)  // khaki
+                Color(red: 0.13, green: 0.55, blue: 0.13),
+                Color(red: 0.24, green: 0.71, blue: 0.44),
+                Color(red: 0.42, green: 0.56, blue: 0.14),
+                Color(red: 0.56, green: 0.74, blue: 0.56),
+                Color(red: 0.33, green: 0.42, blue: 0.19),
+                Color(red: 0.55, green: 0.27, blue: 0.07),
+                Color(red: 0.71, green: 0.40, blue: 0.11),
+                Color(red: 0.80, green: 0.80, blue: 0.50)
             ]
 
         case .neonPop:
@@ -49,10 +48,10 @@ enum ThemeType: String, CaseIterable, Identifiable {
                 Color(red: 1.00, green: 0.84, blue: 0.00),
                 Color(red: 1.00, green: 0.55, blue: 0.00),
                 Color(red: 1.00, green: 0.65, blue: 0.00),
-                Color(red: 1.00, green: 0.71, blue: 0.76),
-                Color(red: 1.00, green: 1.00, blue: 0.88),
-                Color(red: 1.00, green: 0.85, blue: 0.73),
-                Color(red: 1.00, green: 0.50, blue: 0.31)
+                Color(red: 0.85, green: 0.30, blue: 0.60),
+                Color(red: 1.00, green: 0.65, blue: 0.30),
+                Color(red: 0.70, green: 0.35, blue: 0.30),
+                Color(red: 0.80, green: 0.30, blue: 0.20)
             ]
 
         case .gamer:
@@ -68,15 +67,16 @@ enum ThemeType: String, CaseIterable, Identifiable {
             ]
 
         case .ocean:
+            // darkened entries for indices 4–7
             return [
-                Color(red: 0.00, green: 0.12, blue: 0.25),
-                Color(red: 0.00, green: 0.50, blue: 0.50),
-                Color(red: 0.18, green: 0.55, blue: 0.34),
-                Color(red: 0.13, green: 0.70, blue: 0.67),
-                Color(red: 0.50, green: 1.00, blue: 0.83),
-                Color(red: 0.53, green: 0.81, blue: 0.92),
-                Color(red: 0.69, green: 0.88, blue: 0.90),
-                Color(red: 0.60, green: 0.98, blue: 0.60)
+                Color(red: 0.00, green: 0.12, blue: 0.25), // deep navy
+                Color(red: 0.00, green: 0.50, blue: 0.50), // teal
+                Color(red: 0.18, green: 0.55, blue: 0.34), // sea green
+                Color(red: 0.13, green: 0.70, blue: 0.67), // light sea green
+                Color(red: 0.30, green: 0.70, blue: 0.50), // darker aquamarine (Start Workout)
+                Color(red: 0.40, green: 0.60, blue: 0.70), // darker sky blue (Save Workout)
+                Color(red: 0.50, green: 0.70, blue: 0.75), // darker powder blue (Workout Log)
+                Color(red: 0.40, green: 0.70, blue: 0.40)  // darker pale green (Intention)
             ]
         }
     }
@@ -84,7 +84,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Accent color for buttons, nav bars, banners
     var accent: Color {
         switch self {
-        case .rave:      return Color(red: 0.33, green: 0.42, blue: 0.19) // dark olive
+        case .rave:      return Color(red: 0.33, green: 0.42, blue: 0.19)
         case .neonPop:   return .purple
         case .starburst: return .orange
         case .gamer:     return Color(red: 0.00, green: 0.90, blue: 0.90)
