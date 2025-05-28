@@ -14,10 +14,10 @@ final class ThemeManager: ObservableObject {
     private var cancellable: AnyCancellable?
 
     private init() {
-        // Load last‑saved or default to Rave
+        // Load last‑saved or default to neonPop
         let raw = UserDefaults.standard.string(forKey: "selectedTheme")
-                  ?? ThemeType.rave.rawValue
-        selected = ThemeType(rawValue: raw) ?? .rave
+                  ?? ThemeType.neonPop.rawValue
+        selected = ThemeType(rawValue: raw) ?? .neonPop
 
         // Persist future changes
         cancellable = $selected

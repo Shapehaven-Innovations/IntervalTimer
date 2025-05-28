@@ -7,7 +7,7 @@
 import SwiftUI
 
 enum ThemeType: String, CaseIterable, Identifiable {
-    case rave      = "Nature"
+    case nature    = "Nature"
     case neonPop   = "Neon"
     case starburst = "Starburst"
     case gamer     = "Gamer"
@@ -18,7 +18,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Eight card background colors per theme
     var cardBackgrounds: [Color] {
         switch self {
-        case .rave:
+        case .nature:
             return [
                 Color(red: 0.13, green: 0.55, blue: 0.13),
                 Color(red: 0.24, green: 0.71, blue: 0.44),
@@ -84,7 +84,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Accent color for buttons, nav bars, banners
     var accent: Color {
         switch self {
-        case .rave:      return Color(red: 0.33, green: 0.42, blue: 0.19)
+        case .nature:    return Color(red: 0.33, green: 0.42, blue: 0.19)
         case .neonPop:   return .purple
         case .starburst: return .orange
         case .gamer:     return Color(red: 0.00, green: 0.90, blue: 0.90)
@@ -95,7 +95,7 @@ enum ThemeType: String, CaseIterable, Identifiable {
     /// Overall background for every screen
     var backgroundColor: Color {
         switch self {
-        case .rave, .ocean, .starburst:
+        case .nature, .ocean, .starburst:
             return Color(.systemBackground)
         case .neonPop, .gamer:
             return .black
