@@ -1,32 +1,56 @@
 // SettingsView.swift
 // IntervalTimer
-// Interactive Settings UI: enhanced selection glow, static white background
+// Interactive Settings UI: App Theme, Screen Background & Particles toggle
 
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject private var themeManager: ThemeManager
+
     @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
+    @AppStorage("enableParticles")  private var enableParticles: Bool = true
+
     private let backgrounds = BackgroundOption.allCases
 
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
                 // Title
-                Text("Settings")
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.top, 20)
+                HStack {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundColor(.primary)
+                    Text("Settings")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                }
+                .padding(.top, 20)
+                .padding(.horizontal, 20)
 
-                // MARK: – App Theme Section
+                // Particles Toggle Section
                 VStack(alignment: .leading, spacing: 12) {
+                    Text("Particles")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Toggle(isOn: $enableParticles) {
+                        Text("Enable Particles Behind Tiles")
+                            .foregroundColor(.primary)
+                    }
+                    .toggleStyle(SwitchToggleStyle(tint: themeManager.selected.accent))
+                }
+                .padding(.horizontal, 20)
+
+                // App Theme Section
+                VStack(alignment: .leading, spacing: 16) {
                     Text("App Theme")
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    // Show current theme name
-                    Text("Selected: \(themeManager.selected.rawValue)")
+                    // Current theme name
+                    Text(themeManager.selected.rawValue)
                         .font(.subheadline)
                         .foregroundColor(themeManager.selected.accent)
                         .padding(6)
@@ -48,9 +72,13 @@ struct SettingsView: View {
                                 .scaleEffect(theme == themeManager.selected ? 1.1 : 1.0)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(theme.accent, lineWidth: theme == themeManager.selected ? 8 : 0)
+                                        .stroke(theme.accent,
+                                                lineWidth: theme == themeManager.selected ? 8 : 0)
                                 )
-                                .shadow(color: theme.accent.opacity(theme == themeManager.selected ? 0.6 : 0), radius: theme == themeManager.selected ? 15 : 0)
+                                .shadow(
+                                    color: theme.accent.opacity(theme == themeManager.selected ? 0.6 : 0),
+                                    radius: theme == themeManager.selected ? 15 : 0
+                                )
                                 .animation(.easeInOut(duration: 0.2), value: themeManager.selected)
                                 .onTapGesture {
                                     withAnimation(.easeInOut) {
@@ -62,8 +90,8 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal, 20)
 
-                // MARK: – Screen Background Section
-                VStack(alignment: .leading, spacing: 12) {
+                // Screen Background Section
+                VStack(alignment: .leading, spacing: 16) {
                     Text("Screen Background")
                         .font(.headline)
                         .foregroundColor(.primary)
@@ -76,18 +104,21 @@ struct SettingsView: View {
                                 .scaleEffect(backgroundRaw == bg.rawValue ? 1.05 : 1.0)
                                 .overlay(
                                     ZStack {
-                                        // Always show light border so white option remains visible
+                                        // Light border for visibility
                                         RoundedRectangle(cornerRadius: 12)
                                             .stroke(Color.secondary, lineWidth: 1)
-                                        // Highlight selected background
+                                        // Highlight selected
                                         if backgroundRaw == bg.rawValue {
                                             RoundedRectangle(cornerRadius: 12)
-                                                .stroke(themeManager.selected.accent, lineWidth: 6)
+                                                .stroke(themeManager.selected.accent,
+                                                        lineWidth: 6)
                                         }
                                     }
                                 )
                                 .shadow(
-                                    color: backgroundRaw == bg.rawValue ? themeManager.selected.accent.opacity(0.5) : Color.black.opacity(0.1),
+                                    color: backgroundRaw == bg.rawValue
+                                        ? themeManager.selected.accent.opacity(0.5)
+                                        : Color.black.opacity(0.1),
                                     radius: backgroundRaw == bg.rawValue ? 12 : 2
                                 )
                                 .animation(.easeInOut(duration: 0.2), value: backgroundRaw)
@@ -104,8 +135,10 @@ struct SettingsView: View {
 
                 Spacer()
 
-                // MARK: – Done Button
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                // Done Button
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
                     Text("Done")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
