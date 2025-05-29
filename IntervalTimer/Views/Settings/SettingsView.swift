@@ -1,21 +1,19 @@
-//
-//  SettingsView.swift
-//  IntervalTimer
-//  Modernized Settings: add in‑app Light/Dark toggle
-//
+// SettingsView.swift
+// IntervalTimer
+// Modernized Settings: live theme switching for tiles
 
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject private var themeManager: ThemeManager
 
     // MARK: – In‑app Appearance override
     @AppStorage("useDarkMode") private var useDarkMode: Bool = false
 
     // MARK: – Stored settings
-    @AppStorage("enableParticles")    private var enableParticles: Bool   = true
-    @AppStorage("selectedTheme")      private var selectedThemeRaw: String = ThemeType.neonPop.rawValue
-    @AppStorage("screenBackground")   private var screenBackgroundRaw: String = BackgroundOption.white.rawValue
+    @AppStorage("enableParticles")  private var enableParticles: Bool   = true
+    @AppStorage("screenBackground") private var screenBackgroundRaw: String = BackgroundOption.white.rawValue
 
     // MARK: – Data sources
     private let themes      = ThemeType.allCases
@@ -40,9 +38,9 @@ struct SettingsView: View {
 
                 // ── App Theme ──
                 Section(header: Text("App Theme")) {
-                    Picker("", selection: $selectedThemeRaw) {
+                    Picker("", selection: $themeManager.selected) {
                         ForEach(themes) { theme in
-                            Text(theme.rawValue).tag(theme.rawValue)
+                            Text(theme.rawValue).tag(theme)
                         }
                     }
                     .pickerStyle(.inline)
@@ -72,7 +70,7 @@ struct SettingsView: View {
             }
             .accentColor(accent)
         }
-        // Apply the chosen scheme to the Settings screen (and propagate if desired)
+        // Apply the chosen scheme to the Settings screen
         .preferredColorScheme(useDarkMode ? .dark : .light)
     }
 }
