@@ -97,8 +97,6 @@
 		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
 			isa = PBXGroup;
 			children = (
-				9AFB22ED2DE8AFC700A3813D /* app-ads.txt */,
-				9AFB22EC2DE8AD9000A3813D /* .gitignore */,
 				9A66D84B2DE11A13008C73D7 /* Onboarding */,
 				9A66D8252DE11474008C73D7 /* Info.plist */,
 				9A66D8462DE1156D008C73D7 /* Assets */,
@@ -112,6 +110,8 @@
 				9A66D83B2DE11491008C73D7 /* App */,
 				9A66D81D2DE11474008C73D7 /* Preview Content */,
 				9A66D8222DE11474008C73D7 /* Views */,
+				9AFB22ED2DE8AFC700A3813D /* app-ads.txt */,
+				9AFB22EC2DE8AD9000A3813D /* .gitignore */,
 			);
 			path = IntervalTimer;
 			sourceTree = "<group>";
