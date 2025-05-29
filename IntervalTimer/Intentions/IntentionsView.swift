@@ -1,259 +1,215 @@
 //
 //  IntentionsView.swift
 //  IntervalTimer
-//  Refactored to use ThemeManager for dynamic colors.
+//  Refactored to a paged quiz UI matching latest design mockup
 //
 
 import SwiftUI
 
-struct IntentionsView: View {
-    @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject private var themeManager: ThemeManager
+// MARK: – Supporting Enums
 
-    // MARK: – Selection State
-    @State private var selectedMind:    StateOfMind?      = nil
-    @State private var timeGoal:        TimeGoal          = .equal30
-    @State private var intensity:       Intensity         = .medium
-    @State private var workoutMindset:  WorkoutMindset    = .completion
-
-    // MARK: – Computed Titles & Labels
-
-    /// Returns “Morning Intention”, “Afternoon Intention” or “Evening Intention”
-    private var greetingTitle: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 5..<12:     return "Morning Intention"
-        case 12..<17:    return "Afternoon Intention"
-        default:         return "Evening Intention"
-        }
-    }
-
-    /// Day‑of‑week label
-    private var currentDay: String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "EEEE"
-        return fmt.string(from: Date())
-    }
-
-    var body: some View {
-        NavigationView {
-            ZStack {
-                Color.white.ignoresSafeArea()
-                Form {
-                    // MARK: – State of Mind
-                    Section(header: Text("STATE OF MIND")) {
-                        LazyVGrid(
-                            columns: [GridItem(.flexible()), GridItem(.flexible())],
-                            spacing: 12
-                        ) {
-                            ForEach(StateOfMind.allCases, id: \.self) { mind in
-                                let idx = StateOfMind.allCases.firstIndex(of: mind) ?? 0
-                                let baseColor = themeManager.selected.cardBackgrounds[idx]
-                                Button {
-                                    selectedMind = mind
-                                } label: {
-                                    Text(mind.rawValue)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(
-                                                    selectedMind == mind
-                                                        ? baseColor.opacity(0.6)
-                                                        : baseColor.opacity(0.2)
-                                                )
-                                        )
-                                        .foregroundColor(
-                                            selectedMind == mind
-                                                ? .white
-                                                : baseColor.darker()
-                                        )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .contentShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
-                    }
-
-                    // MARK: – Session Time Goal
-                    Section(header: Text("SESSION TIME GOAL")) {
-                        HStack(spacing: 12) {
-                            ForEach(TimeGoal.allCases) { goal in
-                                Button {
-                                    timeGoal = goal
-                                } label: {
-                                    Text(goal.rawValue)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(
-                                                    timeGoal == goal
-                                                        ? goal.color.opacity(0.6)
-                                                        : Color(.systemGray6)
-                                                )
-                                        )
-                                        .foregroundColor(
-                                            timeGoal == goal
-                                                ? .white
-                                                : goal.color
-                                        )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .contentShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                    }
-
-                    // MARK: – Rated Intensity
-                    Section(header: Text("RATED INTENSITY")) {
-                        HStack(spacing: 12) {
-                            ForEach(Intensity.allCases) { level in
-                                Button {
-                                    intensity = level
-                                } label: {
-                                    Text(level.rawValue.capitalized)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(
-                                                    intensity == level
-                                                        ? level.color.opacity(0.6)
-                                                        : Color(.systemGray6)
-                                                )
-                                        )
-                                        .foregroundColor(
-                                            intensity == level
-                                                ? .white
-                                                : level.color
-                                        )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .contentShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                    }
-
-                    // MARK: – Day of Week
-                    Section(header: Text("DAY OF WEEK")) {
-                        Text(currentDay)
-                            .foregroundColor(.secondary)
-                    }
-
-                    // MARK: – Workout Mindset
-                    Section(header: Text("WORKOUT MINDSET")) {
-                        VStack(spacing: 12) {
-                            ForEach(WorkoutMindset.allCases, id: \.self) { mindset in
-                                Button {
-                                    workoutMindset = mindset
-                                } label: {
-                                    Text(mindset.rawValue)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(
-                                                    workoutMindset == mindset
-                                                        ? mindset.color.opacity(0.6)
-                                                        : mindset.color.opacity(0.2)
-                                                )
-                                        )
-                                        .foregroundColor(
-                                            workoutMindset == mindset
-                                                ? .white
-                                                : mindset.color.darker()
-                                        )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .contentShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
-                    }
-                }
-                .scrollContentBackground(.hidden)
-            }
-            .navigationTitle(greetingTitle)
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("Save") {
-                    // TODO: persist selections if desired
-                    presentationMode.wrappedValue.dismiss()
-                }
-            )
-        }
-    }
-}
-
-// MARK: – Color Helper
-
-extension Color {
-    /// Darken by subtracting 0.2 from each component
-    func darker() -> Color {
-        let ui = UIColor(self)
-        var r: CGFloat=0, g: CGFloat=0, b: CGFloat=0, a: CGFloat=0
-        ui.getRed(&r, green:&g, blue:&b, alpha:&a)
-        return Color(
-            red:   Double(max(r-0.2, 0)),
-            green: Double(max(g-0.2, 0)),
-            blue:  Double(max(b-0.2, 0)),
-            opacity: Double(a)
-        )
-    }
-}
-
-// MARK: – Supporting Types
-
+/// User’s state of mind options
 enum StateOfMind: String, CaseIterable {
     case Calm, Anxious, Focused, Confused, Happy, Sad, Angry, Curious
 }
 
+/// Session duration goals
 enum TimeGoal: String, CaseIterable, Identifiable {
-    case greater30 = "> 30 min", less30 = "< 30 min", equal30 = "= 30 min"
+    case greater30 = "> 30 min", less30 = "< 30 min", equal30 = "= 30 min"
     var id: String { rawValue }
-    var color: Color {
-        switch self {
-        case .greater30: return .green
-        case .less30:    return .red
-        case .equal30:   return .blue
-        }
-    }
 }
 
+/// Rated intensity
 enum Intensity: String, CaseIterable, Identifiable {
     case easy, medium, hard
     var id: String { rawValue }
-    var color: Color {
-        switch self {
-        case .easy:   return .green
-        case .medium: return .orange
-        case .hard:   return .red
-        }
-    }
 }
 
+/// Workout mindset choices
 enum WorkoutMindset: String, CaseIterable, Identifiable {
     case completion   = "Completion Mindset"
     case performance  = "Performance Driven"
     case appreciation = "Effort Appreciation"
     var id: String { rawValue }
-    var color: Color {
-        switch self {
-        case .completion:   return .mint
-        case .performance:  return .purple
-        case .appreciation: return .pink
+}
+
+// MARK: – Question Model
+
+private struct Question {
+    let text: String
+    let options: [String]
+}
+
+// MARK: – IntentionsView
+
+struct IntentionsView: View {
+    @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject private var themeManager: ThemeManager
+
+    // Paging state
+    @State private var currentStep: Int = 0
+    @State private var selectionIndex: Int? = nil
+    @State private var answers: [Int?] = Array(repeating: nil, count: 4)
+
+    // Four pages of questions
+    private let questions: [Question] = [
+        Question(
+            text: "How are you feeling today?",
+            options: StateOfMind.allCases.map { $0.rawValue }
+        ),
+        Question(
+            text: "What session duration feels best?",
+            options: TimeGoal.allCases.map { $0.rawValue }
+        ),
+        Question(
+            text: "Choose your intensity:",
+            options: Intensity.allCases.map { $0.rawValue.capitalized }
+        ),
+        Question(
+            text: "Select your workout mindset:",
+            options: WorkoutMindset.allCases.map { $0.rawValue }
+        )
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            content
+            Spacer()
+            nextButton
         }
+        .background(themeManager.selected.backgroundColor.ignoresSafeArea())
+    }
+
+    // Header bar
+    private var header: some View {
+        HStack {
+            Button {
+                if currentStep == 0 {
+                    presentationMode.wrappedValue.dismiss()
+                } else {
+                    currentStep -= 1
+                    selectionIndex = answers[currentStep]
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.title2)
+                    .foregroundColor(themeManager.selected.accent)
+            }
+
+            Spacer()
+
+            Text("Set Your Intention")
+                .font(.headline)
+                .foregroundColor(themeManager.selected.accent)
+
+            Spacer()
+
+            Button {
+                // help tap
+            } label: {
+                Image(systemName: "questionmark.circle")
+                    .font(.title2)
+                    .foregroundColor(themeManager.selected.accent)
+            }
+        }
+        .padding()
+    }
+
+    // Main question + options
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Question \(currentStep + 1)/\(questions.count)")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(themeManager.selected.accent.opacity(0.8))
+                .padding(.horizontal)
+
+            Text(questions[currentStep].text)
+                .font(.title3.weight(.semibold))
+                .foregroundColor(.primary)
+                .padding(.horizontal)
+
+            VStack(spacing: 12) {
+                ForEach(questions[currentStep].options.indices, id: \.self) { idx in
+                    OptionRow(
+                        text: questions[currentStep].options[idx],
+                        isSelected: selectionIndex == idx,
+                        accent: themeManager.selected.accent
+                    )
+                    .onTapGesture {
+                        selectionIndex = idx
+                        answers[currentStep] = idx
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.top, 16)
+    }
+
+    // Next/Save button
+    private var nextButton: some View {
+        Button {
+            if currentStep < questions.count - 1 {
+                currentStep += 1
+                selectionIndex = answers[currentStep]
+            } else {
+                // Persist your answers here, then:
+                presentationMode.wrappedValue.dismiss()
+            }
+        } label: {
+            Text(currentStep < questions.count - 1 ? "Next" : "Save")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(themeManager.selected.accent)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding()
+        }
+        .disabled(selectionIndex == nil)
+        .opacity(selectionIndex == nil ? 0.5 : 1)
     }
 }
 
-// MARK: – Preview
+// Single‐row option with a radio circle
+private struct OptionRow: View {
+    let text: String
+    let isSelected: Bool
+    let accent: Color
+
+    var body: some View {
+        HStack {
+            ZStack {
+                Circle()
+                    .stroke(isSelected ? Color.white : accent, lineWidth: 2)
+                    .frame(width: 24, height: 24)
+                if isSelected {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                }
+            }
+
+            Text(text)
+                .foregroundColor(isSelected ? .white : .primary)
+                .font(.body)
+
+            Spacer()
+        }
+        .padding()
+        .background(isSelected ? accent : Color(.systemBackground))
+        .cornerRadius(8)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+}
 
 struct IntentionsView_Previews: PreviewProvider {
     static var previews: some View {
         IntentionsView()
             .environmentObject(ThemeManager.shared)
+            .previewDevice("iPhone 14")
     }
 }
 
