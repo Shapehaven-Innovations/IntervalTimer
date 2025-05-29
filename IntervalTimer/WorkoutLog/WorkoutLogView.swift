@@ -1,29 +1,35 @@
-// WorkoutLogView.swift
-// IntervalTimer
-// Detailed list of every session, now with live theming from ThemeManager
+//
+//  WorkoutLogView.swift
+//  IntervalTimer
+//  Updated 05/29/25: use system large title, full file with WorkoutCard
+//
 
 import SwiftUI
 
 struct WorkoutLogView: View {
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Mirror your global Dark Mode toggle
+    @AppStorage("useDarkMode") private var useDarkMode: Bool = false
 
     @State private var history: [SessionRecord] = []
     @State private var showingClearAlert = false
+    @State private var showingAnalytics = false
 
-    // MARK: – Pull in user info from Onboarding
+    // MARK: – Onboarding user info
     @AppStorage("userWeight") private var userWeight: Int = 70
     @AppStorage("weightUnit")  private var weightUnit: String = "kg"
-    @AppStorage("userHeight")  private var userHeight: Int    = 170
 
-    /// Converts stored weight into kilograms
+    /// Convert to kilograms
     private var weightKg: Double {
         weightUnit == "lbs"
             ? Double(userWeight) / 2.20462
             : Double(userWeight)
     }
 
-    /// Simple MET‐based calorie estimate (MET = 8)
+    /// MET‐based calorie estimate (MET = 8)
     private func caloriesBurned(for record: SessionRecord) -> Int {
         let workSeconds = record.timerDuration * record.sets
         let minutes     = Double(workSeconds) / 60.0
@@ -36,25 +42,37 @@ struct WorkoutLogView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 16) {
-                    ForEach(Array(history.enumerated()), id: \.element.id) { index, record in
+                    ForEach(Array(history.enumerated()), id: \.element.id) { idx, record in
                         WorkoutCard(
                             record:   record,
-                            index:    index,
+                            index:    idx,
                             calories: caloriesBurned(for: record)
                         )
                         .environmentObject(themeManager)
                     }
                 }
-                .padding(.vertical)
+                .padding(.top, 20)    // space under the large title
+                .padding(.bottom, 16) // bottom breathing room
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Workout Log")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Clear All") { showingClearAlert = true }
-                }
+                // Three-dot menu on the right
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { presentationMode.wrappedValue.dismiss() }
+                    Menu {
+                        Button("Clear All", role: .destructive) {
+                            showingClearAlert = true
+                        }
+                        Button("Analytics") {
+                            showingAnalytics = true
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .rotationEffect(.degrees(90))
+                            .font(.title2)
+                            .foregroundColor(themeManager.selected.accent)
+                    }
                 }
             }
             .alert("Clear Workout Log?", isPresented: $showingClearAlert) {
@@ -63,8 +81,13 @@ struct WorkoutLogView: View {
             } message: {
                 Text("This cannot be undone.")
             }
+            .sheet(isPresented: $showingAnalytics) {
+                AnalyticsView()
+                    .environmentObject(themeManager)
+            }
             .onAppear(perform: loadHistory)
         }
+        .preferredColorScheme(useDarkMode ? .dark : .light)
     }
 
     // MARK: – Data
@@ -82,28 +105,28 @@ struct WorkoutLogView: View {
     }
 }
 
+
 private struct WorkoutCard: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var colorScheme
 
     let record:   SessionRecord
     let index:    Int
     let calories: Int
 
-    /// Light background tint from the theme
+    private var baseColor: Color {
+        themeManager.selected.cardBackgrounds[
+            index % themeManager.selected.cardBackgrounds.count
+        ]
+    }
     private var backgroundTint: Color {
-        let palette = themeManager.selected.cardBackgrounds
-        return palette[index % palette.count].opacity(0.1)
+        baseColor.opacity(colorScheme == .dark ? 0.30 : 0.10)
     }
-
-    /// Slightly stronger shadow tint
     private var shadowTint: Color {
-        let palette = themeManager.selected.cardBackgrounds
-        return palette[index % palette.count].opacity(0.2)
+        baseColor.opacity(colorScheme == .dark ? 0.40 : 0.20)
     }
-
-    /// Accent color (for labels)
-    private var accent: Color {
-        themeManager.selected.accent
+    private var labelColor: Color {
+        colorScheme == .dark ? .white : themeManager.selected.accent
     }
 
     private var displayName: String {
@@ -135,7 +158,8 @@ private struct WorkoutCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(displayName).font(.headline)
+                Text(displayName)
+                    .font(.headline)
                 Spacer()
                 Text(totalTimeString)
                     .font(.subheadline)
@@ -152,7 +176,7 @@ private struct WorkoutCard: View {
                 Label("\(calories) kcal",                 systemImage: "figure.walk")
             }
             .font(.footnote)
-            .foregroundColor(accent)
+            .foregroundColor(labelColor)
         }
         .padding()
         .background(
@@ -161,13 +185,6 @@ private struct WorkoutCard: View {
         )
         .shadow(color: shadowTint, radius: 4, x: 0, y: 2)
         .padding(.horizontal)
-    }
-}
-
-struct WorkoutLogView_Previews: PreviewProvider {
-    static var previews: some View {
-        WorkoutLogView()
-            .environmentObject(ThemeManager.shared)
     }
 }
 
