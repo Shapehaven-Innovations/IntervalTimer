@@ -62,8 +62,6 @@
 		9A768BC12DE252A500435DE8 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
 		9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundOption.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9AFB22EC2DE8AD9000A3813D /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		9AFB22EE2DE8B1CE00A3813D /* app-ads.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "app-ads.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,8 +108,6 @@
 				9A66D83B2DE11491008C73D7 /* App */,
 				9A66D81D2DE11474008C73D7 /* Preview Content */,
 				9A66D8222DE11474008C73D7 /* Views */,
-				9AFB22EC2DE8AD9000A3813D /* .gitignore */,
-				9AFB22EE2DE8B1CE00A3813D /* app-ads.txt */,
 			);
 			path = IntervalTimer;
 			sourceTree = "<group>";
