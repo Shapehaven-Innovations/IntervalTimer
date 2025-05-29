@@ -111,6 +111,7 @@
 				9A66D81D2DE11474008C73D7 /* Preview Content */,
 				9A66D8222DE11474008C73D7 /* Views */,
 				9AFB22EC2DE8AD9000A3813D /* .gitignore */,
+				9AFB22EE2DE8B1CE00A3813D /* app-ads.txt */,
 			);
 			path = IntervalTimer;
 			sourceTree = "<group>";
@@ -226,7 +227,6 @@
 		9AE8C0AF2D125E04001E6F92 = {
 			isa = PBXGroup;
 			children = (
-				9AFB22EE2DE8B1CE00A3813D /* app-ads.txt */,
 				9A66D82C2DE11474008C73D7 /* IntervalTimer */,
 				9AE8C0B92D125E04001E6F92 /* Products */,
 			);
