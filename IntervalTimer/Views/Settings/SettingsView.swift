@@ -1,6 +1,8 @@
-// SettingsView.swift
-// IntervalTimer
-// Modernized Settings: live theme switching for tiles
+//
+//  SettingsView.swift
+//  IntervalTimer
+//  Modernized Settings: live theme switching for tiles
+//
 
 import SwiftUI
 
@@ -12,12 +14,10 @@ struct SettingsView: View {
     @AppStorage("useDarkMode") private var useDarkMode: Bool = false
 
     // MARK: – Stored settings
-    @AppStorage("enableParticles")  private var enableParticles: Bool   = true
-    @AppStorage("screenBackground") private var screenBackgroundRaw: String = BackgroundOption.white.rawValue
+    @AppStorage("enableParticles") private var enableParticles: Bool = true
 
     // MARK: – Data sources
-    private let themes      = ThemeType.allCases
-    private let backgrounds = BackgroundOption.allCases
+    private let themes = ThemeType.allCases
 
     // MARK: – Static accent for this screen
     private let accent: Color = .blue
@@ -46,17 +46,6 @@ struct SettingsView: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
-
-                // ── Screen Background ──
-                Section(header: Text("Screen Background")) {
-                    Picker("", selection: $screenBackgroundRaw) {
-                        ForEach(backgrounds) { bg in
-                            Text(bg.rawValue).tag(bg.rawValue)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
@@ -70,7 +59,6 @@ struct SettingsView: View {
             }
             .accentColor(accent)
         }
-        // Apply the chosen scheme to the Settings screen
         .preferredColorScheme(useDarkMode ? .dark : .light)
     }
 }
@@ -83,7 +71,6 @@ struct SettingsView_Previews: PreviewProvider {
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.light)
                 .previewDisplayName("Light Mode")
-
             SettingsView()
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.dark)
