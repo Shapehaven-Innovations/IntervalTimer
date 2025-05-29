@@ -15,7 +15,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 30) {
+            VStack(spacing: 40) {
                 // Title
                 HStack {
                     Image(systemName: "gearshape.fill")
