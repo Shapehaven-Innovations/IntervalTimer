@@ -15,7 +15,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 40) {
+            VStack(spacing: 30) {
                 // Title
                 HStack {
                     Image(systemName: "gearshape.fill")
@@ -26,7 +26,7 @@ struct SettingsView: View {
                         .foregroundColor(.primary)
                     Spacer()
                 }
-                .padding(.top, 20)
+                .padding(.top, 60)
                 .padding(.horizontal, 20)
 
                 // Particles Toggle Section
