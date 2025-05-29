@@ -1,165 +1,96 @@
-// SettingsView.swift
-// IntervalTimer
-// Interactive Settings UI: App Theme, Screen Background & Particles toggle
+//
+//  SettingsView.swift
+//  IntervalTimer
+//  Modernized Settings: add in‑app Light/Dark toggle
+//
 
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject private var themeManager: ThemeManager
 
-    @AppStorage("screenBackground") private var backgroundRaw: String = BackgroundOption.white.rawValue
-    @AppStorage("enableParticles")  private var enableParticles: Bool = true
+    // MARK: – In‑app Appearance override
+    @AppStorage("useDarkMode") private var useDarkMode: Bool = false
 
+    // MARK: – Stored settings
+    @AppStorage("enableParticles")    private var enableParticles: Bool   = true
+    @AppStorage("selectedTheme")      private var selectedThemeRaw: String = ThemeType.neonPop.rawValue
+    @AppStorage("screenBackground")   private var screenBackgroundRaw: String = BackgroundOption.white.rawValue
+
+    // MARK: – Data sources
+    private let themes      = ThemeType.allCases
     private let backgrounds = BackgroundOption.allCases
+
+    // MARK: – Static accent for this screen
+    private let accent: Color = .blue
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 30) {
-                // Title
-                HStack {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundColor(.primary)
-                    Text("Settings")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    Spacer()
+            Form {
+                // ── Appearance ──
+                Section(header: Text("Settings Appearance")) {
+                    Toggle("Dark Mode", isOn: $useDarkMode)
                 }
-                .padding(.top, 60)
-                .padding(.horizontal, 20)
 
-                // Particles Toggle Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Particles")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Toggle(isOn: $enableParticles) {
-                        Text("Enable Particles Behind Tiles")
-                            .foregroundColor(.primary)
-                    }
-                    .toggleStyle(SwitchToggleStyle(tint: themeManager.selected.accent))
+                // ── General ──
+                Section(header: Text("General")) {
+                    Toggle("Show Particles Behind Tiles", isOn: $enableParticles)
+                        .toggleStyle(SwitchToggleStyle(tint: accent))
                 }
-                .padding(.horizontal, 20)
 
-                // App Theme Section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("App Theme")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    // Current theme name
-                    Text(themeManager.selected.rawValue)
-                        .font(.subheadline)
-                        .foregroundColor(themeManager.selected.accent)
-                        .padding(6)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(themeManager.selected.accent, lineWidth: 2)
-                        )
-
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 80), spacing: 16)],
-                        spacing: 16
-                    ) {
-                        ForEach(ThemeType.allCases) { theme in
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(theme.accent)
-                                .frame(width: 80, height: 80)
-                                .scaleEffect(theme == themeManager.selected ? 1.1 : 1.0)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(theme.accent,
-                                                lineWidth: theme == themeManager.selected ? 8 : 0)
-                                )
-                                .shadow(
-                                    color: theme.accent.opacity(theme == themeManager.selected ? 0.6 : 0),
-                                    radius: theme == themeManager.selected ? 15 : 0
-                                )
-                                .animation(.easeInOut(duration: 0.2), value: themeManager.selected)
-                                .onTapGesture {
-                                    withAnimation(.easeInOut) {
-                                        themeManager.selected = theme
-                                    }
-                                }
+                // ── App Theme ──
+                Section(header: Text("App Theme")) {
+                    Picker("", selection: $selectedThemeRaw) {
+                        ForEach(themes) { theme in
+                            Text(theme.rawValue).tag(theme.rawValue)
                         }
                     }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
                 }
-                .padding(.horizontal, 20)
 
-                // Screen Background Section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Screen Background")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    HStack(spacing: 24) {
+                // ── Screen Background ──
+                Section(header: Text("Screen Background")) {
+                    Picker("", selection: $screenBackgroundRaw) {
                         ForEach(backgrounds) { bg in
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(bg.color)
-                                .frame(width: 80, height: 80)
-                                .scaleEffect(backgroundRaw == bg.rawValue ? 1.05 : 1.0)
-                                .overlay(
-                                    ZStack {
-                                        // Light border for visibility
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.secondary, lineWidth: 1)
-                                        // Highlight selected
-                                        if backgroundRaw == bg.rawValue {
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(themeManager.selected.accent,
-                                                        lineWidth: 6)
-                                        }
-                                    }
-                                )
-                                .shadow(
-                                    color: backgroundRaw == bg.rawValue
-                                        ? themeManager.selected.accent.opacity(0.5)
-                                        : Color.black.opacity(0.1),
-                                    radius: backgroundRaw == bg.rawValue ? 12 : 2
-                                )
-                                .animation(.easeInOut(duration: 0.2), value: backgroundRaw)
-                                .onTapGesture {
-                                    withAnimation(.easeInOut) {
-                                        backgroundRaw = bg.rawValue
-                                    }
-                                }
+                            Text(bg.rawValue).tag(bg.rawValue)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .pickerStyle(.inline)
+                    .labelsHidden()
                 }
-                .padding(.horizontal, 20)
-
-                Spacer()
-
-                // Done Button
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(themeManager.selected.accent)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
             }
-            .background(Color.white.ignoresSafeArea())
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                    .tint(accent)
+                }
+            }
+            .accentColor(accent)
         }
+        // Apply the chosen scheme to the Settings screen (and propagate if desired)
+        .preferredColorScheme(useDarkMode ? .dark : .light)
     }
 }
 
 #if DEBUG
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView()
-            .environmentObject(ThemeManager.shared)
+        Group {
+            SettingsView()
+                .environmentObject(ThemeManager.shared)
+                .preferredColorScheme(.light)
+                .previewDisplayName("Light Mode")
+
+            SettingsView()
+                .environmentObject(ThemeManager.shared)
+                .preferredColorScheme(.dark)
+                .previewDisplayName("Dark Mode")
+        }
     }
 }
 #endif
