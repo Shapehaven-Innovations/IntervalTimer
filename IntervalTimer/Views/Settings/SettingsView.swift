@@ -26,7 +26,7 @@ struct SettingsView: View {
         NavigationView {
             Form {
                 // ── Appearance ──
-                Section(header: Text("Settings Appearance")) {
+                Section(header: Text("Appearance")) {
                     Toggle("Dark Mode", isOn: $useDarkMode)
                 }
 
