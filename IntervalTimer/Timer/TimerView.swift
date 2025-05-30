@@ -279,7 +279,7 @@ struct IntentionBanner: View {
 
     private var bannerColor: Color {
         themeManager.selected == .gamer
-        ? Color(red: 0.0, green: 1.0, blue: 0.00)
+        ? Color(red: 0.5, green: 0.3, blue: 0.06)
             : themeManager.selected.accent
     }
 
