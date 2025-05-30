@@ -202,7 +202,7 @@ struct TimerView: View {
                 startTimerLoop()
             } else {
                 phase = .complete
-                currentTime = 0                  // ← fix: zero‑out so UI shows 00:00
+                currentTime = 0
                 playSound(named: "complete")
                 completeAndSave()
             }
@@ -277,6 +277,12 @@ struct IntentionBanner: View {
 
     @State private var autoDismissTask: Task<Void, Never>?
 
+    private var bannerColor: Color {
+        themeManager.selected == .gamer
+        ? Color(red: 0.0, green: 1.0, blue: 0.00)
+            : themeManager.selected.accent
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "lightbulb.fill")
@@ -286,14 +292,15 @@ struct IntentionBanner: View {
                 .foregroundColor(.white)
             Spacer(minLength: 0)
             Button(role: .cancel, action: onDismiss) {
-                Image(systemName: "xmark").padding(6)
+                Image(systemName: "xmark")
+                    .padding(6)
             }
             .tint(.white)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, minHeight: 52)
-        .background(themeManager.selected.accent)
+        .background(bannerColor)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(radius: 4, y: 2)
         .onTapGesture {
