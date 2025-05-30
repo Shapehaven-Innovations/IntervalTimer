@@ -1,7 +1,7 @@
 //
 //  WorkoutLogView.swift
 //  IntervalTimer
-//  Updated 05/29/25: use system large title, full file with WorkoutCard
+//  Updated 05/30/25: clear intentions when log is cleared
 //
 
 import SwiftUI
@@ -34,8 +34,7 @@ struct WorkoutLogView: View {
         let workSeconds = record.timerDuration * record.sets
         let minutes     = Double(workSeconds) / 60.0
         let met: Double = 8.0
-        let cals = 0.0175 * met * weightKg * minutes
-        return Int(round(cals))
+        return Int(round(0.0175 * met * weightKg * minutes))
     }
 
     var body: some View {
@@ -79,7 +78,7 @@ struct WorkoutLogView: View {
                 Button("Cancel", role: .cancel) {}
                 Button("Clear", role: .destructive) { clearHistory() }
             } message: {
-                Text("This cannot be undone.")
+                Text("This will delete all workout history and associated intentions.")
             }
             .sheet(isPresented: $showingAnalytics) {
                 AnalyticsView()
@@ -100,11 +99,14 @@ struct WorkoutLogView: View {
     }
 
     private func clearHistory() {
+        // 1) Clear in‑memory array
         history.removeAll()
+        // 2) Remove sessions from UserDefaults
         UserDefaults.standard.removeObject(forKey: "sessionHistory")
+        // 3) Also clear all saved intentions so Analytics stays in sync
+        UserDefaults.standard.removeObject(forKey: "intentionsHistory")
     }
 }
-
 
 private struct WorkoutCard: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -185,6 +187,13 @@ private struct WorkoutCard: View {
         )
         .shadow(color: shadowTint, radius: 4, x: 0, y: 2)
         .padding(.horizontal)
+    }
+}
+
+struct WorkoutLogView_Previews: PreviewProvider {
+    static var previews: some View {
+        WorkoutLogView()
+            .environmentObject(ThemeManager.shared)
     }
 }
 

@@ -1,10 +1,3 @@
-//
-//  IntentRecord.swift
-//  IntervalTimer
-//
-//  Created by user on 5/30/25.
-//
-
 
 //
 //  Models.swift

@@ -1,7 +1,7 @@
 //
 //  TimerView.swift
 //  IntervalTimer
-//  Core timer UI with Get‑Ready + mixing with background audio + in‑view IntentionBanner
+//  Core timer UI + In‑view IntentionBanner + persistence
 //
 
 import SwiftUI
@@ -13,24 +13,25 @@ struct TimerView: View {
     /// Passed in from ContentView
     let workoutName: String
 
-    // MARK: – User‑configurable settings
+    // MARK: User‑configurable settings
     @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
     @AppStorage("timerDuration")    private var timerDuration:    Int = 60
     @AppStorage("restDuration")     private var restDuration:     Int = 30
     @AppStorage("sets")             private var sets:             Int = 1
 
-    // MARK: – Timer phases
+    // MARK: Timer phases
     private enum Phase { case getReady, work, rest, complete }
-    @State private var phase: Phase = .getReady
-    @State private var currentTime: Int = 0
-    @State private var currentSet:  Int = 1
-    @State private var timer:        Timer?
+    @State private var phase:      Phase = .getReady
+    @State private var currentTime: Int  = 0
+    @State private var currentSet:  Int  = 1
+    @State private var timer:      Timer?
 
-    // MARK: – Banner & Intentions
-    @State private var showBanner:     Bool = true
-    @State private var showIntentions: Bool = false
+    // MARK: Banner & Intention
+    @State private var showBanner:     Bool    = true
+    @State private var showIntentions: Bool    = false
+    @State private var currentIntention: String? = nil
 
-    // MARK: – Audio
+    // MARK: Audio
     @State private var audioPlayer: AVAudioPlayer?
 
     // Computed
@@ -44,20 +45,20 @@ struct TimerView: View {
     }
     private var elapsedTime: Int { totalDuration - currentTime }
 
-    // Dynamic background via ThemeManager
+    // Dynamic background
     private var backgroundColor: Color {
-        let palette = themeManager.selected.cardBackgrounds
+        let p = themeManager.selected.cardBackgrounds
         switch phase {
-        case .getReady: return palette[0]
-        case .work:     return palette[2]
-        case .rest:     return palette[3]
-        case .complete: return palette[5]
+        case .getReady: return p[0]
+        case .work:     return p[2]
+        case .rest:     return p[3]
+        case .complete: return p[5]
         }
     }
 
     // Controls style
-    private let controlBackground = Color.white.opacity(0.3)
-    private let controlForeground = Color.white
+    private let controlBG = Color.white.opacity(0.3)
+    private let controlFG = Color.white
 
     var body: some View {
         GeometryReader { geo in
@@ -76,7 +77,7 @@ struct TimerView: View {
 
                     Spacer()
 
-                    Text(formatTime(seconds: currentTime))
+                    Text(formatTime(currentTime))
                         .font(.system(
                             size: geo.size.width > geo.size.height ? 120 : 100,
                             weight: .bold,
@@ -94,7 +95,7 @@ struct TimerView: View {
                         value: phase == .getReady ? 0 : Double(elapsedTime),
                         total: Double(totalDuration)
                     )
-                    .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                    .progressViewStyle(.linear)
                     .scaleEffect(x: 1, y: 4)
                     .padding(.horizontal)
                     .opacity(phase == .getReady ? 0 : 1)
@@ -104,27 +105,21 @@ struct TimerView: View {
                     HStack(spacing: 40) {
                         Button(action: toggleTimer) {
                             ZStack {
-                                Circle()
-                                    .fill(controlBackground)
-                                    .frame(width: 80, height: 80)
+                                Circle().fill(controlBG).frame(width: 80, height: 80)
                                 Image(systemName: isRunning
                                       ? "pause.circle.fill"
                                       : "play.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(controlForeground)
+                                    .resizable().frame(width: 60, height: 60)
+                                    .foregroundColor(controlFG)
                             }
                         }
 
                         Button(action: resetAll) {
                             ZStack {
-                                Circle()
-                                    .fill(controlBackground)
-                                    .frame(width: 80, height: 80)
+                                Circle().fill(controlBG).frame(width: 80, height: 80)
                                 Image(systemName: "arrow.clockwise.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(controlForeground)
+                                    .resizable().frame(width: 60, height: 60)
+                                    .foregroundColor(controlFG)
                             }
                         }
                     }
@@ -142,13 +137,16 @@ struct TimerView: View {
                 timer = nil
             }
             .sheet(isPresented: $showIntentions) {
-                IntentionsView()
-                    .environmentObject(themeManager)
+                IntentionsView { state in
+                    currentIntention = state
+                    showBanner = false
+                }
+                .environmentObject(themeManager)
             }
         }
     }
 
-    // MARK: – Helpers
+    // MARK: Helpers
 
     private var isRunning: Bool { timer != nil }
 
@@ -172,15 +170,15 @@ struct TimerView: View {
 
     private func startTimerLoop() {
         timer?.invalidate()
-        let newTimer = Timer(timeInterval: 1, repeats: true) { _ in
+        let t = Timer(timeInterval: 1, repeats: true) { _ in
             guard currentTime > 0 else {
                 advancePhase()
                 return
             }
             currentTime -= 1
         }
-        timer = newTimer
-        RunLoop.main.add(newTimer, forMode: .common)
+        timer = t
+        RunLoop.main.add(t, forMode: .common)
     }
 
     private func advancePhase() {
@@ -228,25 +226,24 @@ struct TimerView: View {
     }
 
     private func completeAndSave() {
-        var history: [SessionRecord] = []
-        if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
-           let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
-            history = decoded
-        }
-        let record = SessionRecord(
+        var h = (try? JSONDecoder().decode([SessionRecord].self,
+                   from: UserDefaults.standard.data(forKey: "sessionHistory") ?? Data()))
+                ?? []
+        let rec = SessionRecord(
             name:           workoutName,
             date:           Date(),
             timerDuration:  timerDuration,
             restDuration:   restDuration,
-            sets:           sets
+            sets:           sets,
+            intention:      currentIntention
         )
-        history.append(record)
-        if let encoded = try? JSONEncoder().encode(history) {
-            UserDefaults.standard.set(encoded, forKey: "sessionHistory")
+        h.append(rec)
+        if let enc = try? JSONEncoder().encode(h) {
+            UserDefaults.standard.set(enc, forKey: "sessionHistory")
         }
     }
 
-    private func formatTime(seconds: Int) -> String {
+    private func formatTime(_ seconds: Int) -> String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
@@ -267,7 +264,8 @@ struct TimerView: View {
     }
 }
 
-// MARK: – IntentionBanner
+
+// MARK: IntentionBanner
 
 struct IntentionBanner: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -279,7 +277,7 @@ struct IntentionBanner: View {
 
     private var bannerColor: Color {
         themeManager.selected == .gamer
-        ? Color(red: 0.5, green: 0.3, blue: 0.06)
+            ? Color(red: 0.5, green: 0.3, blue: 0.06)
             : themeManager.selected.accent
     }
 

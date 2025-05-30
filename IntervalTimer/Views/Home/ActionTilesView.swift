@@ -1,6 +1,8 @@
-// ActionTilesView.swift
-// IntervalTimer
-// Updated 05/27/25: configuration‑style icon + context‑menu delete on long‑press
+//
+//  ActionTilesView.swift
+//  IntervalTimer
+//  Updated to fix ambiguous ForEach init
+//
 
 import SwiftUI
 
@@ -12,7 +14,7 @@ struct ActionTilesView: View {
     @AppStorage("restDuration")        private var restDuration      = 10
     @AppStorage("sets")                private var sets              = 8
     @AppStorage("lastWorkoutName")     private var lastWorkoutName   = ""
-    @AppStorage("savedConfigurations") private var configsData: Data = Data()
+    @AppStorage("savedConfigurations") private var configsData: Data  = Data()
 
     // MARK: – Local state
     @State private var configs: [SessionRecord] = []
@@ -25,53 +27,63 @@ struct ActionTilesView: View {
 
     var body: some View {
         Group {
-            // ─── Static action tiles ───
+            // ─── Static action tiles ─────────────────────
             ActionTileView(
                 icon:    "play.circle.fill",
                 label:   "Start Workout",
                 bgColor: themeManager.selected.cardBackgrounds[4],
                 index:   4
-            ) { showingTimer = true }
+            ) {
+                showingTimer = true
+            }
 
             ActionTileView(
                 icon:    "plus.circle.fill",
                 label:   "Save Workout",
                 bgColor: themeManager.selected.cardBackgrounds[5],
                 index:   5
-            ) { showingConfigEditor = true }
+            ) {
+                showingConfigEditor = true
+            }
 
             ActionTileView(
                 icon:    "list.bullet.clipboard.fill",
                 label:   "Workout Log",
                 bgColor: themeManager.selected.cardBackgrounds[6],
                 index:   6
-            ) { showingWorkoutLog = true }
+            ) {
+                showingWorkoutLog = true
+            }
 
             ActionTileView(
                 icon:    "target",
                 label:   "Intention",
                 bgColor: themeManager.selected.cardBackgrounds[7],
                 index:   7
-            ) { showingIntention = true }
+            ) {
+                showingIntention = true
+            }
 
             ActionTileView(
                 icon:    "chart.bar.doc.horizontal.fill",
                 label:   "Analytics",
                 bgColor: themeManager.selected.accent,
                 index:   8
-            ) { showingAnalytics = true }
+            ) {
+                showingAnalytics = true
+            }
 
-            // ─── Dynamic saved‑configuration tiles ───
-            ForEach(Array(configs.enumerated()), id: \.element.id) { idx, config in
+            // ─── Dynamic saved‑configuration tiles ───────
+            ForEach(Array(configs.enumerated()), id: \.1.id) { (idx, config) in
                 ActionTileView(
-                    icon:    "slider.horizontal.3",            // configuration‑style icon
+                    icon:    "slider.horizontal.3",
                     label:   config.name,
                     bgColor: themeManager.selected.cardBackgrounds[
                                   idx % themeManager.selected.cardBackgrounds.count
                               ],
                     index:   idx + 9
                 ) {
-                    // Tap: load and start this config
+                    // Load and start this saved config
                     getReadyDuration = config.timerDuration
                     restDuration      = config.restDuration
                     sets              = config.sets
@@ -91,7 +103,7 @@ struct ActionTilesView: View {
                 }
             }
         }
-        // ─── Sheets ───
+        // ─── Sheets ───────────────────────────────────
         .sheet(isPresented: $showingTimer) {
             TimerView(workoutName: lastWorkoutName)
                 .environmentObject(themeManager)
@@ -115,16 +127,17 @@ struct ActionTilesView: View {
                 .environmentObject(themeManager)
         }
         .sheet(isPresented: $showingIntention) {
-            IntentionsView()
+            IntentionsView { _ in }
                 .environmentObject(themeManager)
         }
         .sheet(isPresented: $showingAnalytics) {
             AnalyticsView()
                 .environmentObject(themeManager)
         }
-        // ─── Load saved configs ───
+        // ─── Load saved configs ───────────────────────
         .onAppear {
-            if let decoded = try? JSONDecoder().decode([SessionRecord].self, from: configsData) {
+            if let decoded = try? JSONDecoder().decode([SessionRecord].self,
+                                                       from: configsData) {
                 configs = decoded
             }
         }

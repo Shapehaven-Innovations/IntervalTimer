@@ -1,31 +1,27 @@
-//
+///
 //  IntentionsView.swift
 //  IntervalTimer
-//  Refactored to a paged quiz UI matching latest design mockup
+//  Paged quiz UI for capturing user intention
 //
 
 import SwiftUI
 
-// MARK: – Supporting Enums
+// MARK: Supporting Enums
 
-/// User’s state of mind options
 enum StateOfMind: String, CaseIterable {
     case Calm, Anxious, Focused, Confused, Happy, Sad, Angry, Curious
 }
 
-/// Session duration goals
 enum TimeGoal: String, CaseIterable, Identifiable {
     case greater30 = "> 30 min", less30 = "< 30 min", equal30 = "= 30 min"
     var id: String { rawValue }
 }
 
-/// Rated intensity
 enum Intensity: String, CaseIterable, Identifiable {
     case easy, medium, hard
     var id: String { rawValue }
 }
 
-/// Workout mindset choices
 enum WorkoutMindset: String, CaseIterable, Identifiable {
     case completion   = "Completion Mindset"
     case performance  = "Performance Driven"
@@ -33,18 +29,21 @@ enum WorkoutMindset: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-// MARK: – Question Model
+// MARK: Question Model
 
 private struct Question {
     let text: String
     let options: [String]
 }
 
-// MARK: – IntentionsView
+// MARK: IntentionsView
 
 struct IntentionsView: View {
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject private var themeManager: ThemeManager
+
+    /// Callback with the chosen intention
+    let onSave: (String) -> Void
 
     // Paging state
     @State private var currentStep: Int = 0
@@ -71,6 +70,10 @@ struct IntentionsView: View {
         )
     ]
 
+    init(onSave: @escaping (String) -> Void) {
+        self.onSave = onSave
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -82,7 +85,7 @@ struct IntentionsView: View {
         .background(themeManager.selected.backgroundColor.ignoresSafeArea())
     }
 
-    // Header bar
+    // Header
     private var header: some View {
         HStack {
             Button {
@@ -97,17 +100,13 @@ struct IntentionsView: View {
                     .font(.title2)
                     .foregroundColor(themeManager.selected.accent)
             }
-
             Spacer()
-
             Text("Set Your Intention")
                 .font(.headline)
                 .foregroundColor(themeManager.selected.accent)
-
             Spacer()
-
             Button {
-                // help tap
+                // help action
             } label: {
                 Image(systemName: "questionmark.circle")
                     .font(.title2)
@@ -117,7 +116,7 @@ struct IntentionsView: View {
         .padding()
     }
 
-    // Main question + options
+    // Question + options
     private var content: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("Question \(currentStep + 1)/\(questions.count)")
@@ -148,14 +147,29 @@ struct IntentionsView: View {
         .padding(.top, 16)
     }
 
-    // Next/Save button
+    // Next / Save button
     private var nextButton: some View {
         Button {
             if currentStep < questions.count - 1 {
                 currentStep += 1
                 selectionIndex = answers[currentStep]
             } else {
-                // Persist your answers here, then:
+                // 1) Persist only the first answer (state‐of‐mind)
+                let state = questions[0].options[answers[0] ?? 0]
+                var all: [IntentRecord] = []
+                if let data = UserDefaults.standard.data(forKey: "intentionsHistory"),
+                   let decoded = try? JSONDecoder().decode([IntentRecord].self, from: data) {
+                    all = decoded
+                }
+                all.append(IntentRecord(date: Date(), state: state))
+                if let enc = try? JSONEncoder().encode(all) {
+                    UserDefaults.standard.set(enc, forKey: "intentionsHistory")
+                }
+
+                // 2) Notify parent (TimerView)
+                onSave(state)
+
+                // 3) Dismiss
                 presentationMode.wrappedValue.dismiss()
             }
         } label: {
@@ -191,11 +205,9 @@ private struct OptionRow: View {
                         .frame(width: 12, height: 12)
                 }
             }
-
             Text(text)
                 .foregroundColor(isSelected ? .white : .primary)
                 .font(.body)
-
             Spacer()
         }
         .padding()
@@ -207,9 +219,8 @@ private struct OptionRow: View {
 
 struct IntentionsView_Previews: PreviewProvider {
     static var previews: some View {
-        IntentionsView()
+        IntentionsView { _ in }
             .environmentObject(ThemeManager.shared)
-            .previewDevice("iPhone 14")
     }
 }
 

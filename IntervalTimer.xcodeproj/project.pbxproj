@@ -32,6 +32,7 @@
 		9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */; };
 		9A768BC22DE252A500435DE8 /* PickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A768BC12DE252A500435DE8 /* PickerSheet.swift */; };
 		9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */; };
+		9AA3DCA72DEA0FE5002A2055 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA3DCA62DEA0FE5002A2055 /* Models.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +62,7 @@
 		9A768BBF2DE2528000435DE8 /* ConfigurationEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditorView.swift; sourceTree = "<group>"; };
 		9A768BC12DE252A500435DE8 /* PickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerSheet.swift; sourceTree = "<group>"; };
 		9A93B2E22DE38F5E0046F727 /* BackgroundOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundOption.swift; sourceTree = "<group>"; };
+		9AA3DCA62DEA0FE5002A2055 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -123,6 +125,7 @@
 		9A66D83C2DE1149E008C73D7 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				9AA3DCA62DEA0FE5002A2055 /* Models.swift */,
 				9A66D8282DE11474008C73D7 /* SessionRecord.swift */,
 			);
 			path = Models;
@@ -331,6 +334,7 @@
 				9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */,
 				9A0258042DE4EFD100A85EFE /* ConfigTilesView.swift in Sources */,
 				9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */,
+				9AA3DCA72DEA0FE5002A2055 /* Models.swift in Sources */,
 				9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

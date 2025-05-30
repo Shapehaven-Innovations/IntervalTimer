@@ -1,49 +1,31 @@
-// AnalyticsView.swift
-// IntervalTimer
-// Modernized interactive analytics with Charts
+//
+//  AnalyticsView.swift
+//  IntervalTimer
+//  Interactive analytics with Charts + drill‑down by intention
+//
 
 import SwiftUI
 import Charts
 
-// MARK: – Intent Record
-
-/// Records an intention set by the user.
-/// Conforms to Codable so we can persist and load from UserDefaults.
-struct IntentRecord: Identifiable, Codable {
-    let id: UUID
-    let date: Date
-    let state: String
-
-    /// Convenience initializer for new records.
-    init(date: Date, state: String) {
-        self.id = UUID()
-        self.date = date
-        self.state = state
-    }
-}
-
-// MARK: – Analytics View
-
 struct AnalyticsView: View {
     @Environment(\.presentationMode) private var presentationMode
 
-    // Session history
-    @State private var history: [SessionRecord] = []
-    // Intentions history
-    @State private var intentions: [IntentRecord] = []
+    // ── Data ──────────────────────────────────
+    @State private var history:    [SessionRecord] = []
+    @State private var intentions: [IntentRecord]  = []
+    @State private var selectedState: String?      = nil
 
-    // Goals
-    @AppStorage("dailyGoal")   private var dailyGoal:   Int = 1
-    @AppStorage("weeklyGoal")  private var weeklyGoal:  Int = 7
-    @AppStorage("monthlyGoal") private var monthlyGoal: Int = 30
+    // ── Goals & Onboarding ────────────────────
+    @AppStorage("dailyGoal")   private var dailyGoal:   Int    = 1
+    @AppStorage("weeklyGoal")  private var weeklyGoal:  Int    = 7
+    @AppStorage("monthlyGoal") private var monthlyGoal: Int    = 30
 
-    // Onboarding info
     @AppStorage("userSex")    private var userSex:    String = ""
     @AppStorage("userHeight") private var userHeight: Int    = 0
     @AppStorage("userWeight") private var userWeight: Int    = 0
     @AppStorage("weightUnit") private var weightUnit: String = "kg"
 
-    // Computed metrics
+    // ── Computed Metrics ──────────────────────
     private var totalSessions: Int { history.count }
     private var daysCompleted: Int {
         Set(history.map { Calendar.current.startOfDay(for: $0.date) }).count
@@ -57,7 +39,6 @@ struct AnalyticsView: View {
         return (todayCount, weekCount, monthCount)
     }
 
-    // Distribution of intentions by state
     private var intentionDistribution: [(state: String, count: Int)] {
         Dictionary(grouping: intentions, by: \.state)
             .mapValues(\.count)
@@ -70,7 +51,7 @@ struct AnalyticsView: View {
             ScrollView {
                 VStack(spacing: 24) {
 
-                    // MARK: Onboarding Summary
+                    // ── Onboarding Summary ─────────────────
                     HStack {
                         MetricCard(title: "Sex",    value: userSex)
                         MetricCard(title: "Height", value: "\(userHeight) cm")
@@ -78,17 +59,17 @@ struct AnalyticsView: View {
                     }
                     .padding(.horizontal)
 
-                    // MARK: Overview
+                    // ── Overview ──────────────────────────
                     HStack {
                         MetricCard(title: "Sessions",  value: "\(totalSessions)")
                         MetricCard(title: "Days Done", value: "\(daysCompleted)")
                     }
                     .padding(.horizontal)
 
-                    // MARK: Progress vs Goals
+                    // ── Progress vs Goals ─────────────────
                     progressSection
 
-                    // MARK: Intentions Analysis
+                    // ── Intentions Analysis + Drill‑down ─
                     intentionSection
 
                 }
@@ -106,16 +87,10 @@ struct AnalyticsView: View {
         }
     }
 
-    // MARK: – Progress Chart Subview
-
+    // MARK: Progress Chart
     private var progressSection: some View {
-        // Break up into locals for compile‐time efficiency
-        let today = counts.today
-        let week  = counts.week
-        let month = counts.month
-        let dGoal = dailyGoal
-        let wGoal = weeklyGoal
-        let mGoal = monthlyGoal
+        let (today, week, month) = (counts.today, counts.week, counts.month)
+        let (dGoal, wGoal, mGoal) = (dailyGoal, weeklyGoal, monthlyGoal)
 
         return VStack(alignment: .leading, spacing: 8) {
             Text("Progress vs Goals")
@@ -123,12 +98,10 @@ struct AnalyticsView: View {
                 .padding(.horizontal)
 
             Chart {
-                // Actual counts
                 BarMark(x: .value("Count", today), y: .value("Period", "Today"))
                 BarMark(x: .value("Count", week),  y: .value("Period", "Week"))
                 BarMark(x: .value("Count", month), y: .value("Period", "Month"))
 
-                // Goal lines (span full height)
                 RuleMark(x: .value("Goal", dGoal))
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
                     .foregroundStyle(.red)
@@ -147,8 +120,7 @@ struct AnalyticsView: View {
         }
     }
 
-    // MARK: – Intentions Chart Subview
-
+    // MARK: Intentions & Drill‑down
     private var intentionSection: some View {
         let data = intentionDistribution
 
@@ -175,12 +147,45 @@ struct AnalyticsView: View {
                 .chartLegend(.visible)
                 .frame(height: 240)
                 .padding(.horizontal)
+
+                // menu to pick which slice to drill into:
+                Picker("Filter by Intention", selection: $selectedState) {
+                    Text("All").tag(String?.none)
+                    ForEach(data.map(\.state), id: \.self) { state in
+                        Text("\(state) (\(data.first { $0.state == state }!.count))")
+                            .tag(Optional(state))
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(.horizontal)
+            }
+
+            // drill‑down list
+            if let state = selectedState {
+                Text("Sessions tagged “\(state)”")
+                    .font(.subheadline).bold()
+                    .padding(.horizontal)
+
+                ForEach(history.filter { $0.intention == state }) { rec in
+                    HStack {
+                        Text(rec.name)
+                        Spacer()
+                        Text(rec.date, style: .date)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+                }
+
+                Button("Clear Filter") {
+                    selectedState = nil
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 4)
             }
         }
     }
 
-    // MARK: – Data Loading
-
+    // MARK: Data Loading
     private func loadHistory() {
         if let data = UserDefaults.standard.data(forKey: "sessionHistory"),
            let decoded = try? JSONDecoder().decode([SessionRecord].self, from: data) {
@@ -196,7 +201,8 @@ struct AnalyticsView: View {
     }
 }
 
-// MARK: – Reusable Metric Card
+
+// MARK: MetricCard
 
 private struct MetricCard: View {
     let title: String
