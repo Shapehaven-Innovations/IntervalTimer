@@ -3,11 +3,9 @@
 //  IntervalTimer
 //  Modernized Settings: live theme switching for tiles
 //
-
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject private var themeManager: ThemeManager
 
     // MARK: – In‑app Appearance override
@@ -49,17 +47,11 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .tint(accent)
-                }
-            }
             .accentColor(accent)
         }
         .preferredColorScheme(useDarkMode ? .dark : .light)
+        // ensure swipe‑to‑dismiss is enabled if you’d previously disabled it:
+        .interactiveDismissDisabled(false)
     }
 }
 
@@ -79,4 +71,3 @@ struct SettingsView_Previews: PreviewProvider {
     }
 }
 #endif
-
