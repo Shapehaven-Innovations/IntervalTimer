@@ -1,4 +1,3 @@
-//
 //  AnalyticsView.swift
 //  IntervalTimer
 //  Interactive analytics with Charts + drill‑down by intention
@@ -8,7 +7,7 @@ import SwiftUI
 import Charts
 
 struct AnalyticsView: View {
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     // ── Data ──────────────────────────────────
     @State private var history:    [SessionRecord] = []
@@ -47,7 +46,7 @@ struct AnalyticsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
 
@@ -77,13 +76,12 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Done") { presentationMode.wrappedValue.dismiss() }
-            )
-            .onAppear {
-                loadHistory()
-                loadIntentions()
-            }
+            // no Done button – rely on sheet’s swipe-to-dismiss
+        }
+        .interactiveDismissDisabled(false)
+        .onAppear {
+            loadHistory()
+            loadIntentions()
         }
     }
 
@@ -148,7 +146,6 @@ struct AnalyticsView: View {
                 .frame(height: 240)
                 .padding(.horizontal)
 
-                // menu to pick which slice to drill into:
                 Picker("Filter by Intention", selection: $selectedState) {
                     Text("All").tag(String?.none)
                     ForEach(data.map(\.state), id: \.self) { state in
@@ -160,7 +157,6 @@ struct AnalyticsView: View {
                 .padding(.horizontal)
             }
 
-            // drill‑down list
             if let state = selectedState {
                 Text("Sessions tagged “\(state)”")
                     .font(.subheadline).bold()
@@ -200,7 +196,6 @@ struct AnalyticsView: View {
         }
     }
 }
-
 
 // MARK: MetricCard
 
