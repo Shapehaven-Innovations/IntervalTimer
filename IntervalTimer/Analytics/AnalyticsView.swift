@@ -1,8 +1,8 @@
-//
+///
 //  AnalyticsView.swift
 //  IntervalTimer
 //  Interactive analytics with Charts + Calories Burned over Time
-//  Updated 05/30/25 to show calories burned over selectable timeframes
+//  Refactored 05/31/25 to improve card visibility in Dark Mode
 //
 
 import SwiftUI
@@ -10,6 +10,7 @@ import Charts
 
 struct AnalyticsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     // ── Data ──────────────────────────────────
     @State private var history: [SessionRecord] = []
@@ -36,18 +37,24 @@ struct AnalyticsView: View {
     @State private var selectedTimeframe: Timeframe = .month
 
     // ── Computed Metrics ──────────────────────
-    private var totalSessions: Int { history.count }
+    private var totalSessions: Int {
+        history.count
+    }
+
     private var daysCompleted: Int {
         Set(history.map { Calendar.current.startOfDay(for: $0.date) }).count
     }
+
     private var counts: (today: Int, week: Int, month: Int) {
-        let todayCount = history.filter { Calendar.current.isDateInToday($0.date) }.count
-        let weekStart  = Calendar.current.date(byAdding: .day,   value: -7,  to: Date())!
+        let calendar = Calendar.current
+        let todayCount = history.filter { calendar.isDateInToday($0.date) }.count
+        let weekStart  = calendar.date(byAdding: .day,   value: -7,  to: Date())!
         let weekCount  = history.filter { $0.date >= weekStart }.count
-        let monthStart = Calendar.current.date(byAdding: .month, value: -1, to: Date())!
+        let monthStart = calendar.date(byAdding: .month, value: -1, to: Date())!
         let monthCount = history.filter { $0.date >= monthStart }.count
         return (todayCount, weekCount, monthCount)
     }
+
     private var intentionDistribution: [(state: String, count: Int)] {
         Dictionary(grouping: intentions, by: \.state)
             .mapValues(\.count)
@@ -69,17 +76,32 @@ struct AnalyticsView: View {
                 VStack(spacing: 24) {
 
                     // ── Onboarding Summary ─────────────────
-                    HStack {
-                        MetricCard(title: "Sex",    value: userSex)
-                        MetricCard(title: "Height", value: "\(userHeight) cm")
-                        MetricCard(title: "Weight", value: "\(userWeight) \(weightUnit)")
+                    HStack(spacing: 12) {
+                        MetricCard(
+                            title: "Sex",
+                            value: userSex
+                        )
+                        MetricCard(
+                            title: "Height",
+                            value: "\(userHeight) cm"
+                        )
+                        MetricCard(
+                            title: "Weight",
+                            value: "\(userWeight) \(weightUnit)"
+                        )
                     }
                     .padding(.horizontal)
 
                     // ── Overview ──────────────────────────
-                    HStack {
-                        MetricCard(title: "Sessions",  value: "\(totalSessions)")
-                        MetricCard(title: "Days Done", value: "\(daysCompleted)")
+                    HStack(spacing: 12) {
+                        MetricCard(
+                            title: "Sessions",
+                            value: "\(totalSessions)"
+                        )
+                        MetricCard(
+                            title: "Days Done",
+                            value: "\(daysCompleted)"
+                        )
                     }
                     .padding(.horizontal)
 
@@ -90,17 +112,19 @@ struct AnalyticsView: View {
                     intentionSection
 
                 }
-                .padding(.vertical)
+                .padding(.vertical, 16)
             }
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.inline)
-            // no Done button – rely on sheet’s swipe-to-dismiss
+            // No explicit “Done” button; rely on swipe-to-dismiss
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .onAppear {
+                loadHistory()
+                loadIntentions()
+            }
         }
         .interactiveDismissDisabled(false)
-        .onAppear {
-            loadHistory()
-            loadIntentions()
-        }
+        .preferredColorScheme(colorScheme) // respect system or user override
     }
 
     // MARK: Calories Section
@@ -133,13 +157,6 @@ struct AnalyticsView: View {
                             .foregroundColor(.primary)
                     }
                 }
-
-                // Optional: add a dashed line showing a “goal” if you want to display a calorie target.
-                // Uncomment and replace 'calorieGoal' with your own value (e.g., @AppStorage("dailyCalorieGoal")).
-                //
-                // RuleMark(y: .value("Calorie Goal", calorieGoal))
-                //     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                //     .foregroundStyle(.red)
             }
             .chartYAxis {
                 AxisMarks(position: .leading)
@@ -152,7 +169,7 @@ struct AnalyticsView: View {
     }
 
     // MARK: Compute Data Points
-    /// Returns an array of DataPoint, each with a label (String) and calories (Int) for the selected timeframe.
+    /// Returns an array of DataPoint (label, calories) for the chosen timeframe.
     private func computeDataPoints() -> [DataPoint] {
         switch selectedTimeframe {
         case .week:
@@ -164,7 +181,7 @@ struct AnalyticsView: View {
         }
     }
 
-    // DataPoint model for chart entries
+    /// DataPoint model for chart entries
     private struct DataPoint {
         let label: String
         let calories: Int
@@ -174,28 +191,25 @@ struct AnalyticsView: View {
     private func computeLastWeekByDay() -> [DataPoint] {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
-        let dayCount = 7
         var results: [DataPoint] = []
 
-        for offset in stride(from: dayCount - 1, through: 0, by: -1) {
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: todayStart) else { continue }
+        for offset in stride(from: 6, through: 0, by: -1) {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: todayStart) else {
+                continue
+            }
             let dayLabel = DateFormatter.localizedString(
                 from: date,
                 dateStyle: .short,
                 timeStyle: .none
             ) // e.g. "5/24/25"
 
-            // Sum all sessions whose date falls within that exact calendar day
             let dayCalories = history
                 .filter { calendar.isDate($0.date, inSameDayAs: date) }
-                .map { session in
-                    calculateCalories(for: session)
-                }
+                .map { calculateCalories(for: $0) }
                 .reduce(0, +)
 
             results.append(DataPoint(label: dayLabel, calories: dayCalories))
         }
-
         return results
     }
 
@@ -207,25 +221,20 @@ struct AnalyticsView: View {
             return []
         }
 
-        // Find the Monday (or first weekday) of the week containing monthAgo
-        var startOfFirstWeek: Date = monthAgo
-        if let weekStart = calendar.dateInterval(of: .weekOfYear, for: monthAgo)?.start {
-            startOfFirstWeek = weekStart
-        }
-
+        // Find the start of the week containing monthAgo
+        var weekStartDate = calendar.dateInterval(of: .weekOfYear, for: monthAgo)!.start
         var results: [DataPoint] = []
-        var weekStartDate = startOfFirstWeek
 
         while weekStartDate <= today {
-            // Label: "MMM d, yy" for the week start
             let weekLabel = DateFormatter.localizedString(
                 from: weekStartDate,
                 dateStyle: .medium,
                 timeStyle: .none
             ) // e.g. "May 1, 25"
 
-            // Sum all sessions from weekStartDate ..< nextWeekStart
-            guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else { break }
+            guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else {
+                break
+            }
 
             let weekCalories = history
                 .filter { $0.date >= weekStartDate && $0.date < nextWeek }
@@ -233,11 +242,8 @@ struct AnalyticsView: View {
                 .reduce(0, +)
 
             results.append(DataPoint(label: weekLabel, calories: weekCalories))
-
-            // Move to next week
             weekStartDate = nextWeek
         }
-
         return results
     }
 
@@ -253,14 +259,11 @@ struct AnalyticsView: View {
         var monthIteratorDate = threeMonthsAgo
 
         while monthIteratorDate <= today {
-            // Get the month index (1...12), then subtract 1 to index monthSymbols (0...11)
             let monthIndex = calendar.component(.month, from: monthIteratorDate) - 1
-            let monthName = DateFormatter().monthSymbols[monthIndex]     // Safe: 0...11
+            let monthName = DateFormatter().monthSymbols[monthIndex]
             let year = calendar.component(.year, from: monthIteratorDate)
+            let monthLabel = "\(monthName) \(year)" // e.g. "Mar 2025"
 
-            let monthLabel = "\(monthName) \(year)"   // e.g. "Mar 2025"
-
-            // Find the month interval
             guard let monthInterval = calendar.dateInterval(of: .month, for: monthIteratorDate) else {
                 break
             }
@@ -272,19 +275,17 @@ struct AnalyticsView: View {
 
             results.append(DataPoint(label: monthLabel, calories: monthCalories))
 
-            // Move to the first day of next month
             guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthIteratorDate) else {
                 break
             }
             monthIteratorDate = nextMonth
         }
-
         return results
     }
 
     // MARK: Calorie Calculation
-    /// Estimates calories burned for a given SessionRecord using MET=8 formula:
-    ///   calories = 0.0175 × MET × weight (kg) × duration (minutes)
+    /// Estimates calories burned for a session using MET=8:
+    ///     cals = 0.0175 × MET × weight (kg) × duration (minutes)
     private func calculateCalories(for session: SessionRecord) -> Int {
         let totalWorkSeconds = session.timerDuration * session.sets
         let minutes = Double(totalWorkSeconds) / 60.0
@@ -373,28 +374,55 @@ struct AnalyticsView: View {
     }
 }
 
-// MARK: MetricCard
+
+// MARK: — MetricCard
 
 private struct MetricCard: View {
     let title: String
     let value: String
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title)
                 .fontWeight(.bold)
+                .foregroundColor(.primary)
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                // Use secondarySystemBackground so that in Dark Mode the card is slightly lighter than its surroundings.
+                .fill(Color(UIColor.secondarySystemBackground))
+        )
+        .shadow(
+            color: colorScheme == .dark
+                ? Color.black.opacity(0.7)
+                : Color.black.opacity(0.1),
+            radius: 4,
+            x: 0,
+            y: 2
         )
     }
 }
+
+
+// MARK: — Preview
+
+struct AnalyticsView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            AnalyticsView()
+                .preferredColorScheme(.light)
+            AnalyticsView()
+                .preferredColorScheme(.dark)
+        }
+    }
+}
+
 
