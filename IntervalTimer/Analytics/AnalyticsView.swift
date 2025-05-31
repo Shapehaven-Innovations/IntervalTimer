@@ -1,6 +1,8 @@
+//
 //  AnalyticsView.swift
 //  IntervalTimer
-//  Interactive analytics with Charts + drill‑down by intention
+//  Interactive analytics with Charts + Calories Burned over Time
+//  Updated 05/30/25 to show calories burned over selectable timeframes
 //
 
 import SwiftUI
@@ -10,9 +12,9 @@ struct AnalyticsView: View {
     @Environment(\.dismiss) private var dismiss
 
     // ── Data ──────────────────────────────────
-    @State private var history:    [SessionRecord] = []
-    @State private var intentions: [IntentRecord]  = []
-    @State private var selectedState: String?      = nil
+    @State private var history: [SessionRecord] = []
+    @State private var intentions: [IntentRecord] = []
+    @State private var selectedState: String? = nil
 
     // ── Goals & Onboarding ────────────────────
     @AppStorage("dailyGoal")   private var dailyGoal:   Int    = 1
@@ -23,6 +25,15 @@ struct AnalyticsView: View {
     @AppStorage("userHeight") private var userHeight: Int    = 0
     @AppStorage("userWeight") private var userWeight: Int    = 0
     @AppStorage("weightUnit") private var weightUnit: String = "kg"
+
+    // ── Timeframe Picker ─────────────────────
+    private enum Timeframe: String, CaseIterable, Identifiable {
+        case week    = "Week"
+        case month   = "Month"
+        case quarter = "Quarter"
+        var id: String { rawValue }
+    }
+    @State private var selectedTimeframe: Timeframe = .month
 
     // ── Computed Metrics ──────────────────────
     private var totalSessions: Int { history.count }
@@ -37,7 +48,6 @@ struct AnalyticsView: View {
         let monthCount = history.filter { $0.date >= monthStart }.count
         return (todayCount, weekCount, monthCount)
     }
-
     private var intentionDistribution: [(state: String, count: Int)] {
         Dictionary(grouping: intentions, by: \.state)
             .mapValues(\.count)
@@ -45,6 +55,14 @@ struct AnalyticsView: View {
             .sorted { $0.count > $1.count }
     }
 
+    // ── Weight in Kilograms ───────────────────
+    private var userWeightKg: Double {
+        weightUnit == "lbs"
+            ? Double(userWeight) / 2.20462
+            : Double(userWeight)
+    }
+
+    // MARK: Body
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -65,8 +83,8 @@ struct AnalyticsView: View {
                     }
                     .padding(.horizontal)
 
-                    // ── Progress vs Goals ─────────────────
-                    progressSection
+                    // ── Calories Burned Chart ──────────────
+                    caloriesSection
 
                     // ── Intentions Analysis + Drill‑down ─
                     intentionSection
@@ -85,40 +103,197 @@ struct AnalyticsView: View {
         }
     }
 
-    // MARK: Progress Chart
-    private var progressSection: some View {
-        let (today, week, month) = (counts.today, counts.week, counts.month)
-        let (dGoal, wGoal, mGoal) = (dailyGoal, weeklyGoal, monthlyGoal)
-
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("Progress vs Goals")
+    // MARK: Calories Section
+    private var caloriesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Calories Burned Over Time")
                 .font(.headline)
                 .padding(.horizontal)
 
-            Chart {
-                BarMark(x: .value("Count", today), y: .value("Period", "Today"))
-                BarMark(x: .value("Count", week),  y: .value("Period", "Week"))
-                BarMark(x: .value("Count", month), y: .value("Period", "Month"))
-
-                RuleMark(x: .value("Goal", dGoal))
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                    .foregroundStyle(.red)
-
-                RuleMark(x: .value("Goal", wGoal))
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                    .foregroundStyle(.red)
-
-                RuleMark(x: .value("Goal", mGoal))
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                    .foregroundStyle(.red)
+            // Picker to choose Week / Month / Quarter
+            Picker("Timeframe", selection: $selectedTimeframe) {
+                ForEach(Timeframe.allCases) { timeframe in
+                    Text(timeframe.rawValue).tag(timeframe)
+                }
             }
-            .chartXAxisLabel("Sessions")
-            .frame(height: 200)
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+
+            // Chart
+            Chart {
+                ForEach(computeDataPoints(), id: \.label) { point in
+                    BarMark(
+                        x: .value("Period", point.label),
+                        y: .value("Calories", point.calories)
+                    )
+                    .foregroundStyle(.blue.gradient)
+                    .annotation(position: .top) {
+                        Text("\(point.calories)")
+                            .font(.caption2)
+                            .foregroundColor(.primary)
+                    }
+                }
+
+                // Optional: add a dashed line showing a “goal” if you want to display a calorie target.
+                // Uncomment and replace 'calorieGoal' with your own value (e.g., @AppStorage("dailyCalorieGoal")).
+                //
+                // RuleMark(y: .value("Calorie Goal", calorieGoal))
+                //     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
+                //     .foregroundStyle(.red)
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
+            .chartXAxisLabel("Timeframe: \(selectedTimeframe.rawValue)")
+            .chartYAxisLabel("Calories (kcal)")
+            .frame(height: 260)
             .padding(.horizontal)
         }
     }
 
-    // MARK: Intentions & Drill‑down
+    // MARK: Compute Data Points
+    /// Returns an array of DataPoint, each with a label (String) and calories (Int) for the selected timeframe.
+    private func computeDataPoints() -> [DataPoint] {
+        switch selectedTimeframe {
+        case .week:
+            return computeLastWeekByDay()
+        case .month:
+            return computeLastMonthByWeek()
+        case .quarter:
+            return computeLastQuarterByMonth()
+        }
+    }
+
+    // DataPoint model for chart entries
+    private struct DataPoint {
+        let label: String
+        let calories: Int
+    }
+
+    // ── 1) Last 7 Days, Grouped by Day ─────────────────────
+    private func computeLastWeekByDay() -> [DataPoint] {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+        let dayCount = 7
+        var results: [DataPoint] = []
+
+        for offset in stride(from: dayCount - 1, through: 0, by: -1) {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: todayStart) else { continue }
+            let dayLabel = DateFormatter.localizedString(
+                from: date,
+                dateStyle: .short,
+                timeStyle: .none
+            ) // e.g. "5/24/25"
+
+            // Sum all sessions whose date falls within that exact calendar day
+            let dayCalories = history
+                .filter { calendar.isDate($0.date, inSameDayAs: date) }
+                .map { session in
+                    calculateCalories(for: session)
+                }
+                .reduce(0, +)
+
+            results.append(DataPoint(label: dayLabel, calories: dayCalories))
+        }
+
+        return results
+    }
+
+    // ── 2) Last 30 Days, Grouped by Week ───────────────────
+    private func computeLastMonthByWeek() -> [DataPoint] {
+        let calendar = Calendar.current
+        let today = Date()
+        guard let monthAgo = calendar.date(byAdding: .month, value: -1, to: today) else {
+            return []
+        }
+
+        // Find the Monday (or first weekday) of the week containing monthAgo
+        var startOfFirstWeek: Date = monthAgo
+        if let weekStart = calendar.dateInterval(of: .weekOfYear, for: monthAgo)?.start {
+            startOfFirstWeek = weekStart
+        }
+
+        var results: [DataPoint] = []
+        var weekStartDate = startOfFirstWeek
+
+        while weekStartDate <= today {
+            // Label: "MMM d, yy" for the week start
+            let weekLabel = DateFormatter.localizedString(
+                from: weekStartDate,
+                dateStyle: .medium,
+                timeStyle: .none
+            ) // e.g. "May 1, 25"
+
+            // Sum all sessions from weekStartDate ..< nextWeekStart
+            guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else { break }
+
+            let weekCalories = history
+                .filter { $0.date >= weekStartDate && $0.date < nextWeek }
+                .map { calculateCalories(for: $0) }
+                .reduce(0, +)
+
+            results.append(DataPoint(label: weekLabel, calories: weekCalories))
+
+            // Move to next week
+            weekStartDate = nextWeek
+        }
+
+        return results
+    }
+
+    // ── 3) Last 3 Months, Grouped by Month ─────────────────
+    private func computeLastQuarterByMonth() -> [DataPoint] {
+        let calendar = Calendar.current
+        let today = Date()
+        guard let threeMonthsAgo = calendar.date(byAdding: .month, value: -3, to: today) else {
+            return []
+        }
+
+        var results: [DataPoint] = []
+        var monthIteratorDate = threeMonthsAgo
+
+        while monthIteratorDate <= today {
+            // Get the month index (1...12), then subtract 1 to index monthSymbols (0...11)
+            let monthIndex = calendar.component(.month, from: monthIteratorDate) - 1
+            let monthName = DateFormatter().monthSymbols[monthIndex]     // Safe: 0...11
+            let year = calendar.component(.year, from: monthIteratorDate)
+
+            let monthLabel = "\(monthName) \(year)"   // e.g. "Mar 2025"
+
+            // Find the month interval
+            guard let monthInterval = calendar.dateInterval(of: .month, for: monthIteratorDate) else {
+                break
+            }
+
+            let monthCalories = history
+                .filter { $0.date >= monthInterval.start && $0.date < monthInterval.end }
+                .map { calculateCalories(for: $0) }
+                .reduce(0, +)
+
+            results.append(DataPoint(label: monthLabel, calories: monthCalories))
+
+            // Move to the first day of next month
+            guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthIteratorDate) else {
+                break
+            }
+            monthIteratorDate = nextMonth
+        }
+
+        return results
+    }
+
+    // MARK: Calorie Calculation
+    /// Estimates calories burned for a given SessionRecord using MET=8 formula:
+    ///   calories = 0.0175 × MET × weight (kg) × duration (minutes)
+    private func calculateCalories(for session: SessionRecord) -> Int {
+        let totalWorkSeconds = session.timerDuration * session.sets
+        let minutes = Double(totalWorkSeconds) / 60.0
+        let met: Double = 8.0
+        let cals = 0.0175 * met * userWeightKg * minutes
+        return Int(round(cals))
+    }
+
+    // MARK: Intentions Section
     private var intentionSection: some View {
         let data = intentionDistribution
 
@@ -149,7 +324,8 @@ struct AnalyticsView: View {
                 Picker("Filter by Intention", selection: $selectedState) {
                     Text("All").tag(String?.none)
                     ForEach(data.map(\.state), id: \.self) { state in
-                        Text("\(state) (\(data.first { $0.state == state }!.count))")
+                        let count = data.first { $0.state == state }!.count
+                        Text("\(state) (\(count))")
                             .tag(Optional(state))
                     }
                 }
