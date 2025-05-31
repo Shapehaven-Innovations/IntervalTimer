@@ -1,7 +1,9 @@
-///
+//
 //  IntentionsView.swift
 //  IntervalTimer
 //  Paged quiz UI for capturing user intention
+//
+//  Refactored 05/31/25 to support Light/Dark Mode via system colors
 //
 
 import SwiftUI
@@ -40,9 +42,9 @@ private struct Question {
 
 struct IntentionsView: View {
     @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var colorScheme
 
-    /// Callback with the chosen intention
+    /// Callback with the chosen intention (only the first answer is ever passed back)
     let onSave: (String) -> Void
 
     // Paging state
@@ -82,10 +84,12 @@ struct IntentionsView: View {
             Spacer()
             nextButton
         }
-        .background(themeManager.selected.backgroundColor.ignoresSafeArea())
+        // Use systemBackground so it flips automatically in Light/Dark Mode
+        .background(Color(.systemBackground).ignoresSafeArea())
     }
 
-    // Header
+    // MARK: – Header
+
     private var header: some View {
         HStack {
             Button {
@@ -98,35 +102,40 @@ struct IntentionsView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.title2)
-                    .foregroundColor(themeManager.selected.accent)
+                    .foregroundColor(Color(.label))
             }
+
             Spacer()
+
             Text("Set Your Intention")
                 .font(.headline)
-                .foregroundColor(themeManager.selected.accent)
+                .foregroundColor(Color(.label))
+
             Spacer()
+
             Button {
-                // help action
+                // (Optional) Help action
             } label: {
                 Image(systemName: "questionmark.circle")
                     .font(.title2)
-                    .foregroundColor(themeManager.selected.accent)
+                    .foregroundColor(Color(.label))
             }
         }
         .padding()
     }
 
-    // Question + options
+    // MARK: – Content (Question + Options)
+
     private var content: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("Question \(currentStep + 1)/\(questions.count)")
                 .font(.subheadline.weight(.semibold))
-                .foregroundColor(themeManager.selected.accent.opacity(0.8))
+                .foregroundColor(Color.secondary)
                 .padding(.horizontal)
 
             Text(questions[currentStep].text)
                 .font(.title3.weight(.semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(Color.primary)
                 .padding(.horizontal)
 
             VStack(spacing: 12) {
@@ -134,7 +143,7 @@ struct IntentionsView: View {
                     OptionRow(
                         text: questions[currentStep].options[idx],
                         isSelected: selectionIndex == idx,
-                        accent: themeManager.selected.accent
+                        accent: Color.accentColor
                     )
                     .onTapGesture {
                         selectionIndex = idx
@@ -147,29 +156,41 @@ struct IntentionsView: View {
         .padding(.top, 16)
     }
 
-    // Next / Save button
+    // MARK: – Next / Save Button
+
     private var nextButton: some View {
         Button {
             if currentStep < questions.count - 1 {
+                // Move to the next question; restore previous selection (if any)
                 currentStep += 1
                 selectionIndex = answers[currentStep]
             } else {
-                // 1) Persist only the first answer (state‐of‐mind)
-                let state = questions[0].options[answers[0] ?? 0]
+                // Persist only the first answer (state-of-mind)
+                let chosenStateIndex = answers[0] ?? 0
+                let state = questions[0].options[chosenStateIndex]
+
+                // 1) Load existing history from UserDefaults
                 var all: [IntentRecord] = []
-                if let data = UserDefaults.standard.data(forKey: "intentionsHistory"),
-                   let decoded = try? JSONDecoder().decode([IntentRecord].self, from: data) {
+                if
+                    let data = UserDefaults.standard.data(forKey: "intentionsHistory"),
+                    let decoded = try? JSONDecoder().decode([IntentRecord].self, from: data)
+                {
                     all = decoded
                 }
-                all.append(IntentRecord(date: Date(), state: state))
+
+                // 2) Append the new record
+                let newRecord = IntentRecord(date: Date(), state: state)
+                all.append(newRecord)
+
+                // 3) Save back to UserDefaults
                 if let enc = try? JSONEncoder().encode(all) {
                     UserDefaults.standard.set(enc, forKey: "intentionsHistory")
                 }
 
-                // 2) Notify parent (TimerView)
+                // 4) Notify parent
                 onSave(state)
 
-                // 3) Dismiss
+                // 5) Dismiss
                 presentationMode.wrappedValue.dismiss()
             }
         } label: {
@@ -177,17 +198,19 @@ struct IntentionsView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(themeManager.selected.accent)
+                .background(Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom, 8)
         }
         .disabled(selectionIndex == nil)
         .opacity(selectionIndex == nil ? 0.5 : 1)
     }
 }
 
-// Single‐row option with a radio circle
+// MARK: – Single-row Option
+
 private struct OptionRow: View {
     let text: String
     let isSelected: Bool
@@ -199,28 +222,46 @@ private struct OptionRow: View {
                 Circle()
                     .stroke(isSelected ? Color.white : accent, lineWidth: 2)
                     .frame(width: 24, height: 24)
+
                 if isSelected {
                     Circle()
                         .fill(Color.white)
                         .frame(width: 12, height: 12)
                 }
             }
+
             Text(text)
-                .foregroundColor(isSelected ? .white : .primary)
+                .foregroundColor(isSelected ? .white : Color.primary)
                 .font(.body)
+
             Spacer()
         }
         .padding()
-        .background(isSelected ? accent : Color(.systemBackground))
+        .background(
+            Group {
+                if isSelected {
+                    accent
+                } else {
+                    Color(.secondarySystemBackground)
+                }
+            }
+        )
         .cornerRadius(8)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
+// MARK: – Preview
+
 struct IntentionsView_Previews: PreviewProvider {
     static var previews: some View {
-        IntentionsView { _ in }
-            .environmentObject(ThemeManager.shared)
+        Group {
+            IntentionsView { _ in }
+                .preferredColorScheme(.light)
+
+            IntentionsView { _ in }
+                .preferredColorScheme(.dark)
+        }
     }
 }
 
