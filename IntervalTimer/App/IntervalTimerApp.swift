@@ -10,6 +10,7 @@ import AVFoundation
 struct IntervalTimerApp: App {
     @StateObject private var themeManager = ThemeManager.shared
     @AppStorage("useDarkMode") private var useDarkMode: Bool = false
+    @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
 
     init() {
         configureAudioSession()
@@ -18,10 +19,16 @@ struct IntervalTimerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(themeManager)
-                // Drive system dark vs light by the user’s toggle:
-                .preferredColorScheme(useDarkMode ? .dark : .light)
+            // If the user has never onboarded, show the OnboardingView first.
+            if !hasOnboarded {
+                OnboardingView()
+                    .environmentObject(themeManager)
+                    .preferredColorScheme(useDarkMode ? .dark : .light)
+            } else {
+                ContentView()
+                    .environmentObject(themeManager)
+                    .preferredColorScheme(useDarkMode ? .dark : .light)
+            }
         }
     }
 
@@ -59,3 +66,4 @@ struct IntervalTimerApp: App {
         UINavigationBar.appearance().tintColor = UIColor.label
     }
 }
+

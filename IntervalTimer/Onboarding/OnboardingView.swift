@@ -46,7 +46,8 @@ struct OnboardingView: View {
                 Text("Welcome \(deviceName)!")
                     .font(.largeTitle).bold()
                 Text("Let’s get started.")
-                    .font(.title3).foregroundColor(.secondary)
+                    .font(.title3)
+                    .foregroundColor(.secondary)
 
                 Form {
                     Section(header: Text("SEX")
@@ -74,9 +75,13 @@ struct OnboardingView: View {
                             Spacer()
                         }
                     }
-                    // use the new zero‑parameter onChange to avoid deprecation
-                    .onChange(of: heightFeet)   { recalcCm() }
-                    .onChange(of: heightInches) { recalcCm() }
+                    // ── Use zero‐parameter onChange for height changes ──
+                    .onChange(of: heightFeet) {
+                        recalcCm()
+                    }
+                    .onChange(of: heightInches) {
+                        recalcCm()
+                    }
 
                     Section(header: Text("UNITS")
                                 .font(.caption)
@@ -87,8 +92,8 @@ struct OnboardingView: View {
                             Text("lbs").tag("lbs")
                         }
                         .pickerStyle(.segmented)
-                        .onChange(of: selectedUnit) { old, new in
-                            convertWeight(from: old, to: new)
+                        .onChange(of: selectedUnit) { oldUnit, newUnit in
+                            convertWeight(from: oldUnit, to: newUnit)
                         }
                     }
 
@@ -98,9 +103,9 @@ struct OnboardingView: View {
                     ) {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.numberPad)
-                            // this two‑parameter onChange is already the new form
-                            .onChange(of: weightText) { _, new in
-                                weightText = new.filter(\.isNumber)
+                            .onChange(of: weightText) { _oldValue, newValue in
+                                // Keep only digits
+                                weightText = newValue.filter(\.isNumber)
                             }
                     }
                 }
@@ -155,7 +160,10 @@ struct OnboardingView: View {
         userHeight = heightCm
         userWeight = Int(weightText) ?? userWeight
         weightUnit = selectedUnit
-        withAnimation { hasOnboarded = true }
+
+        withAnimation {
+            hasOnboarded = true
+        }
     }
 }
 
