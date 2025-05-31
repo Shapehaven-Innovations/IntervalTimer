@@ -1,8 +1,8 @@
-///
+//
 //  PickerSheet.swift
 //  IntervalTimer
 //  Modernized duration picker in minutes & seconds
-//  Updated 05/28/25
+//  Updated 05/31/25 so that it responds to Dark/Light Mode
 //
 
 import SwiftUI
@@ -14,6 +14,7 @@ struct PickerSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var colorScheme
 
     private let maxSeconds = 300
     private let maxRounds = 20
@@ -24,13 +25,12 @@ struct PickerSheet: View {
     @State private var seconds: Double
     @State private var rounds: Double
 
-    // Gradient for tinting
+    // MARK: – Gradient and solid colors for the “accent” on this sheet
     private var themeGradient: LinearGradient {
         let colors = [themeColor, themeColor.opacity(0.7)]
         return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
-    // Solid theme color
     private var themeColor: Color {
         switch type {
         case .getReady: return themeManager.selected.cardBackgrounds[0]
@@ -43,7 +43,8 @@ struct PickerSheet: View {
     init(type: PickerType, value: Binding<Int>) {
         self.type = type
         self._value = value
-        // Initialize state from binding value
+
+        // Initialize state from the binding’s current value (clamped)
         let initial = min(max(value.wrappedValue, 1), maxSeconds)
         _minutes = State(initialValue: Double(initial / 60))
         _seconds = State(initialValue: Double(initial % 60))
@@ -53,14 +54,21 @@ struct PickerSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemBackground).ignoresSafeArea()
-                themeColor.opacity(0.05).ignoresSafeArea()
+                // 1) Full‑screen, dynamic background
+                Color(.systemBackground)
+                    .ignoresSafeArea()
+                // 2) Slight tinted overlay to pick up a bit of themeColor
+                themeColor.opacity(0.05)
+                    .ignoresSafeArea()
 
                 VStack(spacing: 32) {
                     headerView
 
                     cardView
-                        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0), value: animationTrigger)
+                        .animation(
+                            .interactiveSpring(response: 0.4, dampingFraction: 0.8, blendDuration: 0),
+                            value: animationTrigger
+                        )
 
                     previewView
 
@@ -70,9 +78,12 @@ struct PickerSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .principal) {
+                    // empty placeholder to center title
                     Color.clear.frame(height: 0)
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -83,23 +94,24 @@ struct PickerSheet: View {
                 }
             }
         }
-        .environment(\.colorScheme, .light)
+        // ← No forced colorScheme here. PickerSheet now inherits the app’s colorScheme.
     }
 
-    /// Header with dynamic gradient text and icon
+    // MARK: – Header with dynamic gradient text and icon
     private var headerView: some View {
         VStack(spacing: 8) {
             Image(systemName: type.iconName)
                 .font(.system(size: 40, weight: .bold))
                 .foregroundStyle(themeGradient)
                 .scaleEffect(1.2)
+
             Text(type.title.uppercased())
                 .font(.system(size: 34, weight: .heavy, design: .rounded))
                 .foregroundStyle(themeGradient)
         }
     }
 
-    /// Main interactive card (sliders or rounds)
+    // MARK: – Main interactive card (either “Rounds” slider or “Minutes/Seconds” sliders)
     @ViewBuilder
     private var cardView: some View {
         if type == .rounds {
@@ -123,7 +135,7 @@ struct PickerSheet: View {
                 .tint(themeGradient)
             }
             .padding()
-            .background(.ultraThinMaterial)
+            .background(.ultraThinMaterial) // adapts to light/dark automatically
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         } else {
             VStack(spacing: 24) {
@@ -131,12 +143,12 @@ struct PickerSheet: View {
                 sliderRow(label: "Seconds", value: $seconds, range: 0...60)
             }
             .padding()
-            .background(.ultraThinMaterial)
+            .background(.ultraThinMaterial) // dynamic blur/highlight
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }
 
-    /// Row with label and slider
+    /// A single row with a label, a Slider, and a numeric display
     private func sliderRow(label: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
         HStack(spacing: 16) {
             Text(label)
@@ -165,7 +177,7 @@ struct PickerSheet: View {
         }
     }
 
-    /// Preview of current selection
+    /// A preview text showing the current number of “minutes+seconds” or “rounds”
     private var previewView: some View {
         Text(livePreviewText)
             .font(.title3.weight(.semibold))
@@ -173,11 +185,11 @@ struct PickerSheet: View {
             .padding(.top, 8)
     }
 
-    /// Determines what to animate
+    /// Used to trigger the spring animation whenever the slider or rounds change
     private var animationTrigger: Int {
         switch type {
         case .rounds: return Int(rounds)
-        default: return Int(minutes * 60 + seconds)
+        default:      return Int(minutes * 60 + seconds)
         }
     }
 
@@ -186,7 +198,7 @@ struct PickerSheet: View {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    /// Text for live preview
+    /// The text that updates as the user moves sliders
     private var livePreviewText: String {
         switch type {
         case .rounds:
@@ -196,7 +208,7 @@ struct PickerSheet: View {
         }
     }
 
-    /// Sync binding value based on picker type
+    /// Synchronize our @Binding<Int> “value” whenever the sliders change
     private func syncValue() {
         switch type {
         case .rounds:
@@ -206,6 +218,11 @@ struct PickerSheet: View {
         }
     }
 }
+
+// ───────────────────────────────────────────────────────────
+//  Below we add exactly one “extension PickerType” to supply `iconName`.
+//  Do NOT re‑declare the entire enum here—just this extension.
+// ───────────────────────────────────────────────────────────
 
 private extension PickerType {
     var iconName: String {
@@ -218,17 +235,3 @@ private extension PickerType {
     }
 }
 
-#if DEBUG
-struct PickerSheet_Previews: PreviewProvider {
-    @State static var tmp = 90
-    static var previews: some View {
-        Group {
-            PickerSheet(type: .getReady, value: $tmp)
-            PickerSheet(type: .rounds, value: $tmp)
-            PickerSheet(type: .work, value: $tmp)
-            PickerSheet(type: .rest, value: $tmp)
-        }
-        .environmentObject(ThemeManager.shared)
-    }
-}
-#endif

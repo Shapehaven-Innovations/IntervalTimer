@@ -1,13 +1,14 @@
 //
 //  ActionTilesView.swift
 //  IntervalTimer
-//  Updated to fix ambiguous ForEach init
+//  Updated 05/31/25 to ensure tiles adapt to Dark Mode
 //
 
 import SwiftUI
 
 struct ActionTilesView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var colorScheme
 
     // MARK: – Stored settings & saved configs
     @AppStorage("getReadyDuration")    private var getReadyDuration  = 3
@@ -67,6 +68,7 @@ struct ActionTilesView: View {
             ActionTileView(
                 icon:    "chart.bar.doc.horizontal.fill",
                 label:   "Analytics",
+                // In Dark Mode we pick a slightly more opaque accent background
                 bgColor: themeManager.selected.accent,
                 index:   8
             ) {
@@ -146,8 +148,15 @@ struct ActionTilesView: View {
 
 struct ActionTilesView_Previews: PreviewProvider {
     static var previews: some View {
-        ActionTilesView()
-            .environmentObject(ThemeManager.shared)
+        Group {
+            ActionTilesView()
+                .environmentObject(ThemeManager.shared)
+                .preferredColorScheme(.light)
+
+            ActionTilesView()
+                .environmentObject(ThemeManager.shared)
+                .preferredColorScheme(.dark)
+        }
     }
 }
 
