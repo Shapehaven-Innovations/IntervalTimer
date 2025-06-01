@@ -11,7 +11,7 @@ struct SessionRecord: Identifiable, Codable {
     let timerDuration: Int
     let restDuration: Int
     let sets: Int
-    let intention: String?      // ← new
+    let intention: String?
 
     init(id: UUID = UUID(),
          name: String = "",
@@ -19,7 +19,7 @@ struct SessionRecord: Identifiable, Codable {
          timerDuration: Int,
          restDuration: Int,
          sets: Int,
-         intention: String? = nil) {    // ← updated
+         intention: String? = nil) {
         self.id = id
         self.name = name
         self.date = date
@@ -29,3 +29,4 @@ struct SessionRecord: Identifiable, Codable {
         self.intention = intention
     }
 }
+

@@ -1,7 +1,8 @@
+// ThemeManager.swift
 //
 //  ThemeManager.swift
 //  IntervalTimer
-//  Updated 05/27/25 to default to Rave and persist any new choice
+//  Updated 05/27/25 to default to Neon and persist any new choice
 //
 
 import SwiftUI

@@ -75,7 +75,7 @@ struct OnboardingView: View {
                             Spacer()
                         }
                     }
-                    // ── Use zero‐parameter onChange for height changes ──
+                    // ── Use zero‑parameter onChange for height changes ──
                     .onChange(of: heightFeet) {
                         recalcCm()
                     }

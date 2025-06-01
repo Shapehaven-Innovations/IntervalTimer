@@ -1,4 +1,5 @@
-///
+// IntervalTimerApp.swift
+//
 //  IntervalTimerApp.swift
 //  IntervalTimer
 //

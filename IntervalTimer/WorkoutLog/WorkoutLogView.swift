@@ -1,3 +1,4 @@
+// WorkoutLogView.swift
 //
 //  WorkoutLogView.swift
 //  IntervalTimer
@@ -29,7 +30,7 @@ struct WorkoutLogView: View {
             : Double(userWeight)
     }
 
-    /// MET‐based calorie estimate (MET = 8)
+    /// MET‑based calorie estimate (MET = 8)
     private func caloriesBurned(for record: SessionRecord) -> Int {
         let workSeconds = record.timerDuration * record.sets
         let minutes     = Double(workSeconds) / 60.0

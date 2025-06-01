@@ -1,3 +1,4 @@
+// ActionTilesView.swift
 //
 //  ActionTilesView.swift
 //  IntervalTimer
@@ -94,7 +95,6 @@ struct ActionTilesView: View {
                 }
                 .contextMenu {
                     Button(role: .destructive) {
-                        // Delete this configuration
                         configs.removeAll { $0.id == config.id }
                         if let data = try? JSONEncoder().encode(configs) {
                             configsData = data

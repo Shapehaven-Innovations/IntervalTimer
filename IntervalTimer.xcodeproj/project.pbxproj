@@ -13,6 +13,9 @@
 		9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */; };
 		9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */; };
 		9A498DFD2DECC3AC003147B7 /* WorkoutSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498DFC2DECC3AC003147B7 /* WorkoutSummaryView.swift */; };
+		9A498E002DECCF0E003147B7 /* SoundType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498DFF2DECCF0E003147B7 /* SoundType.swift */; };
+		9A498E022DECCF1E003147B7 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498E012DECCF1E003147B7 /* SoundManager.swift */; };
+		9A498E042DECCF29003147B7 /* SoundSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498E032DECCF29003147B7 /* SoundSettingsView.swift */; };
 		9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */; };
 		9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D81F2DE11474008C73D7 /* ContentView.swift */; };
 		9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A66D8202DE11474008C73D7 /* IntentionsView.swift */; };
@@ -43,6 +46,9 @@
 		9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTilesView.swift; sourceTree = "<group>"; };
 		9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedTile.swift; sourceTree = "<group>"; };
 		9A498DFC2DECC3AC003147B7 /* WorkoutSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryView.swift; sourceTree = "<group>"; };
+		9A498DFF2DECCF0E003147B7 /* SoundType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundType.swift; sourceTree = "<group>"; };
+		9A498E012DECCF1E003147B7 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		9A498E032DECCF29003147B7 /* SoundSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsView.swift; sourceTree = "<group>"; };
 		9A66D81C2DE11474008C73D7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		9A66D81E2DE11474008C73D7 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		9A66D81F2DE11474008C73D7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -68,6 +74,15 @@
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		9A498E092DECEBDE003147B7 /* mySounds */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			name = mySounds;
+			path = /Users/computer/Desktop/mySounds;
+			sourceTree = "<absolute>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		9AE8C0B52D125E04001E6F92 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -85,6 +100,16 @@
 				9A498DFC2DECC3AC003147B7 /* WorkoutSummaryView.swift */,
 			);
 			path = WorkoutSummary;
+			sourceTree = "<group>";
+		};
+		9A498DFE2DECCED5003147B7 /* Sound */ = {
+			isa = PBXGroup;
+			children = (
+				9A498E032DECCF29003147B7 /* SoundSettingsView.swift */,
+				9A498E012DECCF1E003147B7 /* SoundManager.swift */,
+				9A498DFF2DECCF0E003147B7 /* SoundType.swift */,
+			);
+			path = Sound;
 			sourceTree = "<group>";
 		};
 		9A66D81D2DE11474008C73D7 /* Preview Content */ = {
@@ -108,6 +133,7 @@
 		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
 			isa = PBXGroup;
 			children = (
+				9A498DFE2DECCED5003147B7 /* Sound */,
 				9A66D84B2DE11A13008C73D7 /* Onboarding */,
 				9A66D8252DE11474008C73D7 /* Info.plist */,
 				9A66D8462DE1156D008C73D7 /* Assets */,
@@ -121,6 +147,7 @@
 				9A66D83B2DE11491008C73D7 /* App */,
 				9A66D81D2DE11474008C73D7 /* Preview Content */,
 				9A66D8222DE11474008C73D7 /* Views */,
+				9A498E092DECEBDE003147B7 /* mySounds */,
 			);
 			path = IntervalTimer;
 			sourceTree = "<group>";
@@ -265,6 +292,9 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				9A498E092DECEBDE003147B7 /* mySounds */,
+			);
 			name = IntervalTimer;
 			packageProductDependencies = (
 			);
@@ -326,6 +356,7 @@
 				9A768BC22DE252A500435DE8 /* PickerSheet.swift in Sources */,
 				9A66D82D2DE11474008C73D7 /* AnalyticsView.swift in Sources */,
 				9A66D82E2DE11474008C73D7 /* ContentView.swift in Sources */,
+				9A498E042DECCF29003147B7 /* SoundSettingsView.swift in Sources */,
 				9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */,
 				9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */,
 				9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */,
@@ -340,12 +371,14 @@
 				9A0258022DE4EFC700A85EFE /* PickerType.swift in Sources */,
 				9A66D8342DE11474008C73D7 /* SessionRecord.swift in Sources */,
 				9A768BBE2DE250AF00435DE8 /* ConfigTileView.swift in Sources */,
+				9A498E022DECCF1E003147B7 /* SoundManager.swift in Sources */,
 				9A768BBA2DE2506D00435DE8 /* ParticleBackground.swift in Sources */,
 				9A66D8362DE11474008C73D7 /* TimerView.swift in Sources */,
 				9A66D8372DE11474008C73D7 /* WorkoutLogView.swift in Sources */,
 				9A768BB42DE24AEF00435DE8 /* SettingsView.swift in Sources */,
 				9A0258042DE4EFD100A85EFE /* ConfigTilesView.swift in Sources */,
 				9A768BB62DE24EF500435DE8 /* ThemeManager.swift in Sources */,
+				9A498E002DECCF0E003147B7 /* SoundType.swift in Sources */,
 				9AA3DCA72DEA0FE5002A2055 /* Models.swift in Sources */,
 				9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */,
 			);

@@ -1,3 +1,4 @@
+// ConfigTilesView.swift
 //
 //  ConfigTilesView.swift
 //  IntervalTimer
@@ -5,8 +6,6 @@
 //  Created by user on 5/26/25.
 //
 
-
-// ConfigTilesView.swift
 import SwiftUI
 
 struct ConfigTilesView: View {
@@ -92,3 +91,4 @@ struct ConfigTilesView_Previews: PreviewProvider {
           .environmentObject(ThemeManager.shared)
     }
 }
+

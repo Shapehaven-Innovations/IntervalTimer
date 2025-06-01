@@ -1,7 +1,8 @@
-///
+/// AnalyticsView.swift
+//
 //  AnalyticsView.swift
 //  IntervalTimer
-//  Interactive analytics with Charts + Calories Burned over Time
+//  Interactive analytics with Charts + Calories Burned over Time
 //  Refactored 05/31/25 to improve card visibility in Dark Mode
 //
 
@@ -105,7 +106,7 @@ struct AnalyticsView: View {
                     }
                     .padding(.horizontal)
 
-                    // ── Calories Burned Chart ──────────────
+                    // ── Calories Burned Chart ──────────────
                     caloriesSection
 
                     // ── Intentions Analysis + Drill‑down ─
@@ -116,7 +117,6 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.inline)
-            // No explicit “Done” button; rely on swipe-to-dismiss
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .onAppear {
                 loadHistory()
@@ -124,13 +124,13 @@ struct AnalyticsView: View {
             }
         }
         .interactiveDismissDisabled(false)
-        .preferredColorScheme(colorScheme) // respect system or user override
+        .preferredColorScheme(colorScheme)
     }
 
     // MARK: Calories Section
     private var caloriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Calories Burned Over Time")
+            Text("Calories Burned Over Time")
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -162,7 +162,7 @@ struct AnalyticsView: View {
                 AxisMarks(position: .leading)
             }
             .chartXAxisLabel("Timeframe: \(selectedTimeframe.rawValue)")
-            .chartYAxisLabel("Calories (kcal)")
+            .chartYAxisLabel("Calories (kcal)")
             .frame(height: 260)
             .padding(.horizontal)
         }
@@ -230,7 +230,7 @@ struct AnalyticsView: View {
                 from: weekStartDate,
                 dateStyle: .medium,
                 timeStyle: .none
-            ) // e.g. "May 1, 25"
+            ) // e.g. "May 1, 25"
 
             guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else {
                 break
@@ -262,7 +262,7 @@ struct AnalyticsView: View {
             let monthIndex = calendar.component(.month, from: monthIteratorDate) - 1
             let monthName = DateFormatter().monthSymbols[monthIndex]
             let year = calendar.component(.year, from: monthIteratorDate)
-            let monthLabel = "\(monthName) \(year)" // e.g. "Mar 2025"
+            let monthLabel = "\(monthName) \(year)" // e.g. "Mar 2025"
 
             guard let monthInterval = calendar.dateInterval(of: .month, for: monthIteratorDate) else {
                 break
@@ -424,5 +424,4 @@ struct AnalyticsView_Previews: PreviewProvider {
         }
     }
 }
-
 

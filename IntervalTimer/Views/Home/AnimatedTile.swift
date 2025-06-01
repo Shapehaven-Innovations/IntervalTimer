@@ -1,10 +1,10 @@
+///// AnimatedTile.swift
 //
 //  AnimatedTile.swift
 //  IntervalTimer
 //
 //  Created by user on 5/26/25.
 //
-
 
 import SwiftUI
 
@@ -31,3 +31,4 @@ extension View {
         modifier(AnimatedTile(index: index))
     }
 }
+

@@ -1,3 +1,4 @@
+// SoundManager.swift
 //
 //  SoundManager.swift
 //  IntervalTimer
@@ -6,9 +7,10 @@
 //
 
 import AVFoundation
+import UIKit
 
-/// Centralized audio‐player that handles AVAudioSession configuration
-/// and lets any view simply call `SoundManager.shared.play(_:)`.
+/// Centralized audio‑player that configures AVAudioSession once
+/// and plays any named file (searching in the “mySounds” folder).
 final class SoundManager {
     static let shared = SoundManager()
     private var audioPlayer: AVAudioPlayer?
@@ -17,6 +19,7 @@ final class SoundManager {
         configureAudioSession()
     }
 
+    /// Configure AVAudioSession for playback (mixable with other audio).
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
@@ -27,10 +30,35 @@ final class SoundManager {
         }
     }
 
-    /// Play a sound with the exact asset name (NSDataAsset name or bundled file name).
-    func playSound(named assetName: String) {
-        guard let asset = NSDataAsset(name: assetName) else { return }
-        audioPlayer = try? AVAudioPlayer(data: asset.data)
-        audioPlayer?.play()
+    /// Attempt to play a sound whose filename (no extension) is `rawName`.
+    /// Searches for “rawName.mp3” first, then “rawName.wav” inside “mySounds/”.
+    func playSound(named rawName: String) {
+        guard !rawName.isEmpty else { return }
+
+        // 1) Look for .mp3 inside “mySounds/”
+        if let mp3URL = Bundle.main.url(
+            forResource: rawName,
+            withExtension: "mp3",
+            subdirectory: "mySounds"
+        ) {
+            audioPlayer = try? AVAudioPlayer(contentsOf: mp3URL)
+            audioPlayer?.play()
+            return
+        }
+
+        // 2) Otherwise look for .wav
+        if let wavURL = Bundle.main.url(
+            forResource: rawName,
+            withExtension: "wav",
+            subdirectory: "mySounds"
+        ) {
+            audioPlayer = try? AVAudioPlayer(contentsOf: wavURL)
+            audioPlayer?.play()
+            return
+        }
+
+        // 3) If neither is found, no‑op
+        print("⚠️ SoundManager: Could not find “\(rawName).mp3” or “\(rawName).wav” in mySounds/")
     }
 }
+

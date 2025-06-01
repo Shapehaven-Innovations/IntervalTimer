@@ -1,3 +1,4 @@
+// PickerSheet.swift
 //
 //  PickerSheet.swift
 //  IntervalTimer
@@ -135,7 +136,7 @@ struct PickerSheet: View {
                 .tint(themeGradient)
             }
             .padding()
-            .background(.ultraThinMaterial) // adapts to light/dark automatically
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         } else {
             VStack(spacing: 24) {
@@ -143,7 +144,7 @@ struct PickerSheet: View {
                 sliderRow(label: "Seconds", value: $seconds, range: 0...60)
             }
             .padding()
-            .background(.ultraThinMaterial) // dynamic blur/highlight
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }

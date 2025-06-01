@@ -1,3 +1,4 @@
+// Styles.swift
 //
 //  Styles.swift
 //  IntervalTimer
@@ -51,10 +52,10 @@ struct Shimmer: ViewModifier {
             }
     }
 }
+
 extension View {
     func shimmer() -> some View {
         modifier(Shimmer())
     }
 }
-
 

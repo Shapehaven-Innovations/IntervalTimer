@@ -1,8 +1,10 @@
+// SettingsView.swift
 //
 //  SettingsView.swift
 //  IntervalTimer
-//  Modernized Settings: live theme switching for tiles
+//  Modernized Settings: live theme switching + sound selection
 //
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -44,13 +46,15 @@ struct SettingsView: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
+
+                // ── Sound ── (our dynamic view)
+                SoundSettingsView()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .accentColor(accent)
         }
         .preferredColorScheme(useDarkMode ? .dark : .light)
-        // ensure swipe‑to‑dismiss is enabled if you’d previously disabled it:
         .interactiveDismissDisabled(false)
     }
 }
@@ -63,6 +67,7 @@ struct SettingsView_Previews: PreviewProvider {
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.light)
                 .previewDisplayName("Light Mode")
+
             SettingsView()
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.dark)
@@ -71,3 +76,4 @@ struct SettingsView_Previews: PreviewProvider {
     }
 }
 #endif
+

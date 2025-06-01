@@ -1,3 +1,4 @@
+// BackgroundOption.swift
 //
 //  BackgroundOption.swift
 //  IntervalTimer
@@ -5,10 +6,9 @@
 //  Created by user on 5/25/25.
 //
 
-
 import SwiftUI
 
-/// The four backgrounds your user can choose.
+/// The two backgrounds your user can choose.
 enum BackgroundOption: String, CaseIterable, Identifiable {
     case black  = "Dark"
     case white  = "Light"
@@ -23,3 +23,4 @@ enum BackgroundOption: String, CaseIterable, Identifiable {
         }
     }
 }
+

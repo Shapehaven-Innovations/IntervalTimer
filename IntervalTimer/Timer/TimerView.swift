@@ -1,13 +1,13 @@
+// TimerView.swift
 //
 //  TimerView.swift
 //  IntervalTimer
 //  Core timer UI + In‑view IntentionBanner + persistence
 //
-//  Refactored 06/01/25 to present a post‑workout summary.
+//  Refactored 06/01/25 to load sounds dynamically from mySounds/.
 //
 
 import SwiftUI
-import AVFoundation
 
 struct TimerView: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -15,33 +15,36 @@ struct TimerView: View {
     /// Passed in from ContentView
     let workoutName: String
 
-    // MARK: User‑configurable settings
+    // MARK: – User‑configurable settings
     @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
     @AppStorage("timerDuration")    private var timerDuration:    Int = 60
     @AppStorage("restDuration")     private var restDuration:     Int = 30
     @AppStorage("sets")             private var sets:             Int = 1
 
-    // MARK: Timer phases
+    // MARK: – Sound settings
+    @AppStorage("enableSound")      private var enableSound: Bool      = true
+    @AppStorage("workSound")        private var workSoundRaw: String    = ""
+    @AppStorage("restSound")        private var restSoundRaw: String    = ""
+    @AppStorage("completeSound")    private var completeSoundRaw: String = ""
+
+    // MARK: – Timer phases
     private enum Phase { case getReady, work, rest, complete }
     @State private var phase:      Phase = .getReady
     @State private var currentTime: Int  = 0
     @State private var currentSet:  Int  = 1
     @State private var timer:      Timer?
 
-    // MARK: Banner & Intention
+    // MARK: – Banner & Intention
     @State private var showBanner:     Bool    = true
     @State private var showIntentions: Bool    = false
     @State private var currentIntention: String? = nil
 
-    // MARK: Post‑workout summary
+    // MARK: – Post‑workout summary
     @State private var showSummary: Bool = false
     @State private var justCompletedRecord: SessionRecord? = nil
     @State private var justCompletedCalories: Int = 0
 
-    // MARK: Audio
-    @State private var audioPlayer: AVAudioPlayer?
-
-    // Computed
+    // MARK: – Computed
     private var totalDuration: Int {
         switch phase {
         case .getReady: return getReadyDuration
@@ -52,7 +55,7 @@ struct TimerView: View {
     }
     private var elapsedTime: Int { totalDuration - currentTime }
 
-    // Dynamic background
+    // MARK: – Dynamic background
     private var backgroundColor: Color {
         let p = themeManager.selected.cardBackgrounds
         switch phase {
@@ -63,7 +66,7 @@ struct TimerView: View {
         }
     }
 
-    // Controls style
+    // MARK: – Controls style
     private let controlBG = Color.white.opacity(0.3)
     private let controlFG = Color.white
 
@@ -135,7 +138,6 @@ struct TimerView: View {
                 .frame(minHeight: geo.size.height)
             }
             .onAppear {
-                configureAudioSession()
                 phase = .getReady
                 currentTime = getReadyDuration
             }
@@ -151,7 +153,6 @@ struct TimerView: View {
                 .environmentObject(themeManager)
             }
             .sheet(isPresented: $showSummary) {
-                // If we have a just‐completed record, unwrap and pass into summary
                 if let completed = justCompletedRecord {
                     WorkoutSummaryView(record: completed, calories: justCompletedCalories)
                         .environmentObject(themeManager)
@@ -160,7 +161,7 @@ struct TimerView: View {
         }
     }
 
-    // MARK: Helpers
+    // MARK: – Helpers
 
     private var isRunning: Bool { timer != nil }
 
@@ -203,19 +204,19 @@ struct TimerView: View {
         case .getReady:
             phase = .work
             currentTime = timerDuration
-            playSound(named: "work")
+            playPhaseSound(for: .work)
             startTimerLoop()
 
         case .work:
             if currentSet < sets {
                 phase = .rest
                 currentTime = restDuration
-                playSound(named: "rest")
+                playPhaseSound(for: .rest)
                 startTimerLoop()
             } else {
                 phase = .complete
                 currentTime = 0
-                playSound(named: "complete")
+                playPhaseSound(for: .complete)
                 completeAndSave()
             }
 
@@ -223,11 +224,11 @@ struct TimerView: View {
             currentSet += 1
             phase = .work
             currentTime = timerDuration
-            playSound(named: "work")
+            playPhaseSound(for: .work)
             startTimerLoop()
 
         case .complete:
-            // do nothing here; the summary sheet will have appeared
+            // do nothing; summary sheet will appear
             break
         }
     }
@@ -240,8 +241,8 @@ struct TimerView: View {
         currentTime = getReadyDuration
     }
 
-    /// Called once the workout has truly completed: saves to UserDefaults,
-    /// then prepares the data for `WorkoutSummaryView` and triggers it.
+    /// Called once the workout is truly complete: save to UserDefaults,
+    /// compute calories, then show the summary.
     private func completeAndSave() {
         // 1) Load existing history
         var history = (try? JSONDecoder().decode([SessionRecord].self,
@@ -264,25 +265,19 @@ struct TimerView: View {
             UserDefaults.standard.set(enc, forKey: "sessionHistory")
         }
 
-        // 4) Compute calories now that we have weight & newRecord
+        // 4) Compute calories
         let workSeconds = newRecord.timerDuration * newRecord.sets
         let minutes     = Double(workSeconds) / 60.0
-        let weightKg: Double
-        let wUnit = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
-        let wValue = UserDefaults.standard.integer(forKey: "userWeight")
-        if wUnit == "lbs" {
-            weightKg = Double(wValue) / 2.20462
-        } else {
-            weightKg = Double(wValue)
-        }
-        let met: Double = 8.0
-        let calcs = Int(round(0.0175 * met * weightKg * minutes))
+        let wUnit       = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
+        let wValue      = UserDefaults.standard.integer(forKey: "userWeight")
+        let weightKg    = wUnit == "lbs" ? Double(wValue) / 2.20462 : Double(wValue)
+        let cals        = Int(round(0.0175 * 8.0 * weightKg * minutes))
 
-        // 5) Store for summary sheet
-        justCompletedRecord = newRecord
-        justCompletedCalories = calcs
+        // 5) Store for summary
+        justCompletedRecord   = newRecord
+        justCompletedCalories = cals
 
-        // 6) Show the summary modal
+        // 6) Show the summary
         showSummary = true
     }
 
@@ -290,24 +285,27 @@ struct TimerView: View {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
-    private func playSound(named name: String) {
-        guard let asset = NSDataAsset(name: name) else { return }
-        audioPlayer = try? AVAudioPlayer(data: asset.data)
-        audioPlayer?.play()
-    }
+    /// If sound is enabled, attempt to play the chosen file from “mySounds/”.
+    private func playPhaseSound(for phase: Phase) {
+        guard enableSound else { return }
 
-    private func configureAudioSession() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.playback, options: [.mixWithOthers])
-            try session.setActive(true)
-        } catch {
-            print("⚠️ Audio session config failed: \(error)")
+        let rawName: String
+        switch phase {
+        case .work:
+            rawName = workSoundRaw
+        case .rest:
+            rawName = restSoundRaw
+        case .complete:
+            rawName = completeSoundRaw
+        default:
+            return
         }
+
+        SoundManager.shared.playSound(named: rawName)
     }
 }
 
-// MARK: IntentionBanner
+// MARK: – IntentionBanner (embedded to avoid “Cannot find IntentionBanner”)
 
 struct IntentionBanner: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -357,10 +355,13 @@ struct IntentionBanner: View {
     }
 }
 
+// MARK: – Preview
+
 struct TimerView_Previews: PreviewProvider {
     static var previews: some View {
         TimerView(workoutName: "Demo Workout")
             .environmentObject(ThemeManager.shared)
+            .previewLayout(.fixed(width: 375, height: 800))
     }
 }
 

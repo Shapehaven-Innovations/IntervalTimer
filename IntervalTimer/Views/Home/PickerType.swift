@@ -1,3 +1,4 @@
+// PickerType.swift
 //
 //  PickerType.swift
 //  IntervalTimer
@@ -5,8 +6,6 @@
 //  Created by user on 5/26/25.
 //
 
-
-// PickerType.swift
 import SwiftUI
 
 /// Extracted from ContentView so ConfigTilesView & PickerSheet can share it.
@@ -24,3 +23,4 @@ enum PickerType: Int, Identifiable {
         }
     }
 }
+

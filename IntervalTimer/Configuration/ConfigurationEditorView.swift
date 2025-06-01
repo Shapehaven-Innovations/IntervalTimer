@@ -1,3 +1,4 @@
+/// ConfigurationEditorView.swift
 //
 //  ConfigurationEditorView.swift
 //  IntervalTimer

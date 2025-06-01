@@ -1,4 +1,4 @@
-
+// Models.swift
 //
 //  Models.swift
 //  IntervalTimer
@@ -6,7 +6,7 @@
 
 import Foundation
 
-/// A record of one workout‐intention (state of mind) entry.
+/// A record of one workout‑intention (state of mind) entry.
 public struct IntentRecord: Identifiable, Codable {
     public let id: UUID
     public let date: Date
@@ -18,3 +18,4 @@ public struct IntentRecord: Identifiable, Codable {
         self.state = state
     }
 }
+
