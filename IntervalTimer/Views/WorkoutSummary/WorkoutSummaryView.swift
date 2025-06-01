@@ -1,24 +1,44 @@
-//
-//  WorkoutSummaryView.swift
-//  IntervalTimer
-//
-//  Created by Your Name on 06/01/25.
-//  Displays a celebratory summary after each completed workout.
-//
-
 import SwiftUI
+import MessageUI
+
+struct MessageComposer: UIViewControllerRepresentable {
+    let body: String
+    static var canSendText: Bool { MFMessageComposeViewController.canSendText() }
+
+    @Environment(\.presentationMode) private var presentationMode
+
+    func makeUIViewController(context: Context) -> MFMessageComposeViewController {
+        let controller = MFMessageComposeViewController()
+        controller.body = body
+        controller.messageComposeDelegate = context.coordinator
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) { }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    final class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
+        let parent: MessageComposer
+        init(parent: MessageComposer) { self.parent = parent }
+
+        func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                          didFinishWith result: MessageComposeResult) {
+            controller.dismiss(animated: true) {
+                self.parent.presentationMode.wrappedValue.dismiss()
+            }
+        }
+    }
+}
 
 struct WorkoutSummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var themeManager: ThemeManager
 
-    /// The session record that was just completed & saved.
     let record: SessionRecord
-
-    /// Computed calories based on weight & session info.
     let calories: Int
+    @State private var isShowingMessageComposer = false
 
-    /// Format a `Date` into a user‐friendly string.
     private var formattedDate: String {
         let fmt = DateFormatter()
         fmt.dateStyle = .full
@@ -26,7 +46,6 @@ struct WorkoutSummaryView: View {
         return fmt.string(from: record.date)
     }
 
-    /// Total workout time (including rest).
     private var totalTimeString: String {
         let restTotal = max(0, record.restDuration * (record.sets - 1))
         let totalSec  = record.timerDuration * record.sets + restTotal
@@ -34,20 +53,32 @@ struct WorkoutSummaryView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
+    private var shareText: String {
+        var base = """
+        I just completed “\(record.name)” on \(formattedDate).
+        Duration: \(totalTimeString)
+        Calories burned: \(calories) kcal
+        """
+        if let intent = record.intention, !intent.isEmpty {
+            base += "\nIntention: \(intent)"
+        }
+        return base
+    }
+
     var body: some View {
         ZStack {
-            // Background color depends on theme
-            themeManager.selected.backgroundColor
-                .ignoresSafeArea()
+            themeManager.selected.backgroundColor.ignoresSafeArea()
 
             VStack(spacing: 24) {
-                // ── Celebration Header ─────────────────────────
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 80, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [themeManager.selected.accent.opacity(0.8), themeManager.selected.accent],
+                                colors: [
+                                    themeManager.selected.accent.opacity(0.8),
+                                    themeManager.selected.accent
+                                ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -62,7 +93,6 @@ struct WorkoutSummaryView: View {
                 }
                 .padding(.top, 40)
 
-                // ── Summary Cards ─────────────────────────────
                 VStack(spacing: 16) {
                     SummaryCardView(
                         iconName: "flame.fill",
@@ -98,7 +128,6 @@ struct WorkoutSummaryView: View {
 
                 Spacer()
 
-                // ── Dismiss / Share Buttons ───────────────────
                 HStack(spacing: 16) {
                     Button(action: {
                         dismiss()
@@ -115,10 +144,10 @@ struct WorkoutSummaryView: View {
                     }
 
                     Button(action: {
-                        shareSummary()
+                        isShowingMessageComposer = true
                     }) {
                         HStack {
-                            Image(systemName: "square.and.arrow.up")
+                            Image(systemName: "message.fill")
                             Text("Share")
                         }
                         .font(.headline)
@@ -130,27 +159,25 @@ struct WorkoutSummaryView: View {
                         )
                         .foregroundColor(.white)
                     }
+                    .disabled(!MessageComposer.canSendText)
+                    .opacity(MessageComposer.canSendText ? 1.0 : 0.5)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 40)
             }
         }
-    }
-
-    /// Presents a share sheet with the summary text.
-    private func shareSummary() {
-        let summaryText = """
-        I just completed “\(record.name)” on \(formattedDate).
-        Duration: \(totalTimeString)
-        Calories burned: \(calories) kcal
-        \(record.intention.map { "Intention: \($0)" } ?? "")
-        """
-        let av = UIActivityViewController(activityItems: [summaryText], applicationActivities: nil)
-        UIApplication.shared.windows.first?.rootViewController?.present(av, animated: true)
+        .sheet(isPresented: $isShowingMessageComposer) {
+            if MessageComposer.canSendText {
+                MessageComposer(body: shareText)
+            } else {
+                Text("Your device is not configured to send Messages.")
+                    .font(.body)
+                    .padding()
+            }
+        }
     }
 }
 
-/// A small reusable card for each metric in the summary.
 private struct SummaryCardView: View {
     let iconName: String
     let title: String
@@ -165,10 +192,7 @@ private struct SummaryCardView: View {
                 .font(.system(size: 28))
                 .foregroundColor(.white)
                 .padding(12)
-                .background(
-                    Circle()
-                        .fill(cardColor)
-                )
+                .background(Circle().fill(cardColor))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title.uppercased())
@@ -197,24 +221,3 @@ private struct SummaryCardView: View {
     }
 }
 
-#if DEBUG
-struct WorkoutSummaryView_Previews: PreviewProvider {
-    static var previews: some View {
-        let sample = SessionRecord(
-            name: "Morning Burn",
-            date: Date(),
-            timerDuration: 60,
-            restDuration: 30,
-            sets: 5,
-            intention: "Focused"
-        )
-        WorkoutSummaryView(record: sample, calories: 250)
-            .environmentObject(ThemeManager.shared)
-            .preferredColorScheme(.light)
-
-        WorkoutSummaryView(record: sample, calories: 250)
-            .environmentObject(ThemeManager.shared)
-            .preferredColorScheme(.dark)
-    }
-}
-#endif

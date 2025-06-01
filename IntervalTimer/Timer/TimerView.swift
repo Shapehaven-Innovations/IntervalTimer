@@ -3,6 +3,8 @@
 //  IntervalTimer
 //  Core timer UI + In‑view IntentionBanner + persistence
 //
+//  Refactored 06/01/25 to present a post‑workout summary.
+//
 
 import SwiftUI
 import AVFoundation
@@ -30,6 +32,11 @@ struct TimerView: View {
     @State private var showBanner:     Bool    = true
     @State private var showIntentions: Bool    = false
     @State private var currentIntention: String? = nil
+
+    // MARK: Post‑workout summary
+    @State private var showSummary: Bool = false
+    @State private var justCompletedRecord: SessionRecord? = nil
+    @State private var justCompletedCalories: Int = 0
 
     // MARK: Audio
     @State private var audioPlayer: AVAudioPlayer?
@@ -143,6 +150,13 @@ struct TimerView: View {
                 }
                 .environmentObject(themeManager)
             }
+            .sheet(isPresented: $showSummary) {
+                // If we have a just‐completed record, unwrap and pass into summary
+                if let completed = justCompletedRecord {
+                    WorkoutSummaryView(record: completed, calories: justCompletedCalories)
+                        .environmentObject(themeManager)
+                }
+            }
         }
     }
 
@@ -213,6 +227,7 @@ struct TimerView: View {
             startTimerLoop()
 
         case .complete:
+            // do nothing here; the summary sheet will have appeared
             break
         }
     }
@@ -225,11 +240,16 @@ struct TimerView: View {
         currentTime = getReadyDuration
     }
 
+    /// Called once the workout has truly completed: saves to UserDefaults,
+    /// then prepares the data for `WorkoutSummaryView` and triggers it.
     private func completeAndSave() {
-        var h = (try? JSONDecoder().decode([SessionRecord].self,
-                   from: UserDefaults.standard.data(forKey: "sessionHistory") ?? Data()))
-                ?? []
-        let rec = SessionRecord(
+        // 1) Load existing history
+        var history = (try? JSONDecoder().decode([SessionRecord].self,
+                         from: UserDefaults.standard.data(forKey: "sessionHistory") ?? Data()))
+                      ?? []
+
+        // 2) Create the new record
+        let newRecord = SessionRecord(
             name:           workoutName,
             date:           Date(),
             timerDuration:  timerDuration,
@@ -237,10 +257,33 @@ struct TimerView: View {
             sets:           sets,
             intention:      currentIntention
         )
-        h.append(rec)
-        if let enc = try? JSONEncoder().encode(h) {
+        history.append(newRecord)
+
+        // 3) Persist
+        if let enc = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(enc, forKey: "sessionHistory")
         }
+
+        // 4) Compute calories now that we have weight & newRecord
+        let workSeconds = newRecord.timerDuration * newRecord.sets
+        let minutes     = Double(workSeconds) / 60.0
+        let weightKg: Double
+        let wUnit = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
+        let wValue = UserDefaults.standard.integer(forKey: "userWeight")
+        if wUnit == "lbs" {
+            weightKg = Double(wValue) / 2.20462
+        } else {
+            weightKg = Double(wValue)
+        }
+        let met: Double = 8.0
+        let calcs = Int(round(0.0175 * met * weightKg * minutes))
+
+        // 5) Store for summary sheet
+        justCompletedRecord = newRecord
+        justCompletedCalories = calcs
+
+        // 6) Show the summary modal
+        showSummary = true
     }
 
     private func formatTime(_ seconds: Int) -> String {
@@ -263,7 +306,6 @@ struct TimerView: View {
         }
     }
 }
-
 
 // MARK: IntentionBanner
 
@@ -317,7 +359,7 @@ struct IntentionBanner: View {
 
 struct TimerView_Previews: PreviewProvider {
     static var previews: some View {
-        TimerView(workoutName: "Demo")
+        TimerView(workoutName: "Demo Workout")
             .environmentObject(ThemeManager.shared)
     }
 }
