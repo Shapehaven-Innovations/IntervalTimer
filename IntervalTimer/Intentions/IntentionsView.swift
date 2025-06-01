@@ -1,9 +1,8 @@
-//
 //  IntentionsView.swift
 //  IntervalTimer
 //  Paged quiz UI for capturing user intention
 //
-//  Refactored 05/31/25 to support Light/Dark Mode via system colors
+//  Refactored 06/01/25 to support Light/Dark Mode via system colors
 //
 
 import SwiftUI
@@ -52,6 +51,9 @@ struct IntentionsView: View {
     @State private var selectionIndex: Int? = nil
     @State private var answers: [Int?] = Array(repeating: nil, count: 4)
 
+    // Show help alert/popover
+    @State private var showHelp: Bool = false
+
     // Four pages of questions
     private let questions: [Question] = [
         Question(
@@ -86,6 +88,14 @@ struct IntentionsView: View {
         }
         // Use systemBackground so it flips automatically in Light/Dark Mode
         .background(Color(.systemBackground).ignoresSafeArea())
+        // Present an Alert when showHelp toggles
+        .alert(isPresented: $showHelp) {
+            Alert(
+                title: Text("What is an Intention?"),
+                message: Text(helpText),
+                dismissButton: .default(Text("Got it!"))
+            )
+        }
     }
 
     // MARK: – Header
@@ -114,12 +124,15 @@ struct IntentionsView: View {
             Spacer()
 
             Button {
-                // (Optional) Help action
+                // When tapped on a non‑pointer device, show the same help in an alert
+                showHelp = true
             } label: {
                 Image(systemName: "questionmark.circle")
                     .font(.title2)
                     .foregroundColor(Color(.label))
             }
+            // Hover/cursor environments (iPad pointer, mac Catalyst, etc.) will show this tooltip
+            .help(helpText)
         }
         .padding()
     }
@@ -206,6 +219,19 @@ struct IntentionsView: View {
         }
         .disabled(selectionIndex == nil)
         .opacity(selectionIndex == nil ? 0.5 : 1)
+    }
+
+    // MARK: – Help Text
+
+    /// This is the same string used for .help(...) and for the Alert body.
+    private var helpText: String {
+        """
+        An intention is your conscious focus and purpose for this session—your reason “why.” \
+        By setting an intention, you direct your energy, sharpen your mind, and align \
+        each action with a deeper meaning. Logging your intention isn’t just about this \
+        workout; it’s a small act that ripples outward, helping you grow and making a \
+        positive impact on the universe. 🌟
+        """
     }
 }
 
