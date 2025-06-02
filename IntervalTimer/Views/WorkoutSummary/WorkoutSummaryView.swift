@@ -1,10 +1,16 @@
-//WorkoutSummaryView.swift
+//
+//  WorkoutSummaryView.swift
+//  IntervalTimer
+//
+//  Shows the “Workout Complete!” summary. When the user taps “Done”,
+//  it calls `onDone()` to close both this sheet and the parent TimerView.
+//
 
 import SwiftUI
 import MessageUI
 
 //
-//  build a lightweight message‐composer for “Share”:
+//  A lightweight message‐composer for “Share”:
 //
 struct MessageComposer: UIViewControllerRepresentable {
     let body: String
@@ -23,7 +29,7 @@ struct MessageComposer: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) {
-        // Nothing to do here
+        // No updates needed
     }
 
     func makeCoordinator() -> Coordinator {
@@ -39,18 +45,25 @@ struct MessageComposer: UIViewControllerRepresentable {
             didFinishWith result: MessageComposeResult
         ) {
             controller.dismiss(animated: true) {
+                // When the user finishes messaging, also dismiss the SwiftUI sheet that wrapped this view:
                 self.parent.presentationMode.wrappedValue.dismiss()
             }
         }
     }
 }
 
+
 struct WorkoutSummaryView: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var themeManager: ThemeManager
 
+    // MARK: – Inputs
     let record: SessionRecord
     let calories: Int
+
+    /// Called when the user taps “Done.”
+    /// The parent (TimerView) will implement this to hide both sheets.
+    let onDone: () -> Void
+
     @State private var isShowingMessageComposer = false
 
     // MARK: – Date & Time Formatting Helpers
@@ -62,7 +75,7 @@ struct WorkoutSummaryView: View {
     }
 
     private var totalTimeString: String {
-        // Sum up all “work + rest” segments
+        // Sum up all (work + rest) segments
         let restTotal = max(0, record.restDuration * (record.sets - 1))
         let totalSec  = record.timerDuration * record.sets + restTotal
         let minutes = totalSec / 60
@@ -84,14 +97,13 @@ struct WorkoutSummaryView: View {
 
     var body: some View {
         ZStack {
-            // 1) Fill entire background with the theme’s background color.
+            // Fill entire background with the theme’s background color
             themeManager.selected.backgroundColor
                 .ignoresSafeArea()
 
             VStack(spacing: 24) {
-
                 //
-                //  ── Header: Big checkmark + “Workout Complete!” ──
+                //  ── Header ──
                 //
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
@@ -109,10 +121,12 @@ struct WorkoutSummaryView: View {
                         .scaleEffect(1.2)
                         .shadow(
                             color: themeManager.selected.accent.opacity(0.5),
-                            radius: 10, x: 0, y: 5
+                            radius: 10,
+                            x: 0,
+                            y: 5
                         )
 
-                    // FORCE this title to be white, so it’s always visible atop whatever background.
+                    // Always force this text to white so it’s legible on any background
                     Text("Workout Complete!")
                         .font(.largeTitle.weight(.black))
                         .foregroundColor(.white)
@@ -164,7 +178,7 @@ struct WorkoutSummaryView: View {
                 HStack(spacing: 16) {
                     // DONE Button
                     Button(action: {
-                        dismiss()
+                        onDone()
                     }) {
                         Text("Done")
                             .font(.headline)
@@ -172,7 +186,7 @@ struct WorkoutSummaryView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    // SecondarySystemBackground is white in Light Mode, dark gray in Dark Mode.
+                                    // secondarySystemBackground is white in Light Mode, dark gray in Dark Mode
                                     .fill(Color(UIColor.secondarySystemBackground))
                             )
                             // Use the system label color (black on white, white on dark)
@@ -197,7 +211,6 @@ struct WorkoutSummaryView: View {
                         .foregroundColor(.white)
                     }
                     .disabled(!MessageComposer.canSendText)
-                    // If messaging is not available, dim the button:
                     .opacity(MessageComposer.canSendText ? 1.0 : 0.5)
                 }
                 .padding(.horizontal)
@@ -208,7 +221,6 @@ struct WorkoutSummaryView: View {
             if MessageComposer.canSendText {
                 MessageComposer(body: shareText)
             } else {
-                // Fallback if MFMessageComposeViewController is unavailable:
                 Text("Your device is not configured to send Messages.")
                     .font(.body)
                     .padding()
@@ -217,7 +229,8 @@ struct WorkoutSummaryView: View {
     }
 }
 
-/// A single card with an icon, title, and value. Matches the style you already had.
+
+/// A single row of the summary cards (icon + title + value).
 private struct SummaryCardView: View {
     let iconName: String
     let title: String
@@ -248,14 +261,16 @@ private struct SummaryCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                // secondarySystemBackground: white in Light Mode, dark gray in Dark Mode
+                // secondarySystemBackground is white in Light Mode, dark gray in Dark Mode
                 .fill(Color(UIColor.secondarySystemBackground))
         )
         .shadow(
             color: colorScheme == .dark
                 ? Color.black.opacity(0.6)
                 : Color.black.opacity(0.1),
-            radius: 5, x: 0, y: 3
+            radius: 5,
+            x: 0,
+            y: 3
         )
     }
 }

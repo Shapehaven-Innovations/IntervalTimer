@@ -3,13 +3,14 @@
 //  IntervalTimer
 //
 //  Core timer UI + In‑view IntentionBanner + persistence
-//  Refactored to load sounds by looking up SoundType.fromFileName(...)
+//  Refactored so that “Done” in WorkoutSummaryView dismisses both sheets.
 //
 
 import SwiftUI
 
 struct TimerView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.presentationMode) private var presentationMode
 
     /// Passed in from ContentView
     let workoutName: String
@@ -52,6 +53,7 @@ struct TimerView: View {
         case .complete: return 1
         }
     }
+
     private var elapsedTime: Int { totalDuration - currentTime }
 
     // MARK: — Dynamic background
@@ -153,10 +155,23 @@ struct TimerView: View {
                 }
                 .environmentObject(themeManager)
             }
+
+            // ── Here is the updated summary‐sheet code ──
             .sheet(isPresented: $showSummary) {
                 if let completed = justCompletedRecord {
-                    WorkoutSummaryView(record: completed, calories: justCompletedCalories)
-                        .environmentObject(themeManager)
+                    WorkoutSummaryView(
+                        record: completed,
+                        calories: justCompletedCalories
+                    ) {
+                        // 1) Dismiss the summary sheet itself
+                        showSummary = false
+
+                        // 2) On the next run loop, dismiss TimerView's sheet
+                        DispatchQueue.main.async {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                    .environmentObject(themeManager)
                 }
             }
         }
@@ -229,7 +244,6 @@ struct TimerView: View {
             startTimerLoop()
 
         case .complete:
-            // do nothing—summary will appear
             break
         }
     }
@@ -285,8 +299,6 @@ struct TimerView: View {
     }
 
     /// Plays the chosen sound if enableSound is ON.
-    /// We stored only the lowercase `fileName` in UserDefaults,
-    /// so we map back to SoundType and ask SoundManager to play it.
     private func playPhaseSound(for phase: Phase) {
         guard enableSound else { return }
 
@@ -302,14 +314,13 @@ struct TimerView: View {
             return
         }
 
-        // Map to SoundType, defaulting to .beep if the string is unrecognized
         let soundType = SoundType.fromFileName(chosenFile)
         SoundManager.shared.playSound(named: soundType.fileName)
     }
 }
 
 // ==============================
-// MARK: — IntentionBanner (UNCHANGED)
+// MARK: — IntentionBanner
 // ==============================
 struct IntentionBanner: View {
     @EnvironmentObject private var themeManager: ThemeManager
