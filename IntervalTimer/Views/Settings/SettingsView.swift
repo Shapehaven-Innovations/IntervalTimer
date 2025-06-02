@@ -1,11 +1,13 @@
 //
 //  SettingsView.swift
 //  IntervalTimer
-//
-//  Updated on 2025‑06‑01 to embed SoundSettingsView
+//  Updated 06/02/25 to embed SoundSettingsView and add toggle for Preconfigured Templates.
 //
 
 import SwiftUI
+
+/// Make sure you place this code in a file named SettingsView.swift.
+/// Do NOT paste ActionTilesView inside this file.
 
 struct SettingsView: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -15,6 +17,9 @@ struct SettingsView: View {
 
     // MARK: — Stored settings
     @AppStorage("enableParticles") private var enableParticles: Bool = true
+
+    /// Whether built‑in/preconfigured templates should be shown
+    @AppStorage("showPreconfiguredTemplates") private var showPreconfiguredTemplates: Bool = true
 
     // MARK: — Data sources
     private let themes = ThemeType.allCases
@@ -28,12 +33,17 @@ struct SettingsView: View {
                 // ── Appearance ──
                 Section(header: Text("Appearance")) {
                     Toggle("Dark Mode", isOn: $useDarkMode)
+                        .toggleStyle(SwitchToggleStyle(tint: accent))
                 }
 
                 // ── General ──
                 Section(header: Text("General")) {
                     Toggle("Show Particles Behind Tiles", isOn: $enableParticles)
                         .toggleStyle(SwitchToggleStyle(tint: accent))
+
+                    Toggle("Show Preconfigured Templates", isOn: $showPreconfiguredTemplates)
+                        .toggleStyle(SwitchToggleStyle(tint: accent))
+                        .animation(.default, value: showPreconfiguredTemplates)
                 }
 
                 // ── App Theme ──

@@ -92,6 +92,14 @@
 		9AE8C0B82D125E04001E6F92 /* IntervalTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntervalTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PreConfiguredTemplates;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		9AE8C0B52D125E04001E6F92 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -142,6 +150,7 @@
 		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
 			isa = PBXGroup;
 			children = (
+				9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */,
 				9A498DFE2DECCED5003147B7 /* Sound */,
 				9A66D84B2DE11A13008C73D7 /* Onboarding */,
 				9A66D8252DE11474008C73D7 /* Info.plist */,
@@ -308,6 +317,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */,
 			);
 			name = IntervalTimer;
 			packageProductDependencies = (

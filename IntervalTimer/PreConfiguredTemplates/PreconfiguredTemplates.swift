@@ -1,9 +1,8 @@
-//  PreconfiguredTemplates.swift
-//  IntervalTimer
+// PreconfiguredTemplates.swift
+// IntervalTimer
 //
-//  Defines a set of built‑in SessionRecord templates (HIIT, Tabata, HILT, Work‑to‑Rest),
-//  each with a fixed UUID so we can reference and hide/delete them persistently.
-//
+// Defines a set of built‑in SessionRecord templates (HIIT, Tabata, HILT, Work‑to‑Rest),
+// each with a fixed UUID so we can reference and hide/delete them persistently.
 
 import Foundation
 
@@ -17,10 +16,14 @@ enum PreconfiguredTemplates {
     static let workToRestID  = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
 
     /// A “fresh” date is used here only because SessionRecord requires one; the date field is never
-    /// shown for preconfigured templates. Adjust durations & sets as desired per template spec.
+    /// shown for preconfigured templates in the UI. You can set this to any Date.
     private static var now: Date { Date() }
 
-    /// The four built‑in templates
+    /// The four built‑in templates. Notice that:
+    ///   • `timerDuration` is the “work” period in seconds
+    ///   • `restDuration` is the “rest” period in seconds
+    ///   • `sets` is how many rounds to perform
+    ///   • `intention` is always nil for a template
     static let all: [SessionRecord] = [
         SessionRecord(
             id: hiitID,
@@ -66,3 +69,4 @@ enum PreconfiguredTemplates {
         Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
     }()
 }
+
