@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  IntervalTimer
 //
-//  Updated on 2025‑06‑01 to embed SoundSettingsView (static fileName approach).
+//  Updated on 2025‑06‑01 to embed SoundSettingsView
 //
 
 import SwiftUI
@@ -47,7 +47,7 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
 
-                // ── Sound ── (insert our refactored section)
+                // ── Sound ── (now split into two sections via SoundSettingsView)
                 SoundSettingsView()
             }
             .navigationTitle("Settings")
