@@ -1,11 +1,17 @@
-// WorkoutSummaryView.swift
+//WorkoutSummaryView.swift
 
 import SwiftUI
 import MessageUI
 
+//
+//  build a lightweight message‐composer for “Share”:
+//
 struct MessageComposer: UIViewControllerRepresentable {
     let body: String
-    static var canSendText: Bool { MFMessageComposeViewController.canSendText() }
+
+    static var canSendText: Bool {
+        MFMessageComposeViewController.canSendText()
+    }
 
     @Environment(\.presentationMode) private var presentationMode
 
@@ -16,16 +22,22 @@ struct MessageComposer: UIViewControllerRepresentable {
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) { }
+    func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) {
+        // Nothing to do here
+    }
 
-    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
 
     final class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
         let parent: MessageComposer
         init(parent: MessageComposer) { self.parent = parent }
 
-        func messageComposeViewController(_ controller: MFMessageComposeViewController,
-                                          didFinishWith result: MessageComposeResult) {
+        func messageComposeViewController(
+            _ controller: MFMessageComposeViewController,
+            didFinishWith result: MessageComposeResult
+        ) {
             controller.dismiss(animated: true) {
                 self.parent.presentationMode.wrappedValue.dismiss()
             }
@@ -41,6 +53,7 @@ struct WorkoutSummaryView: View {
     let calories: Int
     @State private var isShowingMessageComposer = false
 
+    // MARK: – Date & Time Formatting Helpers
     private var formattedDate: String {
         let fmt = DateFormatter()
         fmt.dateStyle = .full
@@ -49,9 +62,11 @@ struct WorkoutSummaryView: View {
     }
 
     private var totalTimeString: String {
+        // Sum up all “work + rest” segments
         let restTotal = max(0, record.restDuration * (record.sets - 1))
         let totalSec  = record.timerDuration * record.sets + restTotal
-        let minutes = totalSec / 60, seconds = totalSec % 60
+        let minutes = totalSec / 60
+        let seconds = totalSec % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
@@ -59,7 +74,7 @@ struct WorkoutSummaryView: View {
         var base = """
         I just completed “\(record.name)” on \(formattedDate).
         Duration: \(totalTimeString)
-        Calories burned: \(calories) kcal
+        Calories burned: \(calories) kcal
         """
         if let intent = record.intention, !intent.isEmpty {
             base += "\nIntention: \(intent)"
@@ -69,9 +84,15 @@ struct WorkoutSummaryView: View {
 
     var body: some View {
         ZStack {
-            themeManager.selected.backgroundColor.ignoresSafeArea()
+            // 1) Fill entire background with the theme’s background color.
+            themeManager.selected.backgroundColor
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
+
+                //
+                //  ── Header: Big checkmark + “Workout Complete!” ──
+                //
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 80, weight: .bold))
@@ -86,20 +107,27 @@ struct WorkoutSummaryView: View {
                             )
                         )
                         .scaleEffect(1.2)
-                        .shadow(color: themeManager.selected.accent.opacity(0.5), radius: 10, x: 0, y: 5)
+                        .shadow(
+                            color: themeManager.selected.accent.opacity(0.5),
+                            radius: 10, x: 0, y: 5
+                        )
 
+                    // FORCE this title to be white, so it’s always visible atop whatever background.
                     Text("Workout Complete!")
                         .font(.largeTitle.weight(.black))
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 40)
 
+                //
+                //  ── Summary Cards ──
+                //
                 VStack(spacing: 16) {
                     SummaryCardView(
                         iconName: "flame.fill",
                         title: "Calories Burned",
-                        value: "\(calories) kcal",
+                        value: "\(calories) kcal",
                         cardColor: themeManager.selected.cardBackgrounds[2]
                     )
 
@@ -130,7 +158,11 @@ struct WorkoutSummaryView: View {
 
                 Spacer()
 
+                //
+                //  ── Buttons: “Done” + “Share” ──
+                //
                 HStack(spacing: 16) {
+                    // DONE Button
                     Button(action: {
                         dismiss()
                     }) {
@@ -140,11 +172,14 @@ struct WorkoutSummaryView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Color.secondary.opacity(0.2))
+                                    // SecondarySystemBackground is white in Light Mode, dark gray in Dark Mode.
+                                    .fill(Color(UIColor.secondarySystemBackground))
                             )
-                            .foregroundColor(.primary)
+                            // Use the system label color (black on white, white on dark)
+                            .foregroundColor(Color(.label))
                     }
 
+                    // SHARE Button
                     Button(action: {
                         isShowingMessageComposer = true
                     }) {
@@ -162,6 +197,7 @@ struct WorkoutSummaryView: View {
                         .foregroundColor(.white)
                     }
                     .disabled(!MessageComposer.canSendText)
+                    // If messaging is not available, dim the button:
                     .opacity(MessageComposer.canSendText ? 1.0 : 0.5)
                 }
                 .padding(.horizontal)
@@ -172,6 +208,7 @@ struct WorkoutSummaryView: View {
             if MessageComposer.canSendText {
                 MessageComposer(body: shareText)
             } else {
+                // Fallback if MFMessageComposeViewController is unavailable:
                 Text("Your device is not configured to send Messages.")
                     .font(.body)
                     .padding()
@@ -180,6 +217,7 @@ struct WorkoutSummaryView: View {
     }
 }
 
+/// A single card with an icon, title, and value. Matches the style you already had.
 private struct SummaryCardView: View {
     let iconName: String
     let title: String
@@ -210,15 +248,14 @@ private struct SummaryCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
+                // secondarySystemBackground: white in Light Mode, dark gray in Dark Mode
                 .fill(Color(UIColor.secondarySystemBackground))
         )
         .shadow(
             color: colorScheme == .dark
                 ? Color.black.opacity(0.6)
                 : Color.black.opacity(0.1),
-            radius: 5,
-            x: 0,
-            y: 3
+            radius: 5, x: 0, y: 3
         )
     }
 }
