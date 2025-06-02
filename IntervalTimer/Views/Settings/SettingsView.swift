@@ -1,8 +1,8 @@
-// SettingsView.swift
 //
 //  SettingsView.swift
 //  IntervalTimer
-//  Modernized Settings: live theme switching + sound selection
+//
+//  Updated on 2025‑06‑01 to embed SoundSettingsView (static fileName approach).
 //
 
 import SwiftUI
@@ -10,16 +10,16 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
-    // MARK: – In‑app Appearance override
+    // MARK: — In‑app Appearance override
     @AppStorage("useDarkMode") private var useDarkMode: Bool = false
 
-    // MARK: – Stored settings
+    // MARK: — Stored settings
     @AppStorage("enableParticles") private var enableParticles: Bool = true
 
-    // MARK: – Data sources
+    // MARK: — Data sources
     private let themes = ThemeType.allCases
 
-    // MARK: – Static accent for this screen
+    // MARK: — Static accent for this screen
     private let accent: Color = .blue
 
     var body: some View {
@@ -47,7 +47,7 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
 
-                // ── Sound ── (our dynamic view)
+                // ── Sound ── (insert our refactored section)
                 SoundSettingsView()
             }
             .navigationTitle("Settings")

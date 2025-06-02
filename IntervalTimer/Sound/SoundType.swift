@@ -1,32 +1,42 @@
-// SoundType.swift
 //
 //  SoundType.swift
 //  IntervalTimer
 //
-//  Created on 06/01/25.
+//  Created by You on 2025‑06‑01.
+//  A static list of all built‑in sounds the user can pick.
+//  rawValue = user‑facing display name ("Beep", "Chime", "Bell").
+//  fileName = the lowercase filename (no extension) that actually lives in the bundle root.
 //
 
 import Foundation
 
-/// All the built‑in sounds the user can pick for each phase.
-/// - rawValue = user‑facing display name.
-/// - fileName = the actual asset name (e.g. “beep”, “chime”, “bell”) that you must add to your Assets.xcassets.
-///
-/// NOTE: This enum is now optional, since our dynamic loader (SoundSettingsView) will pick up anything in mySounds/.
 enum SoundType: String, CaseIterable, Identifiable {
+    /// Display name = “Beep”
     case beep   = "Beep"
+    /// Display name = “Chime”
     case chime  = "Chime"
+    /// Display name = “Bell”
     case bell   = "Bell"
 
     var id: String { rawValue }
 
-    /// The name of the NSDataAsset or bundled sound file in your app bundle.
+    /// The actual filename (no extension) that must exist in the bundle root.
+    /// For example, if you dragged “beep.wav” into Copy Bundle Resources, then fileName = "beep".
     var fileName: String {
         switch self {
-        case .beep:  return "beep"
-        case .chime: return "chime"
-        case .bell:  return "bell"
+        case .beep:
+            return "beep"   // expects “beep.wav”
+        case .chime:
+            return "chime"  // expects “chime.mp3”
+        case .bell:
+            return "bell"   // expects “bell.wav”
         }
+    }
+
+    /// Given a lowercase fileName (e.g. "beep"), returns the corresponding SoundType.
+    /// If there’s no match, defaults to `.beep`.
+    static func fromFileName(_ name: String) -> SoundType {
+        return SoundType.allCases.first { $0.fileName == name } ?? .beep
     }
 }
 

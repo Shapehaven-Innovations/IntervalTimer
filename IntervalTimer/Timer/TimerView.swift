@@ -1,10 +1,9 @@
-// TimerView.swift
 //
 //  TimerView.swift
 //  IntervalTimer
-//  Core timer UI + In‑view IntentionBanner + persistence
 //
-//  Refactored 06/01/25 to load sounds dynamically from mySounds/.
+//  Core timer UI + In‑view IntentionBanner + persistence
+//  Refactored to load sounds by looking up SoundType.fromFileName(...)
 //
 
 import SwiftUI
@@ -15,36 +14,36 @@ struct TimerView: View {
     /// Passed in from ContentView
     let workoutName: String
 
-    // MARK: – User‑configurable settings
+    // MARK: — User‑configurable settings
     @AppStorage("getReadyDuration") private var getReadyDuration: Int = 3
     @AppStorage("timerDuration")    private var timerDuration:    Int = 60
     @AppStorage("restDuration")     private var restDuration:     Int = 30
     @AppStorage("sets")             private var sets:             Int = 1
 
-    // MARK: – Sound settings
+    // MARK: — Sound settings (we store the lowercase fileName)
     @AppStorage("enableSound")      private var enableSound: Bool      = true
-    @AppStorage("workSound")        private var workSoundRaw: String    = ""
-    @AppStorage("restSound")        private var restSoundRaw: String    = ""
-    @AppStorage("completeSound")    private var completeSoundRaw: String = ""
+    @AppStorage("workSound")        private var workSoundFile: String    = SoundType.beep.fileName
+    @AppStorage("restSound")        private var restSoundFile: String    = SoundType.beep.fileName
+    @AppStorage("completeSound")    private var completeSoundFile: String = SoundType.beep.fileName
 
-    // MARK: – Timer phases
+    // MARK: — Timer phases
     private enum Phase { case getReady, work, rest, complete }
     @State private var phase:      Phase = .getReady
     @State private var currentTime: Int  = 0
     @State private var currentSet:  Int  = 1
     @State private var timer:      Timer?
 
-    // MARK: – Banner & Intention
+    // MARK: — Banner & Intention
     @State private var showBanner:     Bool    = true
     @State private var showIntentions: Bool    = false
     @State private var currentIntention: String? = nil
 
-    // MARK: – Post‑workout summary
+    // MARK: — Post‑workout summary
     @State private var showSummary: Bool = false
     @State private var justCompletedRecord: SessionRecord? = nil
     @State private var justCompletedCalories: Int = 0
 
-    // MARK: – Computed
+    // MARK: — Computed
     private var totalDuration: Int {
         switch phase {
         case .getReady: return getReadyDuration
@@ -55,7 +54,7 @@ struct TimerView: View {
     }
     private var elapsedTime: Int { totalDuration - currentTime }
 
-    // MARK: – Dynamic background
+    // MARK: — Dynamic background
     private var backgroundColor: Color {
         let p = themeManager.selected.cardBackgrounds
         switch phase {
@@ -66,7 +65,7 @@ struct TimerView: View {
         }
     }
 
-    // MARK: – Controls style
+    // MARK: — Controls style
     private let controlBG = Color.white.opacity(0.3)
     private let controlFG = Color.white
 
@@ -113,6 +112,7 @@ struct TimerView: View {
                     Spacer()
 
                     HStack(spacing: 40) {
+                        // Play/Pause
                         Button(action: toggleTimer) {
                             ZStack {
                                 Circle().fill(controlBG).frame(width: 80, height: 80)
@@ -124,6 +124,7 @@ struct TimerView: View {
                             }
                         }
 
+                        // Reset
                         Button(action: resetAll) {
                             ZStack {
                                 Circle().fill(controlBG).frame(width: 80, height: 80)
@@ -161,7 +162,7 @@ struct TimerView: View {
         }
     }
 
-    // MARK: – Helpers
+    // MARK: — Helpers
 
     private var isRunning: Bool { timer != nil }
 
@@ -228,7 +229,7 @@ struct TimerView: View {
             startTimerLoop()
 
         case .complete:
-            // do nothing; summary sheet will appear
+            // do nothing—summary will appear
             break
         }
     }
@@ -241,15 +242,13 @@ struct TimerView: View {
         currentTime = getReadyDuration
     }
 
-    /// Called once the workout is truly complete: save to UserDefaults,
-    /// compute calories, then show the summary.
     private func completeAndSave() {
         // 1) Load existing history
         var history = (try? JSONDecoder().decode([SessionRecord].self,
                          from: UserDefaults.standard.data(forKey: "sessionHistory") ?? Data()))
                       ?? []
 
-        // 2) Create the new record
+        // 2) Create new record
         let newRecord = SessionRecord(
             name:           workoutName,
             date:           Date(),
@@ -260,7 +259,7 @@ struct TimerView: View {
         )
         history.append(newRecord)
 
-        // 3) Persist
+        // 3) Save to UserDefaults
         if let enc = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(enc, forKey: "sessionHistory")
         }
@@ -277,7 +276,7 @@ struct TimerView: View {
         justCompletedRecord   = newRecord
         justCompletedCalories = cals
 
-        // 6) Show the summary
+        // 6) Show summary
         showSummary = true
     }
 
@@ -285,28 +284,33 @@ struct TimerView: View {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
-    /// If sound is enabled, attempt to play the chosen file from “mySounds/”.
+    /// Plays the chosen sound if enableSound is ON.
+    /// We stored only the lowercase `fileName` in UserDefaults,
+    /// so we map back to SoundType and ask SoundManager to play it.
     private func playPhaseSound(for phase: Phase) {
         guard enableSound else { return }
 
-        let rawName: String
+        let chosenFile: String
         switch phase {
         case .work:
-            rawName = workSoundRaw
+            chosenFile = workSoundFile
         case .rest:
-            rawName = restSoundRaw
+            chosenFile = restSoundFile
         case .complete:
-            rawName = completeSoundRaw
+            chosenFile = completeSoundFile
         default:
             return
         }
 
-        SoundManager.shared.playSound(named: rawName)
+        // Map to SoundType, defaulting to .beep if the string is unrecognized
+        let soundType = SoundType.fromFileName(chosenFile)
+        SoundManager.shared.playSound(named: soundType.fileName)
     }
 }
 
-// MARK: – IntentionBanner (embedded to avoid “Cannot find IntentionBanner”)
-
+// ==============================
+// MARK: — IntentionBanner (UNCHANGED)
+// ==============================
 struct IntentionBanner: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
@@ -355,8 +359,9 @@ struct IntentionBanner: View {
     }
 }
 
-// MARK: – Preview
-
+// ==============================
+// MARK: — Preview
+// ==============================
 struct TimerView_Previews: PreviewProvider {
     static var previews: some View {
         TimerView(workoutName: "Demo Workout")
