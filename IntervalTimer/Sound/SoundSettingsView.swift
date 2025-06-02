@@ -4,16 +4,15 @@
 //
 //  Created by You on 2025‑06‑01.
 
-
 import SwiftUI
 
 struct SoundSettingsView: View {
     // ────────────────────────────────────────────────────────────
     // 1) AppStorage keys (we store the lowercase fileName, not rawValue)
     // ────────────────────────────────────────────────────────────
-    @AppStorage("enableSound")   private var enableSound: Bool    = true
-    @AppStorage("workSound")     private var workSoundFile: String    = SoundType.beep.fileName
-    @AppStorage("restSound")     private var restSoundFile: String    = SoundType.beep.fileName
+    @AppStorage("enableSound")   private var enableSound: Bool       = true
+    @AppStorage("workSound")     private var workSoundFile: String   = SoundType.beep.fileName
+    @AppStorage("restSound")     private var restSoundFile: String   = SoundType.beep.fileName
     @AppStorage("completeSound") private var completeSoundFile: String = SoundType.beep.fileName
 
     var body: some View {
@@ -27,11 +26,11 @@ struct SoundSettingsView: View {
             // Work Sound Picker
             Picker("Work Sound", selection: $workSoundFile) {
                 ForEach(SoundType.allCases) { sound in
-                    Text(sound.rawValue)      // e.g. “Beep”, “Chime”, “Bell”
-                        .tag(sound.fileName)  // e.g. “beep”, “chime”, “bell”
+                    Text(sound.rawValue)      // e.g. “Beep”, “Chime”, “Laser”, etc.
+                        .tag(sound.fileName)  // e.g. “beep”, “chime”, “laser”, etc.
                 }
             }
-            .disabled(!enableSound) // disable if sound is off
+            .disabled(!enableSound) // disable if sound is turned off
 
             // Rest Sound Picker
             Picker("Rest Sound", selection: $restSoundFile) {

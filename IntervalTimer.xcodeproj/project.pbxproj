@@ -12,6 +12,12 @@
 		9A0258062DE4EFE400A85EFE /* ActionTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258052DE4EFE400A85EFE /* ActionTileView.swift */; };
 		9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */; };
 		9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */; };
+		9A3C411D2DEE08DE002359B6 /* hop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C411C2DEE08DE002359B6 /* hop.wav */; };
+		9A3C411F2DEE08EB002359B6 /* heep.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C411E2DEE08EB002359B6 /* heep.wav */; };
+		9A3C41212DEE08FC002359B6 /* laser.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C41202DEE08FC002359B6 /* laser.wav */; };
+		9A3C41232DEE0A07002359B6 /* ding.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C41222DEE0A07002359B6 /* ding.wav */; };
+		9A3C41252DEE0A5E002359B6 /* beem.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C41242DEE0A5E002359B6 /* beem.wav */; };
+		9A3C41272DEE0A6C002359B6 /* alert.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C41262DEE0A6C002359B6 /* alert.wav */; };
 		9A498DFD2DECC3AC003147B7 /* WorkoutSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498DFC2DECC3AC003147B7 /* WorkoutSummaryView.swift */; };
 		9A498E002DECCF0E003147B7 /* SoundType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498DFF2DECCF0E003147B7 /* SoundType.swift */; };
 		9A498E022DECCF1E003147B7 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A498E012DECCF1E003147B7 /* SoundManager.swift */; };
@@ -48,6 +54,12 @@
 		9A0258052DE4EFE400A85EFE /* ActionTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTileView.swift; sourceTree = "<group>"; };
 		9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTilesView.swift; sourceTree = "<group>"; };
 		9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedTile.swift; sourceTree = "<group>"; };
+		9A3C411C2DEE08DE002359B6 /* hop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = hop.wav; sourceTree = "<group>"; };
+		9A3C411E2DEE08EB002359B6 /* heep.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = heep.wav; sourceTree = "<group>"; };
+		9A3C41202DEE08FC002359B6 /* laser.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = laser.wav; sourceTree = "<group>"; };
+		9A3C41222DEE0A07002359B6 /* ding.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ding.wav; sourceTree = "<group>"; };
+		9A3C41242DEE0A5E002359B6 /* beem.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = beem.wav; sourceTree = "<group>"; };
+		9A3C41262DEE0A6C002359B6 /* alert.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = alert.wav; sourceTree = "<group>"; };
 		9A498DFC2DECC3AC003147B7 /* WorkoutSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummaryView.swift; sourceTree = "<group>"; };
 		9A498DFF2DECCF0E003147B7 /* SoundType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundType.swift; sourceTree = "<group>"; };
 		9A498E012DECCF1E003147B7 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
@@ -145,6 +157,12 @@
 				9A66D81D2DE11474008C73D7 /* Preview Content */,
 				9A66D8222DE11474008C73D7 /* Views */,
 				9A498E392DED3C6C003147B7 /* beep.wav */,
+				9A3C41242DEE0A5E002359B6 /* beem.wav */,
+				9A3C41262DEE0A6C002359B6 /* alert.wav */,
+				9A3C41202DEE08FC002359B6 /* laser.wav */,
+				9A3C41222DEE0A07002359B6 /* ding.wav */,
+				9A3C411C2DEE08DE002359B6 /* hop.wav */,
+				9A3C411E2DEE08EB002359B6 /* heep.wav */,
 				9A498E3A2DED3C6C003147B7 /* bell.wav */,
 				9A498E3B2DED3C6C003147B7 /* chime.mp3 */,
 			);
@@ -337,11 +355,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A3C411D2DEE08DE002359B6 /* hop.wav in Resources */,
+				9A3C411F2DEE08EB002359B6 /* heep.wav in Resources */,
 				9A66D8382DE11474008C73D7 /* Preview Assets.xcassets in Resources */,
 				9A66D8392DE11474008C73D7 /* Assets.xcassets in Resources */,
+				9A3C41212DEE08FC002359B6 /* laser.wav in Resources */,
+				9A3C41252DEE0A5E002359B6 /* beem.wav in Resources */,
 				9A498E3C2DED3C6C003147B7 /* bell.wav in Resources */,
+				9A3C41232DEE0A07002359B6 /* ding.wav in Resources */,
 				9A498E3D2DED3C6C003147B7 /* beep.wav in Resources */,
 				9A498E3E2DED3C6C003147B7 /* chime.mp3 in Resources */,
+				9A3C41272DEE0A6C002359B6 /* alert.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
