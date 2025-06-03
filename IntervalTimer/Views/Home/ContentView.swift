@@ -1,3 +1,5 @@
+//==== ContentView.swift =====
+// ContentView.swift
 //
 //  ContentView.swift
 //  IntervalTimer
@@ -11,17 +13,13 @@ struct ContentView: View {
 
     var body: some View {
         NavigationView {
-            // ─── ScrollView is the only thing under NavigationView ───
-            ScrollView {
-                VStack(spacing: 0) {
-                    // ─── 1) “Hello, <device>!” is now part of the scrollable content ───
-                    Text("Hello, \(UIDevice.current.name)!")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
+            ZStack {
+                // Fill entire screen; status bar & nav‑bar use transparent background
+                Color(.systemBackground)
+                    .ignoresSafeArea()
 
-                    // ─── 2) Your existing grid of tiles ───
+                // ─── Your existing tiles grid ───
+                ScrollView {
                     LazyVGrid(
                         columns: [
                             GridItem(.flexible()),
@@ -31,18 +29,16 @@ struct ContentView: View {
                     ) {
                         ConfigTilesView()
                         ActionTilesView()
-                        // …any other tile views you have…
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                 }
             }
-            // ─── 3) Tell SwiftUI “no title here” so the nav bar stays blank ───
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-
-            // ─── 4) Gear icon in the toolbar (always visible at top‑right) ───
+            // ─── Large, system‑drawn title under the Dynamic Island ───
+            .navigationTitle("Hello, \(UIDevice.current.name)!")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                // Gear in top‑right, tinted automatically by UINavigationBar.appearance().tintColor
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingSettings = true
@@ -56,10 +52,8 @@ struct ContentView: View {
                 SettingsView()
                     .environmentObject(themeManager)
             }
-            // ─── 5) Background‐color‐under‐nav so there’s no flash of white/black ───
-            .background(Color(.systemBackground).ignoresSafeArea())
         }
-        // ─── 6) Force single‑column on iPhone (avoid side‑by‑side on iPad) ───
+        // Force single‑column style on iPhone
         .navigationViewStyle(.stack)
     }
 }
@@ -70,11 +64,11 @@ struct ContentView_Previews: PreviewProvider {
             ContentView()
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.light)
-
             ContentView()
                 .environmentObject(ThemeManager.shared)
                 .preferredColorScheme(.dark)
         }
     }
 }
+
 

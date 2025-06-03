@@ -136,7 +136,7 @@ private struct WorkoutCard: View {
         let trimmed = record.name.trimmingCharacters(in: .whitespaces)
         if !trimmed.isEmpty { return trimmed }
         let fmt = DateFormatter()
-        fmt.dateFormat = "yyyyMMdd"
+        fmt.dateFormat = "yyyyddMM"
         return fmt.string(from: record.date)
     }
 

@@ -1,9 +1,8 @@
-/// AnalyticsView.swift
 //
 //  AnalyticsView.swift
 //  IntervalTimer
 //  Interactive analytics with Charts + Calories Burned over Time
-//  Refactored 05/31/25 to improve card visibility in Dark Mode
+//  Refactored 06/04/25: Moved info button into the navigation bar (upper‐right)
 //
 
 import SwiftUI
@@ -13,22 +12,23 @@ struct AnalyticsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
-    // ── Data ──────────────────────────────────
+    // ── Stored user defaults ──────────────────────────────────
+    @AppStorage("userSex")    private var userSex:    String = ""
+    @AppStorage("userHeight") private var userHeight: Int    = 0    // always stored in centimeters
+    @AppStorage("heightUnit") private var heightUnit: String = "cm" // "cm" or "ft"
+    @AppStorage("userWeight") private var userWeight: Int    = 0
+    @AppStorage("weightUnit") private var weightUnit: String = "kg" // "kg" or "lbs"
+
+    // ── Other state & Onboarding data ───────────────────────
     @State private var history: [SessionRecord] = []
     @State private var intentions: [IntentRecord] = []
     @State private var selectedState: String? = nil
 
-    // ── Goals & Onboarding ────────────────────
     @AppStorage("dailyGoal")   private var dailyGoal:   Int    = 1
     @AppStorage("weeklyGoal")  private var weeklyGoal:  Int    = 7
     @AppStorage("monthlyGoal") private var monthlyGoal: Int    = 30
 
-    @AppStorage("userSex")    private var userSex:    String = ""
-    @AppStorage("userHeight") private var userHeight: Int    = 0
-    @AppStorage("userWeight") private var userWeight: Int    = 0
-    @AppStorage("weightUnit") private var weightUnit: String = "kg"
-
-    // ── Timeframe Picker ─────────────────────
+    // ── Timeframe Picker ─────────────────────────────────────
     private enum Timeframe: String, CaseIterable, Identifiable {
         case week    = "Week"
         case month   = "Month"
@@ -37,23 +37,16 @@ struct AnalyticsView: View {
     }
     @State private var selectedTimeframe: Timeframe = .month
 
-    // ── Computed Metrics ──────────────────────
+    // ── Tooltip State ─────────────────────────────────────────
+    @State private var showUnitsTip: Bool = false
+
+    // ── Computed Metrics ─────────────────────────────────────
     private var totalSessions: Int {
         history.count
     }
 
     private var daysCompleted: Int {
         Set(history.map { Calendar.current.startOfDay(for: $0.date) }).count
-    }
-
-    private var counts: (today: Int, week: Int, month: Int) {
-        let calendar = Calendar.current
-        let todayCount = history.filter { calendar.isDateInToday($0.date) }.count
-        let weekStart  = calendar.date(byAdding: .day,   value: -7,  to: Date())!
-        let weekCount  = history.filter { $0.date >= weekStart }.count
-        let monthStart = calendar.date(byAdding: .month, value: -1, to: Date())!
-        let monthCount = history.filter { $0.date >= monthStart }.count
-        return (todayCount, weekCount, monthCount)
     }
 
     private var intentionDistribution: [(state: String, count: Int)] {
@@ -63,7 +56,7 @@ struct AnalyticsView: View {
             .sorted { $0.count > $1.count }
     }
 
-    // ── Weight in Kilograms ───────────────────
+    // ── Weight in Kilograms ───────────────────────────────────
     private var userWeightKg: Double {
         weightUnit == "lbs"
             ? Double(userWeight) / 2.20462
@@ -76,24 +69,35 @@ struct AnalyticsView: View {
             ScrollView {
                 VStack(spacing: 24) {
 
-                    // ── Onboarding Summary ─────────────────
+                    // ── Onboarding Summary (Sex / Height / Weight) ─────────
                     HStack(spacing: 12) {
+                        // 1) Sex: static display
                         MetricCard(
                             title: "Sex",
                             value: userSex
                         )
-                        MetricCard(
-                            title: "Height",
-                            value: "\(userHeight) cm"
-                        )
-                        MetricCard(
-                            title: "Weight",
-                            value: "\(userWeight) \(weightUnit)"
-                        )
+
+                        // 2) Height: tappable to toggle between cm ↔ ft/in
+                        Button(action: toggleHeightUnit) {
+                            MetricCard(
+                                title: "Height",
+                                value: displayHeight
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+
+                        // 3) Weight: tappable to toggle between kg ↔ lbs
+                        Button(action: toggleWeightUnit) {
+                            MetricCard(
+                                title: "Weight",
+                                value: displayWeight
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     .padding(.horizontal)
 
-                    // ── Overview ──────────────────────────
+                    // ── Overview (Sessions / Days Done) ───────────────────
                     HStack(spacing: 12) {
                         MetricCard(
                             title: "Sessions",
@@ -106,10 +110,10 @@ struct AnalyticsView: View {
                     }
                     .padding(.horizontal)
 
-                    // ── Calories Burned Chart ──────────────
+                    // ── Calories Burned Chart ─────────────────────────────
                     caloriesSection
 
-                    // ── Intentions Analysis + Drill‑down ─
+                    // ── Intentions Analysis + Drill‑down ─────────────────
                     intentionSection
 
                 }
@@ -117,6 +121,23 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // Info button positioned in the top‑right of the navigation bar
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showUnitsTip = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                    }
+                    .alert("Did you know?", isPresented: $showUnitsTip) {
+                        Button("Cool, got it!") { showUnitsTip = false }
+                    } message: {
+                        Text("Tap “Height” to switch between cm ↔ ft/in, and tap “Weight” to switch between kg ↔ lbs. 🎉")
+                    }
+                }
+            }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .onAppear {
                 loadHistory()
@@ -127,6 +148,50 @@ struct AnalyticsView: View {
         .preferredColorScheme(colorScheme)
     }
 
+    // MARK: — Display strings for Height & Weight
+
+    /// Returns either “170 cm” or “5′ 7″” depending on heightUnit
+    private var displayHeight: String {
+        if heightUnit == "cm" {
+            return "\(userHeight) cm"
+        } else {
+            // Convert stored cm → total inches → feet & inches
+            let totalInches = Int(round(Double(userHeight) / 2.54))
+            let feet = totalInches / 12
+            let inches = totalInches % 12
+            return "\(feet)′ \(inches)″"
+        }
+    }
+
+    /// Returns either “70 kg” or “154 lbs” depending on weightUnit
+    private var displayWeight: String {
+        if weightUnit == "kg" {
+            return "\(userWeight) kg"
+        } else {
+            return "\(userWeight) lbs"
+        }
+    }
+
+    // MARK: — Toggling height & weight units
+
+    private func toggleHeightUnit() {
+        heightUnit = (heightUnit == "cm") ? "ft" : "cm"
+    }
+
+    private func toggleWeightUnit() {
+        if weightUnit == "kg" {
+            // Convert stored kilograms → pounds
+            let newLbs = Int(round(Double(userWeight) * 2.20462))
+            userWeight = newLbs
+            weightUnit = "lbs"
+        } else {
+            // Convert stored pounds → kilograms
+            let newKg = Int(round(Double(userWeight) / 2.20462))
+            userWeight = newKg
+            weightUnit = "kg"
+        }
+    }
+
     // MARK: Calories Section
     private var caloriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -134,7 +199,7 @@ struct AnalyticsView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            // Picker to choose Week / Month / Quarter
+            // Picker for Week / Month / Quarter
             Picker("Timeframe", selection: $selectedTimeframe) {
                 ForEach(Timeframe.allCases) { timeframe in
                     Text(timeframe.rawValue).tag(timeframe)
@@ -169,7 +234,6 @@ struct AnalyticsView: View {
     }
 
     // MARK: Compute Data Points
-    /// Returns an array of DataPoint (label, calories) for the chosen timeframe.
     private func computeDataPoints() -> [DataPoint] {
         switch selectedTimeframe {
         case .week:
@@ -181,13 +245,11 @@ struct AnalyticsView: View {
         }
     }
 
-    /// DataPoint model for chart entries
     private struct DataPoint {
         let label: String
         let calories: Int
     }
 
-    // ── 1) Last 7 Days, Grouped by Day ─────────────────────
     private func computeLastWeekByDay() -> [DataPoint] {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
@@ -201,7 +263,7 @@ struct AnalyticsView: View {
                 from: date,
                 dateStyle: .short,
                 timeStyle: .none
-            ) // e.g. "5/24/25"
+            )
 
             let dayCalories = history
                 .filter { calendar.isDate($0.date, inSameDayAs: date) }
@@ -213,7 +275,6 @@ struct AnalyticsView: View {
         return results
     }
 
-    // ── 2) Last 30 Days, Grouped by Week ───────────────────
     private func computeLastMonthByWeek() -> [DataPoint] {
         let calendar = Calendar.current
         let today = Date()
@@ -221,7 +282,6 @@ struct AnalyticsView: View {
             return []
         }
 
-        // Find the start of the week containing monthAgo
         var weekStartDate = calendar.dateInterval(of: .weekOfYear, for: monthAgo)!.start
         var results: [DataPoint] = []
 
@@ -230,7 +290,7 @@ struct AnalyticsView: View {
                 from: weekStartDate,
                 dateStyle: .medium,
                 timeStyle: .none
-            ) // e.g. "May 1, 25"
+            )
 
             guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else {
                 break
@@ -247,7 +307,6 @@ struct AnalyticsView: View {
         return results
     }
 
-    // ── 3) Last 3 Months, Grouped by Month ─────────────────
     private func computeLastQuarterByMonth() -> [DataPoint] {
         let calendar = Calendar.current
         let today = Date()
@@ -262,7 +321,7 @@ struct AnalyticsView: View {
             let monthIndex = calendar.component(.month, from: monthIteratorDate) - 1
             let monthName = DateFormatter().monthSymbols[monthIndex]
             let year = calendar.component(.year, from: monthIteratorDate)
-            let monthLabel = "\(monthName) \(year)" // e.g. "Mar 2025"
+            let monthLabel = "\(monthName) \(year)"
 
             guard let monthInterval = calendar.dateInterval(of: .month, for: monthIteratorDate) else {
                 break
@@ -284,8 +343,6 @@ struct AnalyticsView: View {
     }
 
     // MARK: Calorie Calculation
-    /// Estimates calories burned for a session using MET=8:
-    ///     cals = 0.0175 × MET × weight (kg) × duration (minutes)
     private func calculateCalories(for session: SessionRecord) -> Int {
         let totalWorkSeconds = session.timerDuration * session.sets
         let minutes = Double(totalWorkSeconds) / 60.0
@@ -389,6 +446,10 @@ private struct MetricCard: View {
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.primary)
+                // Force single‑line & shrink if needed
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -397,7 +458,6 @@ private struct MetricCard: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                // Use secondarySystemBackground so that in Dark Mode the card is slightly lighter than its surroundings.
                 .fill(Color(UIColor.secondarySystemBackground))
         )
         .shadow(
