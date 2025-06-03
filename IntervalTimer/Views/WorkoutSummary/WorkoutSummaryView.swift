@@ -251,9 +251,13 @@ private struct SummaryCardView: View {
                 Text(title.uppercased())
                     .font(.caption.weight(.semibold))
                     .foregroundColor(.secondary)
+
+                // Allow the value text (e.g., long date/time) to wrap onto multiple lines:
                 Text(value)
                     .font(.headline.weight(.bold))
                     .foregroundColor(.primary)
+                    // Ensures the text can expand vertically rather than truncating:
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
