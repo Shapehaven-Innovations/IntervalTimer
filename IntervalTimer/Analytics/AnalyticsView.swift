@@ -2,7 +2,7 @@
 //  AnalyticsView.swift
 //  IntervalTimer
 //  Interactive analytics with Charts + Calories Burned over Time
-//  Refactored 06/04/25: Moved info button into the navigation bar (upper‐right)
+//  Refactored 06/07/25: Month‐grouped x‑axis now uses "M/dd/yyyy" formatting
 //
 
 import SwiftUI
@@ -14,10 +14,10 @@ struct AnalyticsView: View {
 
     // ── Stored user defaults ──────────────────────────────────
     @AppStorage("userSex")    private var userSex:    String = ""
-    @AppStorage("userHeight") private var userHeight: Int    = 0    // always stored in centimeters
-    @AppStorage("heightUnit") private var heightUnit: String = "cm" // "cm" or "ft"
+    @AppStorage("userHeight") private var userHeight: Int    = 0       // stored in cm
+    @AppStorage("heightUnit") private var heightUnit: String = "cm"    // "cm" or "ft"
     @AppStorage("userWeight") private var userWeight: Int    = 0
-    @AppStorage("weightUnit") private var weightUnit: String = "kg" // "kg" or "lbs"
+    @AppStorage("weightUnit") private var weightUnit: String = "kg"    // "kg" or "lbs"
 
     // ── Other state & Onboarding data ───────────────────────
     @State private var history: [SessionRecord] = []
@@ -65,7 +65,7 @@ struct AnalyticsView: View {
 
     // MARK: Body
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
 
@@ -119,10 +119,11 @@ struct AnalyticsView: View {
                 }
                 .padding(.vertical, 16)
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Analytics")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                // Info button positioned in the top‑right of the navigation bar
+                // ℹ︎ button in the top‑right, unchanged alert
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showUnitsTip = true
@@ -138,13 +139,12 @@ struct AnalyticsView: View {
                     }
                 }
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .onAppear {
                 loadHistory()
                 loadIntentions()
             }
         }
-        .interactiveDismissDisabled(false)
+        .navigationViewStyle(StackNavigationViewStyle()) // Force single‑column on iPhone
         .preferredColorScheme(colorScheme)
     }
 
@@ -259,6 +259,7 @@ struct AnalyticsView: View {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: todayStart) else {
                 continue
             }
+            // Use the same short format (e.g. “5/28/25”)
             let dayLabel = DateFormatter.localizedString(
                 from: date,
                 dateStyle: .short,
@@ -282,15 +283,17 @@ struct AnalyticsView: View {
             return []
         }
 
+        // We'll group from the weekContaining(monthAgo) up through today
         var weekStartDate = calendar.dateInterval(of: .weekOfYear, for: monthAgo)!.start
         var results: [DataPoint] = []
 
+        // Prepare a DateFormatter that prints “M/dd/yy”
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/dd/yy"
+
         while weekStartDate <= today {
-            let weekLabel = DateFormatter.localizedString(
-                from: weekStartDate,
-                dateStyle: .medium,
-                timeStyle: .none
-            )
+            // Use our custom format instead of .medium
+            let weekLabel = formatter.string(from: weekStartDate)
 
             guard let nextWeek = calendar.date(byAdding: .day, value: 7, to: weekStartDate) else {
                 break
