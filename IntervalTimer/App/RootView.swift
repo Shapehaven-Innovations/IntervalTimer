@@ -2,6 +2,14 @@
 //  RootView.swift
 //  IntervalTimer
 //
+//  Created by user on 6/4/25.
+//
+
+
+//
+//  RootView.swift
+//  IntervalTimer
+//
 //  A minimal “router” that picks which screen to show based on trial, subscription & onboarding:
 //
 //    • If within 7-day free trial  → ContentView (no paywall)  

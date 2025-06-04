@@ -12,6 +12,7 @@
 		9A0258062DE4EFE400A85EFE /* ActionTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258052DE4EFE400A85EFE /* ActionTileView.swift */; };
 		9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */; };
 		9A0258102DE4F14500A85EFE /* AnimatedTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */; };
+		9A229C3F2DF0E083006CA293 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A229C3E2DF0E083006CA293 /* RootView.swift */; };
 		9A3C411D2DEE08DE002359B6 /* hop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C411C2DEE08DE002359B6 /* hop.wav */; };
 		9A3C411F2DEE08EB002359B6 /* heep.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C411E2DEE08EB002359B6 /* heep.wav */; };
 		9A3C41212DEE08FC002359B6 /* laser.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C41202DEE08FC002359B6 /* laser.wav */; };
@@ -54,6 +55,7 @@
 		9A0258052DE4EFE400A85EFE /* ActionTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTileView.swift; sourceTree = "<group>"; };
 		9A0258072DE4EFED00A85EFE /* ActionTilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionTilesView.swift; sourceTree = "<group>"; };
 		9A02580F2DE4F14500A85EFE /* AnimatedTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedTile.swift; sourceTree = "<group>"; };
+		9A229C3E2DF0E083006CA293 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		9A3C411C2DEE08DE002359B6 /* hop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = hop.wav; sourceTree = "<group>"; };
 		9A3C411E2DEE08EB002359B6 /* heep.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = heep.wav; sourceTree = "<group>"; };
 		9A3C41202DEE08FC002359B6 /* laser.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = laser.wav; sourceTree = "<group>"; };
@@ -96,6 +98,11 @@
 		9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PreConfiguredTemplates;
+			sourceTree = "<group>";
+		};
+		9AA45FD82DEFE06500CCF719 /* Subscriptions */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Subscriptions;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -150,6 +157,7 @@
 		9A66D82C2DE11474008C73D7 /* IntervalTimer */ = {
 			isa = PBXGroup;
 			children = (
+				9AA45FD82DEFE06500CCF719 /* Subscriptions */,
 				9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */,
 				9A498DFE2DECCED5003147B7 /* Sound */,
 				9A66D84B2DE11A13008C73D7 /* Onboarding */,
@@ -181,6 +189,7 @@
 		9A66D83B2DE11491008C73D7 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				9A229C3E2DF0E083006CA293 /* RootView.swift */,
 				9A66D8262DE11474008C73D7 /* IntervalTimerApp.swift */,
 			);
 			path = App;
@@ -320,6 +329,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				9A3C41282DEE102E002359B6 /* PreConfiguredTemplates */,
+				9AA45FD82DEFE06500CCF719 /* Subscriptions */,
 			);
 			name = IntervalTimer;
 			packageProductDependencies = (
@@ -394,6 +404,7 @@
 				9A768BC02DE2528000435DE8 /* ConfigurationEditorView.swift in Sources */,
 				9A0258082DE4EFED00A85EFE /* ActionTilesView.swift in Sources */,
 				9A93B2E32DE38F5E0046F727 /* BackgroundOption.swift in Sources */,
+				9A229C3F2DF0E083006CA293 /* RootView.swift in Sources */,
 				9A66D82F2DE11474008C73D7 /* IntentionsView.swift in Sources */,
 				9A66D8302DE11474008C73D7 /* OnboardingView.swift in Sources */,
 				9A768BB82DE24FDE00435DE8 /* ThemeType.swift in Sources */,
@@ -546,6 +557,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
@@ -579,6 +591,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;

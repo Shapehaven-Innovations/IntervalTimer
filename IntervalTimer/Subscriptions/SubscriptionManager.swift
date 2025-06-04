@@ -2,14 +2,12 @@
 //  SubscriptionManager.swift
 //  IntervalTimer
 //
-//  Creates and maintains StoreKit 2 subscription entitlement state.
-//  On init, it:
-//   1) Fetches the `Product` for your subscription identifier(s).
-//   2) Checks the current transaction history/entitlements to set `isSubscribed`.
-//   3) Listens for any transaction updates to keep `isSubscribed` in sync.
+//  A singleton that uses StoreKit 2 to fetch your subscription product,
+//  track current entitlements, and publish `isSubscribed` accordingly.
 //
-//  NOTE: Replace `"com.yourcompany.intervaltimer.subscription.monthly"`
-//        with the actual product identifier you configured in App Store Connect.
+//  NOTE: Replace “com.yourcompany.intervaltimer.subscription.monthly” with
+//  your actual subscription product identifier from App Store Connect.
+//
 
 import Foundation
 import StoreKit
@@ -17,106 +15,113 @@ import SwiftUI
 
 @MainActor
 final class SubscriptionManager: ObservableObject {
-    static let shared = SubscriptionManager()
-    
-    // MARK: – Publicly Observed Properties
-    
-    /// True if the user currently has an active subscription (per StoreKit 2).
+
+    // ───────────────────────────────────────────────────────────────
+    // Publicly Observable Properties
+    // ───────────────────────────────────────────────────────────────
     @Published private(set) var isSubscribed: Bool = false
-    
-    /// The fetched `Product` for your subscription—assuming one in App Store Connect.
-    @Published private(set) var subscriptionProduct: Product? = nil
-    
-    // (Optional) If you have multiple subscription tiers, you can store them in an array:
-    @Published private(set) var allProducts: [Product] = []
-    
-    // MARK: – Internal
-    
-    private var updateListenerTask: Task<Void, Error>? = nil
-    
+    @Published private(set) var subscriptionProduct: StoreKit.Product? = nil
+    @Published private(set) var allProducts: [StoreKit.Product] = []
+
+    // ───────────────────────────────────────────────────────────────
+    // Internal
+    // ───────────────────────────────────────────────────────────────
+    private var updateListenerTask: Task<Void, Never>? = nil
+
+    /// Singleton instance
+    static let shared = SubscriptionManager()
+
+    /// Private initializer to enforce singleton usage
     private init() {
-        // Kick off fetching products and transaction‑listener as soon as this singleton is created
+        // Kick off async tasks:
         Task {
             await fetchProducts()
             await updateSubscriptionStatus()
             listenForTransactions()
         }
     }
-    
+
     deinit {
         updateListenerTask?.cancel()
     }
-    
-    // MARK: – Fetch Available Subscription Product(s)
-    
-    /// Call this on app launch to load your App Store Connect products.
+
+    // MARK: — Fetch Products
+
+    /// Fetch your subscription product(s) from App Store Connect.
     func fetchProducts() async {
         do {
-            // Replace these identifiers with the ones you set in App Store Connect
             let identifiers: Set<String> = [
-                "com.yourcompany.intervaltimer.subscription.monthly",
-                // if you also have a yearly subscription, add it here:
+                "org.ShapehavenInnovations.IntervalTimer.subscription.monthly"
+                // Add additional IDs here if you have e.g. a yearly tier:
                 // "com.yourcompany.intervaltimer.subscription.yearly"
             ]
-            
-            let storeProducts = try await Product.products(for: identifiers)
-            DispatchQueue.main.async {
-                self.allProducts = storeProducts
-                // Example: pick the first one as “the” subscription
-                self.subscriptionProduct = storeProducts.first
-            }
+
+            let storeProducts = try await StoreKit.Product.products(for: identifiers)
+            allProducts = storeProducts
+            subscriptionProduct = storeProducts.first
         } catch {
             print("❌ SubscriptionManager.fetchProducts failed: \(error.localizedDescription)")
         }
     }
-    
-    // MARK: – Purchase / Restore
-    
-    /// Attempt to purchase the given `Product` (e.g. monthly subscription).
-    func purchase(_ product: Product) async throws {
-        guard let purchaseResult = try? await product.purchase() else {
-            throw StoreError.purchaseFailed
-        }
-        
-        switch purchaseResult {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
+
+    // MARK: — Purchase
+
+    /// Attempt to purchase the given subscription product.
+    func purchase(_ product: StoreKit.Product) async throws {
+        let result = try await product.purchase()
+
+        switch result {
+        case .success(let verificationResult):
+            // 1) Verify transaction
+            let transaction = try checkVerified(verificationResult)
+            // 2) Finish it so StoreKit marks it as handled
             await transaction.finish()
+            // 3) Refresh subscription status
             await updateSubscriptionStatus()
+
         case .userCancelled:
             throw StoreError.userCancelled
+
         case .pending:
-            // The purchase is pending (e.g. Ask to Buy). Handle as needed.
+            // “Ask to Buy” or other pending state; handle if necessary.
             break
+
         @unknown default:
             break
         }
     }
-    
-    /// Restore any previously purchased subscription.
+
+    // MARK: — Restore Purchases
+
+    /// Restore any previously purchased subscription by checking current entitlements.
     func restorePurchases() async throws {
-        let result = try await AppTransaction.currentEntitlements
-        // If any entitlement is valid, update state:
-        let isValid = result.contains { transaction in
-            return isSubscription(transaction)
+        var foundValid = false
+
+        for await verificationResult in StoreKit.Transaction.currentEntitlements {
+            let transaction = try checkVerified(verificationResult)
+            if isSubscription(transaction) {
+                foundValid = true
+                break
+            }
         }
-        DispatchQueue.main.async {
-            self.isSubscribed = isValid
-        }
+
+        isSubscribed = foundValid
     }
-    
-    // MARK: – Transaction Listener
-    
-    /// Listen continuously for any transaction updates (purchases, renewals, cancellations).
+
+    // MARK: — Listen for Transaction Updates
+
+    /// Continuously listen for transaction updates (renewals, revocations, etc.).
     private func listenForTransactions() {
         updateListenerTask = Task.detached { [weak self] in
-            for await result in Transaction.updates {
-                guard let self = self else { return }
+            guard let self = self else { return }
+
+            for await verificationResult in StoreKit.Transaction.updates {
                 do {
-                    let transaction = try self.checkVerified(result)
-                    // If this transaction corresponds to our subscription product:
-                    if self.isSubscription(transaction) {
+                    let transaction = try await self.checkVerified(verificationResult)
+                    if await self.isSubscription(transaction) {
+                        // 1) Mark as finished
                         await transaction.finish()
+                        // 2) Refresh subscription status (on main actor)
                         await self.updateSubscriptionStatus()
                     }
                 } catch {
@@ -125,54 +130,54 @@ final class SubscriptionManager: ObservableObject {
             }
         }
     }
-    
-    // MARK: – Check Current Entitlement/Subscription Status
-    
-    /// On launch (or whenever you need), call this to re‑evaluate if there's an active subscription.
+
+    // MARK: — Update Subscription Status
+
+    /// Re-query StoreKit for all current entitlements and update `isSubscribed`.
     func updateSubscriptionStatus() async {
         do {
-            let statuses = try await AppTransaction.currentEntitlements
-            let valid = statuses.contains { transaction in
-                // Only honor “verified” transactions for our known subscription ID(s)
-                return isSubscription(transaction)
+            var foundValid = false
+
+            for await verificationResult in StoreKit.Transaction.currentEntitlements {
+                let transaction = try checkVerified(verificationResult)
+                if isSubscription(transaction) {
+                    foundValid = true
+                    break
+                }
             }
-            DispatchQueue.main.async {
-                self.isSubscribed = valid
-            }
+
+            isSubscribed = foundValid
         } catch {
-            print("❌ SubscriptionManager.updateSubscriptionStatus failed: \(error)")
-            DispatchQueue.main.async {
-                self.isSubscribed = false
-            }
+            print("❌ SubscriptionManager.updateSubscriptionStatus failed: \(error.localizedDescription)")
+            isSubscribed = false
         }
     }
-    
-    // MARK: – Helpers
-    
-    /// Only treat transactions that match your subscription product ID(s) as valid
-    private func isSubscription(_ transaction: Transaction) -> Bool {
-        guard
-            let productID = transaction.productID
-        else { return false }
-        
-        // Compare to your IDs in App Store Connect:
-        return productID == "com.yourcompany.intervaltimer.subscription.monthly"
-        // or if you had multiple:  return ["com.yourcompany.intervaltimer.subscription.monthly",
-        //                                "com.yourcompany.intervaltimer.subscription.yearly"].contains(productID)
+
+    // MARK: — Helpers
+
+    /// Returns true if the transaction’s `productID` matches your subscription ID.
+    private func isSubscription(_ transaction: StoreKit.Transaction) -> Bool {
+        return transaction.productID == "com.yourcompany.intervaltimer.subscription.monthly"
+        // If you have multiple subscription IDs, you can do:
+        // return ["com.yourcompany.intervaltimer.subscription.monthly",
+        //         "com.yourcompany.intervaltimer.subscription.yearly"]
+        //         .contains(transaction.productID)
     }
-    
-    /// Verify the transaction, throw if unverified
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+
+    /// Verify a StoreKit 2 transaction. If unverified, throw its error.
+    private func checkVerified<T>(
+        _ result: StoreKit.VerificationResult<T>
+    ) throws -> T {
         switch result {
-        case .verified(let safe):    return safe
+        case .verified(let safe):
+            return safe
         case .unverified(_, let error):
             throw error
         }
     }
-    
+
     enum StoreError: Error {
-        case failedVerification
-        case purchaseFailed
         case userCancelled
     }
 }
+

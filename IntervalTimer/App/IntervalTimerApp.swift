@@ -1,40 +1,50 @@
-// IntervalTimerApp.swift
 //
 //  IntervalTimerApp.swift
 //  IntervalTimer
 //
+//  Updated 06/04/25 to enforce a 7-day free trial before requiring subscription.
+//
 
 import SwiftUI
 import AVFoundation
+import StoreKit
 
 @main
 struct IntervalTimerApp: App {
-    @StateObject private var themeManager = ThemeManager.shared
-    @AppStorage("useDarkMode") private var useDarkMode: Bool = false
-    @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
+    // ── Theme & Subscription Managers ──────────────────────────────────────────────
+    @StateObject private var themeManager        = ThemeManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
+
+    // ── Onboarding & Appearance Flags ──────────────────────────────────────────────
+    @AppStorage("useDarkMode")   private var useDarkMode = false
+    @AppStorage("hasOnboarded")  private var hasOnboarded = false
+
+    // ── Trial logic: store the Unix timestamp of first launch ───────────────────────
+    /// Stores a TimeInterval (seconds since 1970) marking the first time the app ever ran.
+    @AppStorage("installDate") private var installDate: TimeInterval?
 
     init() {
         configureAudioSession()
         configureNavigationBarAppearance()
+
+        // If there's no installDate yet, set it to now
+        if installDate == nil {
+            installDate = Date().timeIntervalSince1970
+        }
     }
 
     var body: some Scene {
         WindowGroup {
-            // If the user has never onboarded, show the OnboardingView first.
-            if !hasOnboarded {
-                OnboardingView()
-                    .environmentObject(themeManager)
-                    .preferredColorScheme(useDarkMode ? .dark : .light)
-            } else {
-                ContentView()
-                    .environmentObject(themeManager)
-                    .preferredColorScheme(useDarkMode ? .dark : .light)
-            }
+            RootView()
+                .environmentObject(themeManager)
+                .environmentObject(subscriptionManager)
+                .preferredColorScheme(useDarkMode ? .dark : .light)
         }
     }
 
     // MARK: – Audio
 
+    /// Configure AVAudioSession for playback with mixing.
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
@@ -45,26 +55,21 @@ struct IntervalTimerApp: App {
         }
     }
 
-    // MARK: – Nav‑Bar Appearance
+    // MARK: – Nav-Bar Appearance
 
+    /// Make the navigation bar transparent, with adaptive title color.
     private func configureNavigationBarAppearance() {
         let appearance = UINavigationBarAppearance()
-        // Make the bar transparent so our background peeks through
         appearance.configureWithTransparentBackground()
-        // White (or black, depending on scheme) large‑title text
         appearance.largeTitleTextAttributes = [
             .foregroundColor: UIColor.label
         ]
-        // Small title too (just in case)
         appearance.titleTextAttributes = [
             .foregroundColor: UIColor.label
         ]
-
-        // Apply to all states
-        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().standardAppearance   = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        // Gear icon and any bar‑button use this tint
-        UINavigationBar.appearance().tintColor = UIColor.label
+        UINavigationBar.appearance().tintColor            = UIColor.label
     }
 }
 
