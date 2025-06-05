@@ -1,11 +1,9 @@
+// SubscriptionView.swift
+// IntervalTimer
 //
-//  SubscriptionView.swift
-//  IntervalTimer
-//
-//  A simple “paywall” screen. When `isSubscribed == false`, this view
-//  is shown. It displays your subscription product, lets the user purchase
-//  or restore, and auto‐dismisses once `SubscriptionManager.shared.isSubscribed` flips to true.
-//
+// A simple “paywall” screen. When `isSubscribed == false`, this view
+// is shown. It displays your subscription product, lets the user purchase
+// or restore, and auto‐dismisses once `SubscriptionManager.shared.isSubscribed` flips to true.
 
 import SwiftUI
 import StoreKit
@@ -13,34 +11,34 @@ import StoreKit
 struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var subManager = SubscriptionManager.shared
-
+    
     @State private var purchaseErrorMessage: String?
     @State private var isPurchasing: Bool = false
-
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
                 Text("Unlock Full Access")
                     .font(.largeTitle).bold()
                     .padding(.top, 40)
-
+                
                 Text("Purchase a subscription to continue using IntervalTimer.")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-
+                
                 // If products have already been fetched, show them; otherwise show a spinner.
                 if let product = subManager.subscriptionProduct {
                     VStack(spacing: 16) {
                         // 1) Show product name (e.g. “Monthly Subscription”)
                         Text(product.displayName)
                             .font(.title2).bold()
-
+                        
                         // 2) Show localized price (e.g. “$4.99 / month”)
                         Text(product.displayPrice)
                             .font(.title3)
                             .foregroundColor(.secondary)
-
+                        
                         // 3) “Subscribe Now” button
                         Button {
                             Task {
@@ -70,14 +68,14 @@ struct SubscriptionView: View {
                     ProgressView("Loading …")
                         .padding()
                 }
-
+                
                 Button("Restore Purchases") {
                     Task {
                         await doRestore()
                     }
                 }
                 .padding(.top, 8)
-
+                
                 if let errorMsg = purchaseErrorMessage {
                     Text(errorMsg)
                         .font(.footnote)
@@ -85,7 +83,7 @@ struct SubscriptionView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
-
+                
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -110,30 +108,29 @@ struct SubscriptionView: View {
             }
         }
     }
-
+    
     // MARK: — Actions
-
+    
     private func startPurchase(_ product: StoreKit.Product) async {
         isPurchasing = true
         purchaseErrorMessage = nil
-
+        
         do {
             try await subManager.purchase(product)
-            // If successful, `subManager.isSubscribed` becomes true automatically.
+            // On success, `subManager.isSubscribed` flips to true via updateSubscriptionStatus()
         } catch SubscriptionManager.StoreError.userCancelled {
-            // The user tapped “Cancel” in the App Store sheet — no error needed.
+            // User tapped “Cancel” in App Store sheet — do nothing
         } catch {
             purchaseErrorMessage = "Purchase failed: \(error.localizedDescription)"
         }
-
+        
         isPurchasing = false
     }
-
+    
     private func doRestore() async {
-        do {
-            try await subManager.restorePurchases()
-        } catch {
-            purchaseErrorMessage = "Restore failed: \(error.localizedDescription)"
+        await subManager.restorePurchases()
+        if !subManager.isSubscribed {
+            purchaseErrorMessage = "No previous purchases found."
         }
     }
 }

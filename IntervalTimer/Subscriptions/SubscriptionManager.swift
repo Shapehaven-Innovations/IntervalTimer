@@ -1,75 +1,83 @@
+// SubscriptionManager.swift
+// IntervalTimer
 //
-//  SubscriptionManager.swift
-//  IntervalTimer
+// A singleton that uses StoreKit 2 to fetch your subscription product,
+// track current entitlements, and publish `isSubscribed` accordingly.
 //
-//  A singleton that uses StoreKit 2 to fetch your subscription product,
-//  track current entitlements, and publish `isSubscribed` accordingly.
-//
-//  NOTE: Replace “com.yourcompany.intervaltimer.subscription.monthly” with
-//  your actual subscription product identifier from App Store Connect.
-//
+// NOTE: Make sure the App Store Connect product ID matches `Products.monthlyID`.
 
 import Foundation
 import StoreKit
 import SwiftUI
+import os
 
 @MainActor
 final class SubscriptionManager: ObservableObject {
-
     // ───────────────────────────────────────────────────────────────
     // Publicly Observable Properties
     // ───────────────────────────────────────────────────────────────
     @Published private(set) var isSubscribed: Bool = false
     @Published private(set) var subscriptionProduct: StoreKit.Product? = nil
     @Published private(set) var allProducts: [StoreKit.Product] = []
-
+    
     // ───────────────────────────────────────────────────────────────
     // Internal
     // ───────────────────────────────────────────────────────────────
     private var updateListenerTask: Task<Void, Never>? = nil
-
+    private let logger = Logger(subsystem: "org.ShapehavenInnovations.IntervalTimer", category: "SubscriptionManager")
+    
     /// Singleton instance
     static let shared = SubscriptionManager()
-
+    
     /// Private initializer to enforce singleton usage
     private init() {
-        // Kick off async tasks:
         Task {
             await fetchProducts()
             await updateSubscriptionStatus()
             listenForTransactions()
         }
     }
-
+    
     deinit {
         updateListenerTask?.cancel()
     }
-
+    
+    // MARK: — Product Identifiers
+    
+    private enum Products {
+        // Replace this with your exact App Store Connect subscription product ID:
+        static let monthlyID = "org.ShapehavenInnovations.IntervalTimer.subscription.monthly"
+        
+        // If you add a yearly tier later, you could add:
+        // static let yearlyID = "org.ShapehavenInnovations.IntervalTimer.subscription.yearly"
+    }
+    
     // MARK: — Fetch Products
-
+    
     /// Fetch your subscription product(s) from App Store Connect.
     func fetchProducts() async {
         do {
-            let identifiers: Set<String> = [
-                "org.ShapehavenInnovations.IntervalTimer.subscription.monthly"
-                // Add additional IDs here if you have e.g. a yearly tier:
-                // "com.yourcompany.intervaltimer.subscription.yearly"
-            ]
-
+            let identifiers: Set<String> = [ Products.monthlyID ]
             let storeProducts = try await StoreKit.Product.products(for: identifiers)
             allProducts = storeProducts
-            subscriptionProduct = storeProducts.first
+            
+            // Pick the product whose ID matches our constant
+            subscriptionProduct = storeProducts.first(where: { $0.id == Products.monthlyID })
+            
+            if subscriptionProduct == nil {
+                logger.error("No product found matching ID \(Products.monthlyID, privacy: .public)")
+            }
         } catch {
-            print("❌ SubscriptionManager.fetchProducts failed: \(error.localizedDescription)")
+            logger.error("fetchProducts failed: \(error.localizedDescription, privacy: .public)")
         }
     }
-
+    
     // MARK: — Purchase
-
+    
     /// Attempt to purchase the given subscription product.
     func purchase(_ product: StoreKit.Product) async throws {
         let result = try await product.purchase()
-
+        
         switch result {
         case .success(let verificationResult):
             // 1) Verify transaction
@@ -78,92 +86,98 @@ final class SubscriptionManager: ObservableObject {
             await transaction.finish()
             // 3) Refresh subscription status
             await updateSubscriptionStatus()
-
+            
         case .userCancelled:
             throw StoreError.userCancelled
-
+            
         case .pending:
-            // “Ask to Buy” or other pending state; handle if necessary.
+            // “Ask to Buy” or other deferred state: UI can show “Pending”
+            logger.log("Purchase pending (Ask to Buy or deferred). Waiting for updates…")
             break
-
+            
         @unknown default:
+            logger.error("Unknown purchase result for product \(product.id, privacy: .public)")
             break
         }
     }
-
+    
     // MARK: — Restore Purchases
-
+    
     /// Restore any previously purchased subscription by checking current entitlements.
-    func restorePurchases() async throws {
-        var foundValid = false
-
-        for await verificationResult in StoreKit.Transaction.currentEntitlements {
-            let transaction = try checkVerified(verificationResult)
-            if isSubscription(transaction) {
-                foundValid = true
-                break
-            }
+    func restorePurchases() async {
+        let hadSubscription = await checkForActiveSubscription()
+        isSubscribed = hadSubscription
+        
+        if !hadSubscription {
+            logger.log("restorePurchases: no active subscription found.")
         }
-
-        isSubscribed = foundValid
     }
-
+    
     // MARK: — Listen for Transaction Updates
-
+    
     /// Continuously listen for transaction updates (renewals, revocations, etc.).
     private func listenForTransactions() {
-        updateListenerTask = Task.detached { [weak self] in
+        // Use a regular Task so we stay on @MainActor
+        updateListenerTask = Task { [weak self] in
             guard let self = self else { return }
-
+            
             for await verificationResult in StoreKit.Transaction.updates {
                 do {
-                    let transaction = try await self.checkVerified(verificationResult)
-                    if await self.isSubscription(transaction) {
+                    // ❌ Removed `await` here—checkVerified is synchronous
+                    let transaction = try self.checkVerified(verificationResult)
+                    
+                    // ❌ Removed `await` here—isSubscription is synchronous
+                    if self.isSubscription(transaction) {
                         // 1) Mark as finished
                         await transaction.finish()
-                        // 2) Refresh subscription status (on main actor)
+                        // 2) Refresh subscription status
                         await self.updateSubscriptionStatus()
+                        self.logger.log("Transaction update: subscription is active for \(transaction.productID, privacy: .public)")
                     }
                 } catch {
-                    print("⚠️ SubscriptionManager.listenForTransactions: unverified transaction: \(error)")
+                    self.logger.error("listenForTransactions: unverified transaction: \(error.localizedDescription, privacy: .public)")
                 }
             }
         }
     }
-
+    
     // MARK: — Update Subscription Status
-
+    
     /// Re-query StoreKit for all current entitlements and update `isSubscribed`.
     func updateSubscriptionStatus() async {
-        do {
-            var foundValid = false
-
-            for await verificationResult in StoreKit.Transaction.currentEntitlements {
-                let transaction = try checkVerified(verificationResult)
-                if isSubscription(transaction) {
-                    foundValid = true
-                    break
-                }
-            }
-
-            isSubscribed = foundValid
-        } catch {
-            print("❌ SubscriptionManager.updateSubscriptionStatus failed: \(error.localizedDescription)")
-            isSubscribed = false
+        let active = await checkForActiveSubscription()
+        isSubscribed = active
+        
+        if active {
+            logger.log("updateSubscriptionStatus: subscription active.")
+        } else {
+            logger.log("updateSubscriptionStatus: no active subscription.")
         }
     }
-
+    
     // MARK: — Helpers
-
-    /// Returns true if the transaction’s `productID` matches your subscription ID.
-    private func isSubscription(_ transaction: StoreKit.Transaction) -> Bool {
-        return transaction.productID == "com.yourcompany.intervaltimer.subscription.monthly"
-        // If you have multiple subscription IDs, you can do:
-        // return ["com.yourcompany.intervaltimer.subscription.monthly",
-        //         "com.yourcompany.intervaltimer.subscription.yearly"]
-        //         .contains(transaction.productID)
+    
+    /// Returns true if there is an unexpired transaction whose productID matches our subscription ID.
+    private func checkForActiveSubscription() async -> Bool {
+        do {
+            for await verificationResult in StoreKit.Transaction.currentEntitlements {
+                // ❌ Removed `await` here—checkVerified is synchronous
+                let transaction = try checkVerified(verificationResult)
+                if isSubscription(transaction) {
+                    return true
+                }
+            }
+        } catch {
+            logger.error("checkForActiveSubscription failed: \(error.localizedDescription, privacy: .public)")
+        }
+        return false
     }
-
+    
+    /// Returns true if the transaction’s `productID` matches our subscription ID.
+    private func isSubscription(_ transaction: StoreKit.Transaction) -> Bool {
+        return transaction.productID == Products.monthlyID
+    }
+    
     /// Verify a StoreKit 2 transaction. If unverified, throw its error.
     private func checkVerified<T>(
         _ result: StoreKit.VerificationResult<T>
@@ -175,7 +189,7 @@ final class SubscriptionManager: ObservableObject {
             throw error
         }
     }
-
+    
     enum StoreError: Error {
         case userCancelled
     }
