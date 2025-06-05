@@ -2,19 +2,11 @@
 //  RootView.swift
 //  IntervalTimer
 //
-//  Created by user on 6/4/25.
-//
-
-
-//
-//  RootView.swift
-//  IntervalTimer
-//
 //  A minimal “router” that picks which screen to show based on trial, subscription & onboarding:
 //
-//    • If within 7-day free trial  → ContentView (no paywall)  
-//    • Else if not subscribed      → SubscriptionView  
-//    • Else if not onboarded       → OnboardingView  
+//    • If within 3-day free trial  → ContentView (no paywall)
+//    • Else if not subscribed      → SubscriptionView
+//    • Else if not onboarded       → OnboardingView
 //    • Otherwise                   → ContentView
 //
 
@@ -28,14 +20,14 @@ struct RootView: View {
     @AppStorage("installDate") private var installDate: TimeInterval?
 
     // The length of the free trial (in seconds)
-    private let trialLengthSeconds: TimeInterval = 7 * 24 * 60 * 60 // 7 days
+    private let trialLengthSeconds: TimeInterval = 3 * 24 * 60 * 60 // 3 days
 
-    /// Computed property: true if “now” is still within 7 days of installDate
+    /// Computed property: true if “now” is still within 3 days of installDate
     private var isWithinTrial: Bool {
         guard let first = installDate else {
             return false // if for some reason it’s missing, treat as no trial
         }
-        // Compare current date to (installDate + 7 days)
+        // Compare current date to (installDate + 3 days)
         return Date().timeIntervalSince1970 < (first + trialLengthSeconds)
     }
 
@@ -65,3 +57,4 @@ struct RootView: View {
         }
     }
 }
+
